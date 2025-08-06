@@ -1,0 +1,187 @@
+2025/01/01 Opening Balance
+    Assets:Bank:Checking    $3,000.00
+    Equity:Opening-Balances
+
+2025/01/05 Laptop purchase
+    Expenses:Hardware       $1,600.00
+    Assets:Bank:Checking   -$1,600.00
+
+2025/01/06 Office chair
+    Expenses:Office:Supplies  $200.00
+    Assets:Bank:Checking    -$200.00
+
+2025/01/10 Web hosting annual
+    Expenses:Software         $120.00
+    Assets:Bank:Checking    -$120.00
+
+2025/01/12 Coffee at local cafe
+    Expenses:Food:Coffee       $4.00
+    Assets:Cash              -$4.00
+
+2025/01/14 Freelance income: Client A
+    Assets:Bank:Checking    $2,500.00
+    Income:Freelance       -$2,500.00
+
+2025/01/15 Internet bill
+    Expenses:Internet         $35.00
+    Assets:Bank:Checking    -$35.00
+
+2025/01/16 Phone bill
+    Expenses:Phone            $25.00
+    Assets:Bank:Checking    -$25.00
+
+2025/01/18 Github subscription
+    Expenses:Software          $7.00
+    Assets:Bank:Checking     -$7.00
+
+2025/01/20 Groceries
+    Expenses:Food:Meals       $85.00
+    Assets:Bank:Checking    -$85.00
+
+2025/01/22 Bus pass
+    Expenses:Travel           $30.00
+    Assets:Cash             -$30.00
+
+2025/01/25 Website project: Client B
+    Assets:Bank:Checking    $3,200.00
+    Income:Freelance       -$3,200.00
+
+2025/01/26 Power bill
+    Expenses:Utilities        $60.00
+    Assets:Bank:Checking    -$60.00
+
+2025/01/27 Health insurance
+    Expenses:Insurance       $140.00
+    Assets:Bank:Checking   -$140.00
+
+2025/01/28 Online course (Udemy)
+    Expenses:Professional:Education  $20.00
+    Assets:Bank:Checking           -$20.00
+
+2025/01/29 Refund: Overcharge
+    Assets:Bank:Checking    $15.00
+    Income:Refunds         -$15.00
+
+2025/02/01 Opening petty cash
+    Assets:Cash             $100.00
+    Equity:Opening-Balances
+
+2025/02/03 Keyboard
+    Expenses:Hardware        $60.00
+    Assets:Bank:Checking   -$60.00
+
+2025/02/04 Freelance income: Client C
+    Assets:Bank:Checking   $1,800.00
+    Income:Freelance      -$1,800.00
+
+2025/02/05 Printer paper
+    Expenses:Office:Supplies   $12.00
+    Assets:Bank:Checking     -$12.00
+
+2025/02/06 Software license
+    Expenses:Software         $49.00
+    Assets:Bank:Checking    -$49.00
+
+2025/02/08 Lunch with client
+    Expenses:Food:Meals       $25.00
+    Assets:Bank:Checking    -$25.00
+
+2025/02/10 Bus fare
+    Expenses:Travel           $3.00
+    Assets:Cash             -$3.00
+
+2025/02/12 Online backup subscription
+    Expenses:Software         $10.00
+    Assets:Bank:Checking    -$10.00
+
+2025/02/13 Cloud server hosting
+    Expenses:Software         $30.00
+    Assets:Bank:Checking    -$30.00
+
+2025/02/15 Coffee beans
+    Expenses:Food:Coffee      $12.00
+    Assets:Bank:Checking    -$12.00
+
+2025/02/16 Book: JavaScript Mastery
+    Expenses:Professional:Education $35.00
+    Assets:Bank:Checking         -$35.00
+
+2025/02/18 Doctor appointment
+    Expenses:Healthcare         $90.00
+    Assets:Bank:Checking      -$90.00
+
+2025/02/19 Paid self-employment tax
+    Taxes:SelfEmployment      $600.00
+    Assets:Bank:Checking    -$600.00
+
+2025/02/21 Freelance income: Client D
+    Assets:Bank:Checking   $2,700.00
+    Income:Freelance      -$2,700.00
+
+2025/02/22 Mobile phone top-up
+    Expenses:Phone           $20.00
+    Assets:Cash            -$20.00
+
+2025/02/23 Internet bill
+    Expenses:Internet        $35.00
+    Assets:Bank:Checking   -$35.00
+
+2025/02/24 Power bill
+    Expenses:Utilities       $62.00
+    Assets:Bank:Checking   -$62.00
+
+2025/02/25 Website maintenance income
+    Assets:Bank:Checking   $500.00
+    Income:Freelance      -$500.00
+
+2025/02/27 Credit card payment
+    Liabilities:CreditCard  $400.00
+    Assets:Bank:Checking  -$400.00
+
+2025/02/28 Groceries
+    Expenses:Food:Meals     $90.00
+    Assets:Bank:Checking  -$90.00
+
+2025/03/01 Interest earned
+    Assets:Bank:Checking     $3.00
+    Income:Interest         -$3.00
+
+2025/03/03 Headphones
+    Expenses:Hardware       $80.00
+    Assets:Bank:Checking  -$80.00
+
+2025/03/05 Printer ink
+    Expenses:Office:Supplies $40.00
+    Assets:Bank:Checking   -$40.00
+
+2025/03/07 Software plugin
+    Expenses:Software       $22.00
+    Assets:Bank:Checking  -$22.00
+
+2025/03/10 Online storage
+    Expenses:Software       $7.00
+    Assets:Bank:Checking  -$7.00
+
+2025/03/12 Bus pass
+    Expenses:Travel         $30.00
+    Assets:Cash           -$30.00
+
+2025/03/13 Health insurance
+    Expenses:Insurance     $140.00
+    Assets:Bank:Checking -$140.00
+
+2025/03/15 Udemy course: React
+    Expenses:Professional:Education $30.00
+    Assets:Bank:Checking         -$30.00
+
+2025/03/18 Dental cleaning
+    Expenses:Healthcare         $80.00
+    Assets:Bank:Checking      -$80.00
+
+2025/03/20 Freelance income: Client E
+    Assets:Bank:Checking   $2,600.00
+    Income:Freelance      -$2,600.00
+
+2025/03/22 Coffee at Starbucks
+    Expenses:Food:Coffee      $7.00
+    Assets:Cash             -$7.00

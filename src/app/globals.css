@@ -1,0 +1,248 @@
+/* src/app/globals.css */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "highlight.js/styles/github.css"; /* Light mode code highlighting */
+
+.dark {
+  @import "highlight.js/styles/github-dark.css";
+}
+
+@custom-variant dark (&:is(.dark *));
+
+/* Theme Tokens */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-ring: var(--ring);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-destructive: var(--destructive);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --list-bullet: #757575;
+  --blockquote-border: #dadada;
+  --blockquote-text: #444;
+  --code-bg: #f7f7f7;
+  --code-border: #dadada;
+  --code-header-bg: #ededed;
+  --code-header-text: #444f5a;
+  --code-language: #757575;
+  --code-copy: #444f5a;
+  --code-copy-hover: #111;
+  --code-copied: #89581a;
+  --code-text: #23272e;
+}
+
+:root {
+  --background: #fafafa;
+  --foreground: #23272e;
+  --card: #fff;
+  --card-foreground: #23272e;
+  --popover: #fff;
+  --popover-foreground: #23272e;
+  --primary: #23272e;
+  --primary-foreground: #fafafa;
+  --secondary: #ededed;
+  --secondary-foreground: #23272e;
+  --muted: #ededed;
+  --muted-foreground: #757575;
+  --accent: #444f5a;
+  --accent-foreground: #fafafa;
+  --accent-hover: #1e293b;
+  --destructive: #e5484d;
+  --border: #dadada;
+  --input: #ededed;
+  --ring: #bbbbbb;
+  --sidebar: #f7f7f7;
+  --sidebar-foreground: #9ca3af;
+  --sidebar-border: #dadada;
+  --sidebar-ring: #bbbbbb;
+  --font-mono: "Geist Mono", "Fira Mono", "Menlo", "Monaco", "monospace";
+  --code-bg: #e5e5e5;
+  --code-text: #444f5a;
+  --inline-code-bg: #ededed;
+  --inline-code-text: #89581a;
+  --radius: 0.625rem;
+}
+
+.dark {
+  --background: #17181b;
+  --foreground: #d4d4d4;
+  --card: #1e1e1e;
+  --card-foreground: #d4d4d4;
+  --popover: #1e1e1e;
+  --popover-foreground: #d4d4d4;
+  --primary: #4ec9b0;
+  --primary-foreground: #1e1e1e;
+  --secondary: #2d2d30;
+  --secondary-foreground: #d4d4d4;
+  --muted: #2d2d30;
+  --muted-foreground: #858585;
+  --accent: #569cd6;
+  --accent-foreground: #d4d4d4;
+  --accent-hover: #b4e1ff;
+  --destructive: #ff5f57;
+  --border: #30363d;
+  --input: #2d2d30;
+  --ring: #569cd6;
+  --sidebar: #1e1e1e;
+  --sidebar-foreground: #858585;
+  --sidebar-border: #2d2d30;
+  --sidebar-ring: #569cd6;
+  --code-bg: #0d1117;
+  --code-text: #d4d4d4;
+  --code-border: #30363d;
+  --code-header-bg: #2d2d30;
+  --code-header-text: #d4d4d4;
+  --code-language: #569cd6;
+  --code-copy: #d4d4d4;
+  --code-copy-hover: #fff;
+  --code-copied: #ce9178;
+  --inline-code-bg: #2d2d30;
+  --inline-code-text: #ce9178;
+  --radius: 0.625rem;
+  --list-bullet: #569cd6;
+  --blockquote-border: #569cd6;
+  --blockquote-text: #d4d4d4;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-mono;
+  }
+}
+
+/* Scrollbar Styling - Only Vertical */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 0px;
+}
+
+::-webkit-scrollbar-thumb:vertical {
+  background-color: var(--muted);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar:horizontal {
+  display: none;
+}
+
+body,
+main,
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) transparent;
+}
+
+.dark ::-webkit-scrollbar-thumb:vertical {
+  background-color: var(--muted);
+}
+
+.dark body,
+.dark main,
+.dark html {
+  scrollbar-color: var(--muted) transparent;
+}
+
+/* Markdown Styles */
+.terminal-markdown {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.95rem;
+  color: var(--foreground);
+}
+
+.terminal-markdown h1,
+.terminal-markdown h2 {
+  color: var(--primary);
+  font-weight: bold;
+}
+
+.terminal-markdown h1 {
+  font-size: 1.25rem;
+}
+
+.terminal-markdown h2 {
+  font-size: 1.1rem;
+}
+
+.terminal-markdown a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.terminal-markdown a:hover {
+  color: var(--accent-hover);
+}
+
+/* Flatten Markdown list spacing */
+.terminal-markdown ol,
+.terminal-markdown ul {
+  padding-left: 1.25em;
+  margin-top: 0.5em;
+  margin-bottom: 1em;
+}
+
+.terminal-markdown li {
+  margin-bottom: 0.25em;
+}
+
+.terminal-markdown li > p {
+  display: inline; /* 👈 key fix */
+  margin: 0; /* remove extra spacing */
+  padding: 0;
+}
+
+.terminal-markdown strong {
+  color: var(--accent);
+}
+
+/* Editor Theme (light) */
+.editor-theme {
+  --editor-foreground: #1e1e1e; /* Or your Monaco bg */
+  --editor-background: #ffffff;
+  /* ...any other custom editor tokens... */
+}
+
+/* Editor Theme (dark) */
+.dark .editor-theme {
+  --editor-background: #1e1e1e;
+  --editor-foreground: #d4d4d4;
+}

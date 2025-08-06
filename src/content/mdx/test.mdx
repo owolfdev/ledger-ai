@@ -1,0 +1,41 @@
+{/* src/app/mdx-page/page.mdx */}
+import MyComponent from '@/components/my-component'
+
+# Welcome to my MDX page!
+
+This is some **bold** and _italics_ text.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+This is a list in markdown:
+
+- One
+- Two
+- Three
+
+> A quote.
+
+Checkout my React component:
+
+`code`
+
+```js
+import createMDX from "@next/mdx";
+import rehypeHighlight from "rehype-highlight";
+
+const withMDX = createMDX({
+  extension: /\.(md|mdx)$/,
+  options: {
+    rehypePlugins: [rehypeHighlight],
+  },
+});
+
+const nextConfig = {
+  pageExtensions: ["js", "jsx", "ts", "tsx", "md", "mdx"],
+  // Do NOT use mdxRs!
+};
+
+export default withMDX(nextConfig);
+```
+
+<MyComponent />

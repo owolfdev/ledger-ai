@@ -1,0 +1,16 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /api/*
+Disallow: /auth/*
+Disallow: /admin/*
+Disallow: /post/create/*
+Disallow: /post/edit/*
+Disallow: /page/create/*
+Disallow: /page/edit/*
+
+# Host
+Host: https://www.owolf.com/
+
+# Sitemaps
+Sitemap: https://www.owolf.com/sitemap.xml

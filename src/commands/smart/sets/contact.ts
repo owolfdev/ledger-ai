@@ -1,0 +1,20 @@
+export const contactCommandKeys = [
+  "clear",
+  "clearall",
+  "go",
+  "nav",
+  "top",
+  "esc",
+  "help",
+  "info",
+  "team",
+  "skills",
+  "user",
+  "logout",
+  "create",
+  "count",
+  "dark",
+  "light",
+  "messages",
+];
+export default contactCommandKeys;
