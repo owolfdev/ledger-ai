@@ -6,9 +6,10 @@ import { createClient } from "@/utils/supabase/client";
 import type { CachedBlogPost } from "@/types/blog";
 import { setThemeClient } from "@/lib/theme-client";
 import type { User } from "@/types/user";
-import { extractLedgerDateAndText } from "@/lib/ledger-date-parse";
-import * as chrono from "chrono-node";
-import { getLedgerDate } from "@/lib/ledger-date";
+// import { extractLedgerDateAndText } from "@/lib/ledger-date-parse";
+// import * as chrono from "chrono-node";
+// import { getLedgerDate } from "@/lib/ledger-date";
+import { LEDGER_TIMEZONE } from "@/lib/ledger-config";
 
 type CommandMap = Record<string, CommandMeta>;
 type PageEntry = { title: string; slug: string; route: string };
@@ -19,6 +20,27 @@ function cleanLedgerEntry(entry: string): string {
     .replace(/```[a-z]*\n?/gi, "") // Remove code block starts
     .replace(/```$/, "") // Remove code block ends
     .trim();
+}
+
+function getLocalDate() {
+  const now = new Date();
+  // Extract year, month, day in the desired timezone
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: LEDGER_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+
+  const yearPart = parts.find((p) => p.type === "year");
+  const monthPart = parts.find((p) => p.type === "month");
+  const dayPart = parts.find((p) => p.type === "day");
+
+  if (!yearPart || !monthPart || !dayPart) {
+    throw new Error("Could not parse date parts");
+  }
+
+  return `${yearPart.value}-${monthPart.value}-${dayPart.value}`; // e.g., "2025-08-07"
 }
 
 function parseFlags(arg: string) {
@@ -835,12 +857,16 @@ export function createHandleCommand(
         },
       ]);
 
+      const today = getLocalDate();
+
       // ---- 1. Build GPT prompt (NO PRE-PARSING) ----
       const ledgerPrompt = `
       You are a Ledger CLI entry formatter.
       
       - Output a valid Ledger CLI entry.
-      - Date must be in YYYY/MM/DD (slash) format (not dash).
+      - Date must be in YYYY/MM/DD (slash) format (not dash). Today's date is ${
+        today.toString().split("T")[0]
+      }.
       - No asterisks or quotes in the payee.
       - The payee should be just the merchant name (e.g. Starbucks).
       - Expenses should be positive, Assets:Cash negative.
@@ -848,10 +874,11 @@ export function createHandleCommand(
       - Align amounts as in the example.
       - Output only the ledger entry, nothing else, no code block, no commentary.
       - Try to get granular with subcategories.
+      - Take into account the context of the entry. Expenses will be categorized by business, personal, etc. By default entries can be personal. If the entry is for a business, it will be categorized as business. Like: Expenses:Personal:Food:Coffee (default) or Expenses:BusinessName:Food:Coffee
       
       Example:
       2025/08/06 Starbucks
-          Expenses:Food:Coffee    $5.00
+          Expenses:Personal:Food:Coffee    $5.00
           Assets:Cash           -$5.00
       
       Input: ${arg}
@@ -933,6 +960,7 @@ export function createHandleCommand(
       ]);
       return true;
     }
+
     // ----------- DATA-DRIVEN COMMANDS (must be in allowed set) ----------- //
 
     // Blog/project commands (logic only enabled if in allowed set)

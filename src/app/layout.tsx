@@ -20,8 +20,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OWolf.com",
-  description: "OWolf.com - The personal website of O. Wolfson.",
+  title: "Ledger AI",
+  description:
+    "A simple app that allows you to create and manage your ledger with the aid of artificial intelligence.",
 };
 
 export default function RootLayout({

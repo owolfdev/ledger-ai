@@ -9,8 +9,10 @@ export async function generateMetadata() {
   };
   const { metadata } = mdxModule;
   return {
-    title: metadata?.title || "OWolf.com",
-    description: metadata?.description || "OWolf's personal developer website.",
+    title: metadata?.title || "Ledger AI",
+    description:
+      metadata?.description ||
+      "Ledger AI a simple app that allows you to create and manage your ledger with the aid of artificial intelligence.",
   };
 }
 
