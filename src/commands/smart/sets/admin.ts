@@ -7,4 +7,5 @@ export const adminCommandKeys = [
   "cache-posts",
   "user",
   "logout",
+  "new",
 ];
