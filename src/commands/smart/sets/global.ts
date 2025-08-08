@@ -26,5 +26,4 @@ export const globalCommandKeys = [
   "back",
   "forward",
   "update",
-  "new",
 ];
