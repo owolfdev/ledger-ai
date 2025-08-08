@@ -1,0 +1,164 @@
+export const metadata = {
+  id: "213c2d8c-4072-4644-b073-acc9fe5e2234",
+  type: "blog",
+  title: "Ledger CLI A Beginner's Tutorial Part 2",
+  author: "O. Wolfson",
+  publishDate: "2025-08-03",
+  description: "",
+  categories: ["accounting"],
+  tags: [""],
+  modifiedDate: "",
+  image: null,
+  draft: false,
+  relatedPosts: [""],
+  link: null,
+};
+
+*Level up your plain-text accounting.*
+
+## 🗂️ Step 7: Organize With Accounts & Hierarchies
+
+Ledger accounts are hierarchical. Use colons to create subaccounts for detailed tracking.
+
+**Example:**
+
+```
+2025/08/01 Online course
+    Expenses:Education:Courses     $30.00
+    Assets:Bank:Checking         -$30.00
+```
+
+*Tip:* `ledger balance Expenses` rolls up all subaccounts under Expenses.
+
+---
+
+## 📅 Step 8: Add Dates, Payees & Notes
+
+You can include payees and more details:
+
+```
+2025/08/02 Amazon
+    Expenses:Office:Supplies   $45.00  ; new mouse
+    Assets:Bank:Checking      -$45.00
+```
+
+* The first word after the date is the payee/description.
+* Add `;` for notes.
+
+---
+
+## 🔄 Step 9: Split Transactions
+
+Split expenses across categories or accounts:
+
+```
+2025/08/03 Lunch meeting
+    Expenses:Food:Lunch         $12.00
+    Expenses:Business:Meals     $18.00
+    Assets:Bank:Checking       -$30.00
+```
+
+* Both food and business meal expenses are tracked.
+
+---
+
+## 💱 Step 10: Handling Multiple Currencies
+
+Ledger supports multiple currencies. Specify with the symbol:
+
+```
+2025/08/04 PayPal transfer
+    Assets:PayPal      €100.00
+    Income:Freelance  -€100.00
+```
+
+Or mix currencies in a split:
+
+```
+2025/08/05 Stock purchase
+    Assets:Investments:Stocks     $1000.00
+    Assets:Bank:Checking         -$500.00
+    Assets:Foreign:THB         -฿18,000.00
+```
+
+*Ledger will track balances by currency.*
+
+---
+
+## 📄 Step 11: Monthly Reports & Filtering
+
+See expenses by month:
+
+```
+ledger -f my.ledger register Expenses --period 'last month'
+```
+
+Show a single account by month:
+
+```
+ledger -f my.ledger register Expenses:Groceries --monthly
+```
+
+List all income this year:
+
+```
+ledger -f my.ledger register Income --period 'this year'
+```
+
+---
+
+## 🔍 Step 12: Search & Tag Transactions
+
+Add custom tags to transactions for easy searching:
+
+```
+2025/08/06 Taxi ; :client:projectX:
+    Expenses:Travel:Taxi    $8.50
+    Assets:Cash           -$8.50
+```
+
+Filter by tag:
+
+```
+ledger -f my.ledger register ^Expenses --grep projectX
+```
+
+---
+
+## 📊 Step 13: Budgeting & Forecasting
+
+Add periodic budgets to your file:
+
+```
+~ Monthly
+    Expenses:Groceries    $400.00
+    Expenses:Dining Out   $100.00
+```
+
+Check your spending against your budget:
+
+```
+ledger -f my.ledger budget
+```
+
+---
+
+## 🔒 Step 14: Best Practices
+
+* **Back up your .ledger file regularly.**
+* **Use version control** (like Git) for a history of edits.
+* **Consistent naming** for accounts keeps reports tidy.
+* **Validate your file:**
+
+  ```
+  ledger -f my.ledger check
+  ```
+
+---
+
+## 🏁 What’s Next?
+
+* Explore [ledger reports](https://www.ledger-cli.org/3.0/doc/ledger3.html#Reports) for more commands.
+* Try importing data (CSV, bank exports) with [Ledger tools](https://github.com/ledger/awesome-ledger#csv-bank-import).
+* Look into GUIs like [hledger-ui](https://hledger.org/hledger-ui.html).
+

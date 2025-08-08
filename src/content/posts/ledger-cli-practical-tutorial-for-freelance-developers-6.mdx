@@ -1,0 +1,273 @@
+export const metadata = {
+  id: "aaa4e261-5d51-4a12-8ce8-12373e545123",
+  type: "blog",
+  title: "Ledger CLI: Practical Tutorial for Freelance Developers",
+  author: "O. Wolfson",
+  publishDate: "2025-08-05",
+  description: "",
+  categories: ["Accounting"],
+  tags: [""],
+  modifiedDate: "",
+  image: null,
+  draft: false,
+  relatedPosts: ["ledger-cli-practical-tutorial-for-freelance-developers"],
+  link: null,
+};
+
+**Ledger CLI** is a double-entry accounting system using plain text files, commonly processed directly in the terminal. Here’s how to use your ledger file for common financial tasks.
+
+This tutorial requires some data to process in a .ledger file. You can user the [sample file](https://www.owolf.com/documents/ledger/my.ledger).
+
+---
+
+## **1. Check Your Account Balances**
+
+### **See balances for all accounts:**
+
+```bash
+ledger -f my.ledger balance
+```
+
+> _Shows how much you have/spent/owe in each account (summary view)._
+
+---
+
+### **See just your bank account balance:**
+
+```bash
+ledger -f my.ledger balance Assets:Bank:Checking
+```
+
+> _How much money is in your checking account._
+
+---
+
+### **See your total cash on hand:**
+
+```bash
+ledger -f my.ledger balance Assets:Cash
+```
+
+> _Your physical cash balance._
+
+---
+
+## **2. Track Your Spending**
+
+### **Total spent on software:**
+
+```bash
+ledger -f my.ledger balance Expenses:Software
+```
+
+> _Sum of all software/tool/service expenses._
+
+---
+
+### **Total spent on hardware:**
+
+```bash
+ledger -f my.ledger balance Expenses:Hardware
+```
+
+---
+
+### **Total spent on coffee:**
+
+```bash
+ledger -f my.ledger balance Expenses:Food:Coffee
+```
+
+---
+
+## **3. Income Overview**
+
+### **Total freelance income received:**
+
+```bash
+ledger -f my.ledger balance Income:Freelance
+```
+
+> _How much you’ve earned from freelance work (will be negative, since income is a credit)._
+
+---
+
+### **Total income from all sources:**
+
+```bash
+ledger -f my.ledger balance ^Income
+```
+
+> _The caret (^) matches all accounts starting with 'Income'._
+
+---
+
+## **4. View Transaction History**
+
+### **Show a register (checkbook) for your bank account:**
+
+```bash
+ledger -f my.ledger register Assets:Bank:Checking
+```
+
+> _Shows every deposit/withdrawal, date, payee, and running balance._
+
+---
+
+### **Show a register for a specific expense (e.g., coffee):**
+
+```bash
+ledger -f my.ledger register Expenses:Food:Coffee
+```
+
+---
+
+### **Show all transactions involving a specific keyword:**
+
+```bash
+ledger -f my.ledger register Starbucks
+```
+
+> _Any posting with “Starbucks” in the description._
+
+---
+
+## **5. Budgeting and Reports by Category**
+
+### **Sum by top-level category (e.g., all Expenses):**
+
+```bash
+ledger -f my.ledger balance ^Expenses
+```
+
+> _Total expenses, broken down by sub-account._
+
+---
+
+### **Monthly spending report:**
+
+```bash
+ledger -f my.ledger register ^Expenses --monthly
+```
+
+> _Expenses, grouped by month._
+
+---
+
+## **6. Advanced Filtering**
+
+### **Spending in a specific period:**
+
+```bash
+ledger -f my.ledger register ^Expenses --period "2025/02"
+```
+
+> _All expenses in February 2025._
+
+---
+
+### **Income for a specific client:**
+
+```bash
+ledger -f my.ledger register Client\ A
+```
+
+> _Transactions with “Client A” in the description._
+
+---
+
+### **Filter by tag in description (e.g., #education):**
+
+If you use tags in descriptions (like `#education`):
+
+```bash
+ledger -f my.ledger register '#education'
+```
+
+---
+
+## **7. Tax and Business Deductions**
+
+### **Sum of deductible expenses (e.g., hardware, software, education):**
+
+```bash
+ledger -f my.ledger balance Expenses:Hardware Expenses:Software Expenses:Professional:Education
+```
+
+> _Add more accounts as needed for tax time!_
+
+---
+
+### **Total paid in taxes:**
+
+```bash
+ledger -f my.ledger balance ^Taxes
+```
+
+---
+
+## **8. Miscellaneous**
+
+### **Show all transactions (chronologically):**
+
+```bash
+ledger -f my.ledger register
+```
+
+---
+
+### **Show only top-level account balances (condensed):**
+
+```bash
+ledger -f my.ledger balance --depth 2
+```
+
+> _Only two levels deep, for a summarized view._
+
+---
+
+## **9. Export and Save Reports**
+
+You can redirect output to a file:
+
+```bash
+ledger -f my.ledger balance > balances.txt
+ledger -f my.ledger register Expenses:Software > software_spending.txt
+```
+
+---
+
+## **10. Help and Reference**
+
+```bash
+ledger --help
+ledger help balance
+ledger help register
+```
+
+---
+
+# **Summary Table**
+
+| Command                                | What it shows                      |
+| -------------------------------------- | ---------------------------------- |
+| `ledger balance`                       | All account balances               |
+| `ledger balance Assets:Bank:Checking`  | Bank balance                       |
+| `ledger balance Expenses:Food:Coffee`  | Coffee spending total              |
+| `ledger register Assets:Bank:Checking` | Bank transaction history           |
+| `ledger register Starbucks`            | All Starbucks-related transactions |
+| `ledger balance ^Expenses`             | All expenses by sub-account        |
+| `ledger register ^Expenses --monthly`  | Expenses by month                  |
+| `ledger register --period "2025/02"`   | All Feb 2025 transactions          |
+
+---
+
+## **Want More?**
+
+You can:
+
+- Add tags in descriptions for finer tracking.
+- Use `--csv` to export for spreadsheets.
+- Combine filters for powerful queries.
+
+

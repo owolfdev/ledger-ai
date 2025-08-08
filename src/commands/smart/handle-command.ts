@@ -10,6 +10,8 @@ import type { User } from "@/types/user";
 // import * as chrono from "chrono-node";
 // import { getLedgerDate } from "@/lib/ledger-date";
 import { LEDGER_TIMEZONE } from "@/lib/ledger-config";
+import { createLedgerEntry } from "@/app/actions/ledger/create-ledger-entry"; // <-- server action
+import { syncLedgerFile } from "@/app/actions/ledger/sync-ledger-file";
 
 type CommandMap = Record<string, CommandMeta>;
 type PageEntry = { title: string; slug: string; route: string };
@@ -846,6 +848,7 @@ export function createHandleCommand(
     }
 
     // --- NEW: LEDGER ENTRY from plain language ---
+
     if (base === "new" && commands[base]) {
       setHistory([
         ...(history ?? []),
@@ -859,31 +862,30 @@ export function createHandleCommand(
 
       const today = getLocalDate();
 
-      // ---- 1. Build GPT prompt (NO PRE-PARSING) ----
+      // --- 1. Build AI prompt ---
       const ledgerPrompt = `
-      You are a Ledger CLI entry formatter.
-      
-      - Output a valid Ledger CLI entry.
-      - Date must be in YYYY/MM/DD (slash) format (not dash). Today's date is ${
-        today.toString().split("T")[0]
-      }.
-      - No asterisks or quotes in the payee.
-      - The payee should be just the merchant name (e.g. Starbucks).
-      - Expenses should be positive, Assets:Cash negative.
-      - Timezone: Asia/Bangkok
-      - Align amounts as in the example.
-      - Output only the ledger entry, nothing else, no code block, no commentary.
-      - Try to get granular with subcategories.
-      - Take into account the context of the entry. Expenses will be categorized by business, personal, etc. By default entries can be personal. If the entry is for a business, it will be categorized as business. Like: Expenses:Personal:Food:Coffee (default) or Expenses:BusinessName:Food:Coffee
-      
-      Example:
-      2025/08/06 Starbucks
-          Expenses:Personal:Food:Coffee    $5.00
-          Assets:Cash           -$5.00
-      
-      Input: ${arg}
-      `.trim();
+You are a Ledger CLI entry formatter.
+- Output a valid Ledger CLI entry.
+- Date must be in YYYY/MM/DD (slash) format (not dash). Today's date is ${today}.
+- No asterisks or quotes in the payee.
+- The payee should be just the merchant name (e.g. Starbucks).
+- Expenses should be positive, Assets:Cash negative.
+- Timezone: Asia/Bangkok
+- Align amounts as in the example.
+- Output only the ledger entry, nothing else, no code block, no commentary.
+- Try to get granular with subcategories.
+- Take into account the context of the entry. Expenses will be categorized by business, personal, etc. By default entries can be personal. If the entry is for a business, it will be categorized as business. Like: Expenses:Personal:Food:Coffee (default) or Expenses:BusinessName:Food:Coffee
 
+Example:
+2025/08/06 Starbucks
+    Expenses:Personal:Food:Coffee    $5.00
+    Assets:Cash           -$5.00
+
+Input: ${arg}
+`.trim();
+
+      // --- 2. Generate the ledger entry using OpenAI ---
+      let ledgerEntry = "";
       const openaiRes = await fetch("/api/openai", {
         method: "POST",
         body: JSON.stringify({
@@ -892,8 +894,6 @@ export function createHandleCommand(
         }),
       });
 
-      // ---- 2. Read GPT-4 streamed output ----
-      let ledgerEntry = "";
       if (openaiRes.body) {
         const reader = openaiRes.body.getReader();
         const decoder = new TextDecoder();
@@ -928,7 +928,7 @@ export function createHandleCommand(
 
       ledgerEntry = cleanLedgerEntry(ledgerEntry);
 
-      // ---- 3. Show and save ----
+      // --- 3. Show ledger code block in UI ---
       setHistory((h) => [
         ...h.slice(0, -1),
         {
@@ -938,20 +938,23 @@ export function createHandleCommand(
         },
       ]);
 
+      // --- 4. Save to Supabase via server action ---
       let saveResult = "";
       try {
-        const apiRes = await fetch("/api/ledger/append", {
-          method: "POST",
-          headers: { "Content-Type": "text/plain" },
-          body: ledgerEntry,
+        // Optionally pass business_id if you have it in context
+        await createLedgerEntry({
+          entry_text: ledgerEntry,
+          entry_raw: arg,
+          // business_id: businessId || null, // add this if you track business in UI
         });
-        if (apiRes.ok) {
-          saveResult = "_✅ Entry saved to your ledger file._";
+        await syncLedgerFile();
+        saveResult = "_✅ Entry saved to your ledger (Supabase)_";
+      } catch (e: unknown) {
+        if (e instanceof Error) {
+          saveResult = `<my-alert message="❌ Error saving to ledger: ${e.message}" />`;
         } else {
-          saveResult = `<my-alert message="❌ Could not save to ledger file." />`;
+          saveResult = `<my-alert message="❌ Error saving to ledger: Unknown error" />`;
         }
-      } catch (e) {
-        saveResult = `<my-alert message="❌ Error saving to ledger file." />`;
       }
 
       setHistory((h) => [

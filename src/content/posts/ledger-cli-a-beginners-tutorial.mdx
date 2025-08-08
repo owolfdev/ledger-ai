@@ -1,0 +1,157 @@
+export const metadata = {
+  id: "daa4e261-5d51-4ab8-8ce8-21873e545809",
+  type: "blog",
+  title: "Ledger CLI A Beginner's Tutorial",
+  author: "O. Wolfson",
+  publishDate: "2025-07-31",
+  description: "",
+  categories: ["accounting"],
+  tags: [""],
+  modifiedDate: "",
+  image: null,
+  draft: false,
+  relatedPosts: ["ledger-cli-a-beginners-tutorial-part-2"],
+  link: null,
+};
+
+# 🧾 Ledger CLI: A Beginner’s Tutorial
+
+> Track your money using plain text files and the command line!
+
+---
+
+## 📦 Step 1: Install Ledger CLI
+
+### Mac (with Homebrew):
+
+```bash
+brew install ledger
+```
+
+### Linux (Debian/Ubuntu):
+
+```bash
+sudo apt install ledger
+```
+
+### Windows:
+
+- Use [WSL](https://learn.microsoft.com/en-us/windows/wsl/) or download from [https://ledger-cli.org](https://ledger-cli.org)
+
+---
+
+## 📁 Step 2: Create a `.ledger` File
+
+Create a plain text file called `my.ledger`:
+
+```bash
+touch my.ledger
+```
+
+Then open it in your favorite editor (VS Code, Vim, etc).
+
+---
+
+## ✍️ Step 3: Add Your First Transaction
+
+Paste this into `my.ledger`:
+
+```ledger
+2025/07/22 Bought groceries
+    Expenses:Groceries         $50.00
+    Assets:Bank:Checking      -$50.00
+```
+
+This means:
+
+- You spent \$50 on groceries
+- The money came from your bank account
+
+---
+
+## 📊 Step 4: See Your Account Balances
+
+In the terminal, run:
+
+```bash
+ledger -f my.ledger balance
+```
+
+Output:
+
+```
+           $50.00  Expenses:Groceries
+          -$50.00  Assets:Bank:Checking
+--------------------
+                   0
+```
+
+---
+
+## ➕ Step 5: Add More Transactions
+
+Append more entries like:
+
+```ledger
+2025/07/23 Freelance income
+    Assets:Bank:Checking      $500.00
+    Income:Freelance         -$500.00
+
+2025/07/24 Rent payment
+    Expenses:Housing:Rent     $700.00
+    Assets:Bank:Checking     -$700.00
+```
+
+Then run:
+
+```bash
+ledger -f my.ledger register
+```
+
+To see a **checkbook-style ledger**.
+
+---
+
+## 🔎 Step 6: Filter by Account
+
+```bash
+ledger -f my.ledger register Expenses
+```
+
+Or:
+
+```bash
+ledger -f my.ledger balance Income
+```
+
+---
+
+## 🧠 Bonus Tips
+
+- Transactions must **balance to zero**
+- Indent all account lines with **spaces**, not tabs
+- Use `;` for comments
+
+Example with a comment:
+
+```ledger
+2025/07/25 Coffee at cafe
+    Expenses:Food:Coffee      $3.50   ; morning espresso
+    Assets:Cash              -$3.50
+```
+
+---
+
+## ✅ Next Steps
+
+- Try splitting an expense (e.g. part business, part personal)
+- Create your own categories like `Expenses:Business:Marketing`
+- Add `Income:Property:Rent`, `Expenses:Health:Insurance`, etc.
+
+---
+
+## 📚 Resources
+
+- Official site: [https://ledger-cli.org](https://ledger-cli.org)
+- Cheatsheet: [https://plaintextaccounting.org](https://plaintextaccounting.org)
+- Book: _Ledger CLI Pocket Reference_
