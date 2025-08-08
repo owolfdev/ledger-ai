@@ -1,7 +1,3 @@
-Absolutely! Here’s a **revised technical system reference** for your terminal command architecture, **including all recent changes**:
-
----
-
 # Terminal Command System (Ledger App) — Technical Reference
 
 _Updated: August 2025_
