@@ -167,3 +167,380 @@ new coffee starbucks Channel 60 $5
 Let me know if you want a **code block for the key sync/read/write actions** or a **diagram** of the architecture!
 
 ---
+
+├── actions
+│   └── comments
+│   ├── add-comment.ts
+│   ├── approve-comment.ts
+│   ├── delete-comment.ts
+│   └── edit-comment.ts
+├── app
+│   ├── about
+│   │   └── page.tsx
+│   ├── actions
+│   │   ├── actions.ts
+│   │   ├── auth-actions.ts
+│   │   ├── cache-actions.ts
+│   │   ├── cache-bak-remove
+│   │   │   └── generate-posts-cache.ts
+│   │   ├── comments
+│   │   │   └── get-comments.ts
+│   │   ├── contact
+│   │   │   └── get-contact-messages.ts
+│   │   ├── create-new-post-action.ts
+│   │   ├── delete-post-action.ts
+│   │   ├── edit-post-action.ts
+│   │   ├── editor
+│   │   │   ├── delete-post.ts
+│   │   │   └── save-post.ts
+│   │   ├── ledger
+│   │   │   ├── create-ledger-entry.ts
+│   │   │   ├── get-ledger-entries.ts
+│   │   │   ├── read-ledger-file.ts
+│   │   │   └── sync-ledger-file.ts
+│   │   ├── like-actions.ts
+│   │   ├── mdx
+│   │   │   └── fetch-mdx-raw.ts
+│   │   ├── open-actions.ts
+│   │   ├── pages
+│   │   │   ├── create-new-page-action.ts
+│   │   │   ├── edit-page-action.ts
+│   │   │   └── get-page.ts
+│   │   └── posts
+│   │   ├── get-popular-posts.ts
+│   │   ├── get-post.ts
+│   │   ├── get-posts.ts
+│   │   └── getRelatedPostTitles.ts
+│   ├── api
+│   │   ├── admin
+│   │   │   └── cache-posts
+│   │   │   └── route.ts
+│   │   ├── ai-usage
+│   │   │   └── route.ts
+│   │   ├── contact-messages
+│   │   │   └── route.ts
+│   │   ├── ledger
+│   │   │   └── append
+│   │   │   └── route.ts
+│   │   ├── mdx-raw
+│   │   │   └── route.ts
+│   │   └── openai
+│   │   └── route.ts
+│   ├── apple-icon.png
+│   ├── auth
+│   │   ├── confirm
+│   │   │   └── route.ts
+│   │   ├── error
+│   │   │   └── page.tsx
+│   │   ├── forgot-password
+│   │   │   └── page.tsx
+│   │   ├── login
+│   │   │   └── page.tsx
+│   │   ├── sign-up
+│   │   │   └── page.tsx
+│   │   ├── sign-up-success
+│   │   │   └── page.tsx
+│   │   └── update-password
+│   │   └── page.tsx
+│   ├── blog
+│   │   ├── [slug]
+│   │   │   └── page.tsx
+│   │   └── page.tsx
+│   ├── contact
+│   │   └── page.tsx
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── loading-bak.tsx
+│   ├── loading.tsx
+│   ├── not-found.tsx
+│   ├── page.tsx
+│   ├── post
+│   │   ├── create
+│   │   │   └── [slug]
+│   │   │   ├── layout.tsx
+│   │   │   └── page.tsx
+│   │   ├── edit
+│   │   │   └── [slug]
+│   │   │   ├── layout.tsx
+│   │   │   └── page.tsx
+│   │   └── page.tsx
+│   ├── privacy-policy
+│   │   └── page.tsx
+│   ├── projects
+│   │   ├── [slug]
+│   │   │   └── page.tsx
+│   │   └── page.tsx
+│   └── protected
+│   └── page.tsx
+├── commands
+│   ├── smart
+│   │   ├── handle-command.ts
+│   │   ├── registry.ts
+│   │   ├── sets
+│   │   │   ├── about.ts
+│   │   │   ├── admin.ts
+│   │   │   ├── blog.ts
+│   │   │   ├── contact.ts
+│   │   │   ├── global.ts
+│   │   │   ├── home.ts
+│   │   │   ├── post.ts
+│   │   │   ├── privacy.ts
+│   │   │   └── projects.ts
+│   │   └── utils.ts
+│   └── utils.ts
+├── components
+│   ├── alerts
+│   │   ├── custom-alert.tsx
+│   │   └── production-mode-alert.tsx
+│   ├── auth-button.tsx
+│   ├── blog
+│   │   └── blog-layout-wrapper.tsx
+│   ├── code
+│   │   ├── code.tsx
+│   │   ├── inline-code.tsx
+│   │   └── pre.tsx
+│   ├── comments
+│   │   ├── comment-form.tsx
+│   │   ├── comment-list.tsx
+│   │   └── comment-section.tsx
+│   ├── compliance
+│   │   ├── cookie-consent-banner.tsx
+│   │   └── cookie-consent-manager.tsx
+│   ├── contact
+│   │   └── contact-form.tsx
+│   ├── editor
+│   │   └── monaco-mdx-editor.tsx
+│   ├── examples
+│   │   ├── charts
+│   │   ├── chat
+│   │   │   └── command-console.tsx
+│   │   ├── code-type-animation.tsx
+│   │   ├── cookie-jar.tsx
+│   │   ├── copy-to-clipboard
+│   │   │   ├── copy-image.tsx
+│   │   │   └── copy-text.tsx
+│   │   ├── css
+│   │   │   ├── box-model-visualizer.tsx
+│   │   │   ├── display-type-visualizer.tsx
+│   │   │   ├── em-vs-rem.tsx
+│   │   │   ├── position-visualizer.tsx
+│   │   │   └── selectors-demo.tsx
+│   │   ├── custom-button.tsx
+│   │   ├── drawing
+│   │   ├── dynamic-input-popup copy.tsx
+│   │   ├── dynamic-input-popup.tsx
+│   │   ├── fetch-vs-axios
+│   │   │   ├── axios-component.tsx
+│   │   │   └── fetch-component.tsx
+│   │   ├── forms
+│   │   │   └── form-data-demo.tsx
+│   │   ├── geolocation
+│   │   │   └── geolocation-tracker.tsx
+│   │   ├── html
+│   │   ├── media
+│   │   │   ├── custom-audio-player.tsx
+│   │   │   ├── eq-visualizer.tsx
+│   │   │   ├── example-player.tsx
+│   │   │   └── video-with-subtitles.tsx
+│   │   ├── tailwind-colors.tsx
+│   │   ├── typescript
+│   │   │   ├── typed-input-usage.tsx
+│   │   │   └── typed-input.tsx
+│   │   └── useref
+│   │   ├── focus-input-no-useref.tsx
+│   │   ├── focus-input-with-useref.tsx
+│   │   ├── track-previous-state-cannot.tsx
+│   │   └── track-previous-state-with-useref.tsx
+│   ├── forgot-password-form.tsx
+│   ├── graphics
+│   │   └── noisy-logo
+│   │   ├── noisy-logo-test.tsx
+│   │   └── noisy-logo.tsx
+│   ├── like
+│   │   └── like-button.tsx
+│   ├── login-form.tsx
+│   ├── logout-button.tsx
+│   ├── mdx
+│   │   ├── accordion-component.tsx
+│   │   ├── code.tsx
+│   │   ├── custom-button.tsx
+│   │   ├── custom-link.tsx
+│   │   ├── iframe.tsx
+│   │   ├── image.tsx
+│   │   ├── inline-code.tsx
+│   │   ├── mdx-content.tsx
+│   │   ├── pre.tsx
+│   │   ├── regex-highlighter-component.tsx
+│   │   └── youtube.tsx
+│   ├── multi-select
+│   │   ├── multi-select-test.tsx
+│   │   └── shcn-multi-select-categories.tsx
+│   ├── my-component.tsx
+│   ├── nav
+│   │   ├── footer.tsx
+│   │   ├── header.tsx
+│   │   └── links-sheet.tsx
+│   ├── posts
+│   │   ├── back-button.tsx
+│   │   ├── blog-post-list.tsx
+│   │   ├── edit-post-button.tsx
+│   │   ├── open-in-cursor-button.tsx
+│   │   ├── open-in-vs-code-button.tsx
+│   │   ├── popular-posts.tsx
+│   │   ├── progress-bar.tsx
+│   │   ├── project-post-list.tsx
+│   │   ├── related-posts.tsx
+│   │   ├── search-posts.tsx
+│   │   ├── select-limit-posts.tsx
+│   │   └── sort-posts.tsx
+│   ├── sign-up-form.tsx
+│   ├── terminal
+│   │   ├── custom-mdx-components.tsx
+│   │   ├── smart-terminal.tsx
+│   │   ├── terminal-loading.tsx
+│   │   ├── terminal-output-renderer.tsx
+│   │   ├── terminal-reset-button.tsx
+│   │   └── terminal.tsx
+│   ├── theme
+│   │   └── mode-toggle.tsx
+│   ├── theme-bridge.tsx
+│   ├── theme-provider.tsx
+│   ├── typography
+│   │   ├── font-hero
+│   │   │   ├── font-hero.tsx
+│   │   │   ├── fonts
+│   │   │   │   └── CS Noire-Light.otf
+│   │   │   └── fonts.ts
+│   │   ├── hyphenated-title
+│   │   │   └── ht.tsx
+│   │   ├── random-font-hero
+│   │   │   ├── fonts
+│   │   │   │   ├── CS-5uper.otf
+│   │   │   │   ├── CS-Defiant2.woff2
+│   │   │   │   ├── CS-Endless.woff2
+│   │   │   │   ├── CS-Glare.otf
+│   │   │   │   └── CS-Noire-Black.otf
+│   │   │   ├── fonts.ts
+│   │   │   └── random-font-hero.tsx
+│   │   └── random-font-hero-home
+│   │   ├── fonts
+│   │   │   ├── CS-5uper.otf
+│   │   │   ├── CS-Defiant2.woff2
+│   │   │   ├── CS-Endless.woff2
+│   │   │   ├── CS-Glare.otf
+│   │   │   └── CS-Noire-Black.otf
+│   │   ├── fonts.ts
+│   │   └── random-font-hero.tsx
+│   ├── ui
+│   │   ├── accordion.tsx
+│   │   ├── alert.tsx
+│   │   ├── badge.tsx
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   ├── checkbox.tsx
+│   │   ├── command.tsx
+│   │   ├── dialog.tsx
+│   │   ├── dropdown-menu.tsx
+│   │   ├── input.tsx
+│   │   ├── label.tsx
+│   │   ├── popover.tsx
+│   │   ├── select.tsx
+│   │   ├── sheet.tsx
+│   │   ├── sonner.tsx
+│   │   ├── textarea.tsx
+│   │   ├── toast.tsx
+│   │   └── toaster.tsx
+│   └── update-password-form.tsx
+├── content
+│   ├── mdx
+│   │   └── test.mdx
+│   ├── pages
+│   │   ├── about.mdx
+│   │   ├── blog.mdx
+│   │   ├── contact.mdx
+│   │   ├── create.mdx
+│   │   ├── edit.mdx
+│   │   ├── home.mdx
+│   │   ├── post.mdx
+│   │   ├── privacy.mdx
+│   │   ├── projects.mdx
+│   │   ├── protected.mdx
+│   │   └── welcome.mdx
+│   └── posts
+│   ├── ledger-cli-a-beginners-tutorial-part-2.mdx
+│   ├── ledger-cli-a-beginners-tutorial.mdx
+│   └── ledger-cli-practical-tutorial-for-freelance-developers-6.mdx
+├── data
+│   ├── layer
+│   │   ├── blog-fs.ts
+│   │   └── blog.ts
+│   ├── ledger
+│   │   └── general.ledger
+│   ├── pages-list.ts
+│   └── routes.ts
+├── hooks
+│   ├── use-terminal-scroll-keys.ts
+│   └── use-toast.ts
+├── lib
+│   ├── cache
+│   │   ├── generate-cache-posts.mjs
+│   │   └── generate-cache-posts.ts
+│   ├── chat
+│   │   └── generate-title.ts
+│   ├── comments
+│   │   └── local-storage.ts
+│   ├── config
+│   │   └── config.js
+│   ├── keyword-utils.ts
+│   ├── ledger
+│   │   ├── is-local-write-enabled.ts
+│   │   └── parse-ledger-entry.ts
+│   ├── ledger-config.ts
+│   ├── ledger-date-parse.ts
+│   ├── ledger-date.ts
+│   ├── openai.ts
+│   ├── posts
+│   │   └── get-posts.mjs
+│   ├── scripts
+│   │   ├── embedding.ts
+│   │   ├── generate-system-prompt.ts
+│   │   └── populate-likes.mjs
+│   ├── stopwords.ts
+│   ├── theme-client.ts
+│   ├── utils
+│   │   └── is-dev-mode.js
+│   ├── utils.ts
+│   └── web
+│   └── scrape.ts
+├── types
+│   ├── blog.ts
+│   ├── comment.ts
+│   ├── monaco-vim.d.ts
+│   ├── post-metadata.ts
+│   ├── terminal.ts
+│   └── user.ts
+└── utils
+├── cn.ts
+├── commands-serialize.ts
+├── openai
+│   ├── get-client-ip.ts
+│   └── rate-limit.ts
+├── rate-limit-redis.ts
+├── supabase
+│   ├── check-env-vars.ts
+│   ├── client.ts
+│   ├── get-user.ts
+│   ├── middleware.ts
+│   └── server.ts
+└── utils.ts
+
+flowchart TD
+A[User input in React Terminal] --> B[AI parses to Ledger CLI format]
+B --> C[parseLedgerEntry extracts fields]
+C --> D[Lookup business in Supabase]
+D --> E[Write ledger entry row to Supabase]
+E -->|If LOCAL_LEDGER_WRITE=true| F[Sync all entries from Supabase to .ledger file]
+F --> G[Local .ledger file updated]
+G -->|Dev only| H[Run Ledger CLI commands]
+H --> I[Show CLI output in terminal UI]
