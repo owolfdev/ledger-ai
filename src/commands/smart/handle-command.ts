@@ -10,12 +10,13 @@ import type { User } from "@/types/user";
 // import * as chrono from "chrono-node";
 // import { getLedgerDate } from "@/lib/ledger-date";
 import { LEDGER_TIMEZONE } from "@/lib/ledger-config";
-import { createLedgerEntry } from "@/app/actions/ledger/create-ledger-entry"; // <-- server action
-import { syncLedgerFile } from "@/app/actions/ledger/sync-ledger-file";
-import {
-  autoBalanceLedgerEntry,
-  LedgerLine,
-} from "@/lib/ledger/auto-balance-ledger-entry";
+// import { createLedgerEntry } from "@/app/actions/ledger/create-ledger-entry"; // <-- server action
+// import { syncLedgerFile } from "@/app/actions/ledger/sync-ledger-file";
+// import {
+//   autoBalanceLedgerEntry,
+//   LedgerLine,
+// } from "@/lib/ledger/auto-balance-ledger-entry";
+import { handleNew } from "@/commands/smart/new-command-handler";
 
 type CommandMap = Record<string, CommandMeta>;
 type PageEntry = { title: string; slug: string; route: string };
@@ -854,181 +855,9 @@ export function createHandleCommand(
     // --- NEW: LEDGER ENTRY from plain language ---
 
     if (base === "new" && commands[base]) {
-      setHistory([
-        ...(history ?? []),
-        { type: "input", content: cmd },
-        {
-          type: "output",
-          content: "_Creating Ledger entry..._",
-          format: "markdown",
-        },
-      ]);
-
-      const today = getLocalDate();
-
-      // --- 1. Build AI prompt ---
-      const ledgerPrompt = `
-You are a Ledger CLI entry formatter.
-
-- Output a valid, balanced Ledger CLI entry for each input.
-- Date must be in YYYY/MM/DD (slash) format (not dash). Today's date is ${today}.
-- No asterisks or quotes in the payee.
-- The payee should be just the merchant name (e.g. Starbucks).
-- Expenses must be positive; Assets:Cash must be negative.
-- The entry **must balance exactly**: all expense and asset lines must sum to zero.
-- The sum of all expense lines (including tax) must exactly match the total amount paid.
-- If there is a rounding difference, adjust the smallest line or add an Expenses:Personal:Misc line to ensure the entry balances.
-- Align amounts as in the example.
-- Output only the ledger entry—no code blocks, no commentary, nothing else.
-- Use granular subcategories where possible, based on context.
-- Categorize as business or personal as appropriate; default to personal.
-- If unable to classify a purchase, use Expenses:Personal:Misc.
-- Timezone: Asia/Bangkok
-
-Example:
-2025/08/06 Starbucks
-    Expenses:Personal:Food:Coffee    $5.00
-    Assets:Cash           -$5.00
-
-Input: ${arg}
-`.trim();
-
-      // --- 2. Generate the ledger entry using OpenAI ---
-      let ledgerEntry = "";
-      const openaiRes = await fetch("/api/openai", {
-        method: "POST",
-        body: JSON.stringify({
-          prompt: ledgerPrompt,
-          systemPrompt: "You are an expert at writing Ledger CLI entries.",
-        }),
-      });
-
-      if (openaiRes.body) {
-        const reader = openaiRes.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-        let done = false;
-        while (!done) {
-          const { value, done: doneReading } = await reader.read();
-          done = doneReading;
-          if (value) buffer += decoder.decode(value, { stream: !done });
-        }
-        ledgerEntry = buffer
-          .split("\n")
-          .map((line) => {
-            if (!line.startsWith("data:")) return "";
-            if (line.includes("[DONE]")) return "";
-            try {
-              const j = JSON.parse(line.replace(/^data:\s*/, ""));
-              return j.choices?.[0]?.delta?.content || "";
-            } catch {
-              return "";
-            }
-          })
-          .join("");
-      } else {
-        ledgerEntry = await openaiRes.text();
-      }
-
-      ledgerEntry = ledgerEntry
-        .replace(/```[a-z]*\n?/gi, "")
-        .replace(/```$/, "")
-        .trim();
-
-      ledgerEntry = cleanLedgerEntry(ledgerEntry);
-
-      // Helper to parse ledger lines (excluding date/payee line)
-      function parseLedgerLines(entry: string): LedgerLine[] {
-        // Skips first line (date/payee), expects: '    Account             $Amount'
-        return entry
-          .split("\n")
-          .slice(1)
-          .map((line) => {
-            const m = line.trim().match(/^([A-Za-z:]+)\s+(-?\$?\d+\.\d{2})$/);
-            if (!m) return null;
-            return {
-              account: m[1],
-              amount: parseFloat(m[2].replace("$", "")),
-            };
-          })
-          .filter(Boolean) as LedgerLine[];
-      }
-
-      function formatLedgerLines(
-        dateLine: string,
-        lines: LedgerLine[]
-      ): string {
-        return [
-          dateLine,
-          ...lines.map(
-            (l) =>
-              `    ${l.account.padEnd(30)}${
-                l.amount >= 0 ? " " : ""
-              }$${l.amount.toFixed(2)}`
-          ),
-        ].join("\n");
-      }
-
-      // ---- Insert auto-balance step ----
-      const lines = ledgerEntry.split("\n");
-      const dateLine = lines[0];
-      const parsedLines = parseLedgerLines(ledgerEntry);
-
-      let balancedLines: LedgerLine[];
-      try {
-        balancedLines = autoBalanceLedgerEntry(parsedLines); // will throw if not balanceable
-        ledgerEntry = formatLedgerLines(dateLine, balancedLines);
-      } catch (e) {
-        // Handle (show user, etc.)
-        ledgerEntry += "\n; ⚠️ Entry not balanced: " + (e as Error).message;
-      }
-
-      // --- 3. Show ledger code block in UI (unchanged)
-      setHistory((h) => [
-        ...h.slice(0, -1),
-        {
-          type: "output",
-          content: "```ledger\n" + ledgerEntry + "\n```",
-          format: "markdown",
-        },
-      ]);
-
-      // --- 3. Show ledger code block in UI ---
-      setHistory((h) => [
-        ...h.slice(0, -1),
-        {
-          type: "output",
-          content: "```ledger\n" + ledgerEntry + "\n```",
-          format: "markdown",
-        },
-      ]);
-
-      // --- 4. Save to Supabase via server action ---
-      let saveResult = "";
-      try {
-        // Optionally pass business_id if you have it in context
-        await createLedgerEntry({
-          entry_text: ledgerEntry,
-          entry_raw: arg,
-          // business_id: businessId || null, // add this if you track business in UI
-        });
-        await syncLedgerFile();
-        saveResult = "_✅ Entry saved to your ledger (Supabase)_";
-      } catch (e: unknown) {
-        if (e instanceof Error) {
-          saveResult = `<my-alert message="❌ Error saving to ledger: ${e.message}" />`;
-        } else {
-          saveResult = `<my-alert message="❌ Error saving to ledger: Unknown error" />`;
-        }
-      }
-
-      setHistory((h) => [
-        ...h,
-        { type: "output", content: saveResult, format: "markdown" },
-      ]);
+      await handleNew(setHistory, cmd, arg);
       return true;
     }
-
     // ----------- DATA-DRIVEN COMMANDS (must be in allowed set) ----------- //
 
     // Blog/project commands (logic only enabled if in allowed set)
