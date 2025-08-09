@@ -1,108 +1,283 @@
 // /lib/ledger/parse-manual-command.ts
-// Parse a simple natural-language "new" command into a structured receipt shape.
-// Examples:
-//   "new coffee starbucks $4"
-//   "new 2025/08/09 lunch @ mcdonalds 150 thb"
-//   "new taxi 320"
 
-export type NLParseResult = {
-  date: string; // YYYY-MM-DD
-  payee: string; // merchant/payee
-  note?: string; // free text remainder
-  currency: string; // ISO-ish ('THB', 'USD')
-  receipt: {
-    items: { description: string; price: number }[];
-    subtotal: number | null;
-    tax: number | null;
-    total: number | null;
-  };
+import { ReceiptShape, ReceiptItem } from "./build-postings-from-receipt";
+
+export function formatLocalDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function todayLocal(): string {
+  return formatLocalDate(new Date());
+}
+
+export const PARSER_GRAMMAR = {
+  date: {
+    description:
+      "Optional date, defaults to today. Supports relative dates and common formats.",
+    examples: ["2025/08/10", "yesterday", "last Friday", "2 days ago"],
+  },
+  items: {
+    description:
+      "One or more <desc> $<amount> pairs, optionally with quantity, unit price, and category override.",
+    examples: [
+      "coffee $5",
+      "2x coffee @ $5",
+      "apples $10 Expenses:Personal:Groceries",
+      "tax $2.78",
+    ],
+  },
+  paymentMethods: {
+    description: "Optional, defaults to cash. Maps aliases to account names.",
+    map: {
+      "credit card": "Liabilities:CreditCard",
+      "bank card": "Assets:Bank:Checking",
+      paypal: "Assets:PayPal",
+      cash: "Assets:Cash",
+    },
+  },
+  memo: {
+    description: 'Optional memo stored in DB. Format: memo "<text>"',
+    example: 'memo "weekly groceries"',
+  },
+  currency: {
+    description:
+      "Currency symbol or ISO code, defaults to config default (THB).",
+    examples: ["$5", "5 USD", "฿100"],
+  },
+} as const;
+
+type ParsedItem = ReceiptItem & {
+  quantity?: number;
+  category?: string;
 };
 
-// Normalize supported currency tokens → code
-function normCurrency(tok?: string | null): string {
-  if (!tok) return "THB";
-  const t = tok.trim().toUpperCase();
-  if (t === "$" || t === "USD") return "USD";
-  if (t === "฿" || t === "THB") return "THB";
-  if (t === "EUR" || t === "€") return "EUR";
-  if (/^[A-Z]{3}$/.test(t)) return t;
-  return "THB";
-}
+function tokenize(input: string): string[] {
+  const tokens: string[] = [];
+  let buffer = "";
+  let inQuotes = false;
 
-function pad2(n: number) {
-  return n < 10 ? `0${n}` : String(n);
-}
-
-export function getLocalDateYYYYMMDD(d = new Date()): string {
-  // Use local timezone
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-}
-
-/**
- * Very small parser that looks for:
- * - optional date at start: YYYY/MM/DD or YYYY-MM-DD
- * - amount at end, with optional currency token before/after
- * - a payee token (after '@' or last capitalized token), fallback to first word after date
- * - the rest is treated as an item description
- */
-export function parseManualNewCommand(raw: string): NLParseResult {
-  const s = raw.trim().replace(/^new\s+/i, "");
-  if (!s) throw new Error("Empty command");
-
-  // 1) date (optional) at the beginning
-  let rest = s;
-  let date = getLocalDateYYYYMMDD();
-  const mDate = rest.match(/^(\d{4})[\/-](\d{2})[\/-](\d{2})\b\s*/);
-  if (mDate) {
-    date = `${mDate[1]}-${mDate[2]}-${mDate[3]}`;
-    rest = rest.slice(mDate[0].length);
-  }
-
-  // 2) amount (required) at the end; allow "150", "$4.00", "4 usd", "150 thb"
-  const mAmt =
-    rest.match(/\s([\$฿]|USD|THB|EUR)?\s*(-?\d+(?:\.\d{1,2})?)\s*$/i) ||
-    rest.match(/\s(-?\d+(?:\.\d{1,2})?)\s*([\$฿]|USD|THB|EUR)\s*$/i);
-  if (!mAmt) throw new Error("Amount not found");
-
-  let cur: string;
-  let amtStr: string;
-  if (mAmt.length === 3 && /^(?:[\$฿]|USD|THB|EUR)$/i.test(mAmt[1] || "")) {
-    cur = normCurrency(mAmt[1]);
-    amtStr = mAmt[2];
-  } else {
-    cur = normCurrency(mAmt[2]);
-    amtStr = mAmt[1];
-  }
-  const amount = Math.abs(parseFloat(amtStr));
-  rest = rest.slice(0, rest.length - mAmt[0].length).trim();
-
-  // 3) try to find payee after an '@' marker, else last token in rest, else fallback
-  let payee = "Unknown";
-  let desc = rest;
-  const at = rest.match(/^(.*)\s@\s*(.+)$/);
-  if (at) {
-    desc = at[1].trim();
-    payee = at[2].trim();
-  } else {
-    // heuristic: if multiple words, take last word as payee if capitalized, else first as desc
-    const parts = rest.split(/\s+/);
-    if (parts.length >= 2) {
-      payee = parts[parts.length - 1];
-      desc = parts.slice(0, -1).join(" ");
+  for (const char of input.trim()) {
+    if (char === '"') {
+      inQuotes = !inQuotes;
+      buffer += char;
+      continue;
+    }
+    if (char === "," && !inQuotes) {
+      tokens.push(buffer.trim());
+      buffer = "";
     } else {
-      // single token: treat as desc, use 'Personal'
-      payee = "Personal";
-      desc = rest;
+      buffer += char;
+    }
+  }
+  if (buffer) tokens.push(buffer.trim());
+  return tokens.filter((t) => t.length > 0);
+}
+
+function parseDateToken(token: string): string | null {
+  const lower = token.toLowerCase();
+
+  if (lower === "today") {
+    return formatLocalDate(new Date());
+  }
+  if (lower === "yesterday") {
+    const d = new Date();
+    d.setDate(d.getDate() - 1); // local subtraction
+    return formatLocalDate(d);
+  }
+
+  // YYYY/MM/DD or YYYY-MM-DD
+  const match = token.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
+  if (match) {
+    const [, y, m, d] = match;
+    return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  }
+  return null;
+}
+
+function parseItemsAndMaybeInlineVendor(tokens: string[]): {
+  items: ParsedItem[];
+  stopIndex: number; // index in tokens after the last consumed item token
+  vendorInline?: string; // vendor found within the last item token (no trailing comma case)
+} {
+  const items: ParsedItem[] = [];
+  let stopIndex = tokens.length;
+  let vendorInline: string | undefined;
+
+  // full item regex (entire token is an item)
+  const fullItemRe =
+    /^(?:(\d+)x\s*)?(.+?)(?:\s+@\s*\$?(\d+(?:\.\d{1,2})?))?\s+\$?(\d+(?:\.\d{1,2})?)(?:\s+(Expenses:[\w:]+))?$/i;
+  // item prefix with tail (captures inline vendor/payment tail)
+  const prefixWithTailRe =
+    /^(?:(\d+)x\s*)?(.+?)(?:\s+@\s*\$?(\d+(?:\.\d{1,2})?))?\s+\$?(\d+(?:\.\d{1,2})?)\b(?:\s+(.+))?$/i;
+
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+
+    // Case 1: whole token is an item
+    const mFull = t.match(fullItemRe);
+    if (mFull) {
+      const [, qtyStr, descRaw, _unitPriceStr, priceStr, categoryOverride] =
+        mFull;
+      const quantity = qtyStr ? parseInt(qtyStr, 10) : 1;
+      const description = descRaw.trim();
+      const price = parseFloat(priceStr);
+      let category = categoryOverride || undefined;
+
+      if (description.toLowerCase() === "tax" && !category) {
+        category = "Expenses:Taxes:Sales";
+      }
+
+      items.push({ description, price, quantity, category });
+      continue; // keep parsing items
+    }
+
+    // Case 2: token starts like an item but has trailing words (inline vendor)
+    const mPrefix = t.match(prefixWithTailRe);
+    if (mPrefix) {
+      const [, qtyStr, descRaw, _unitPriceStr, priceStr, tail] = mPrefix;
+      const quantity = qtyStr ? parseInt(qtyStr, 10) : 1;
+      const description = descRaw.trim();
+      const price = parseFloat(priceStr);
+      let category: string | undefined;
+      if (description.toLowerCase() === "tax") {
+        category = "Expenses:Taxes:Sales";
+      }
+      items.push({ description, price, quantity, category });
+
+      vendorInline = tail ? tail.trim() : undefined;
+      stopIndex = i + 1; // we consumed this token
+      break; // stop: the rest is vendor/payment/memo
+    }
+
+    // Case 3: not an item — stop here, next token is vendor
+    stopIndex = i;
+    break;
+  }
+
+  if (stopIndex === tokens.length) {
+    // consumed all tokens as items; vendor will be missing, caller will default
+  }
+
+  return { items, stopIndex, vendorInline };
+}
+
+function mapPaymentMethod(token: string): string {
+  const lower = token.toLowerCase();
+  for (const [alias, account] of Object.entries(
+    PARSER_GRAMMAR.paymentMethods.map
+  )) {
+    if (lower === alias) return account;
+  }
+  return PARSER_GRAMMAR.paymentMethods.map.cash;
+}
+
+function extractMemo(tokens: string[]): { memo?: string; tokens: string[] } {
+  const updatedTokens: string[] = [];
+  let memo: string | undefined;
+
+  for (const t of tokens) {
+    if (t.toLowerCase().startsWith("memo ")) {
+      const match = t.match(/^memo\s+"(.+)"$/i);
+      if (match) {
+        memo = match[1];
+        continue; // drop memo token
+      }
+    }
+    updatedTokens.push(t);
+  }
+  return { memo, tokens: updatedTokens };
+}
+
+// Example (variables <>; optional []):
+// new <item> $<price>[, <item> $<price>]... [,<vendor>] [,<payment method>] [, memo "<text>"] [<date>]
+// ex1: new apples $10, butter $5, Safeway, credit card, memo "weekly groceries"
+// ex2: new 2025/08/09 coffee $5 Starbucks
+export function parseManualNewCommand(input: string): {
+  date: string;
+  payee: string;
+  currency: string;
+  receipt: ReceiptShape;
+  memo?: string;
+  paymentAccount: string;
+} {
+  let tokens = tokenize(input);
+
+  // 1) optional date (first token only)
+  let date = formatLocalDate(new Date());
+  let dateTokenIndex = -1;
+
+  for (let i = 0; i < tokens.length; i++) {
+    const maybeDate = parseDateToken(tokens[i]);
+    if (maybeDate) {
+      date = maybeDate;
+      dateTokenIndex = i;
+      break; // stop after finding the first valid date
     }
   }
 
-  const item = { description: desc || "Item", price: +amount.toFixed(2) };
-  const receipt = {
-    items: [item],
-    subtotal: +amount.toFixed(2),
-    tax: null,
-    total: +amount.toFixed(2),
-  } as NLParseResult["receipt"];
+  if (dateTokenIndex >= 0) {
+    tokens.splice(dateTokenIndex, 1); // remove the date token so it doesn't interfere with vendor/items
+  }
 
-  return { date, payee, note: undefined, currency: cur, receipt };
+  // 2) memo extraction (removes memo tokens)
+  const memoResult = extractMemo(tokens);
+  tokens = memoResult.tokens;
+
+  // 3) parse items, allow inline vendor on last item token
+  const {
+    items: parsedItems,
+    stopIndex,
+    vendorInline,
+  } = parseItemsAndMaybeInlineVendor(tokens);
+  if (parsedItems.length === 0) {
+    throw new Error("No valid items found in input.");
+  }
+
+  // Normalize to ReceiptItem[] for ReceiptShape
+  const normalizedItems: ReceiptItem[] = parsedItems.map((it) => ({
+    description: it.description,
+    price: it.price,
+  }));
+
+  // 4) vendor
+  const vendorToken = vendorInline ?? tokens[stopIndex] ?? "Unknown Vendor";
+  const payee = vendorToken;
+
+  // 5) payment method (next token, if present and not memo)
+  let paymentAccount: string = PARSER_GRAMMAR.paymentMethods.map.cash;
+
+  const pmCandidateIndex = vendorInline ? stopIndex : stopIndex + 1;
+  if (tokens[pmCandidateIndex]) {
+    paymentAccount = mapPaymentMethod(tokens[pmCandidateIndex]); // now works for all mapped values
+  }
+  // 6) receipt totals
+  const subtotal = normalizedItems.reduce((sum, i) => sum + i.price, 0);
+  const taxAmount =
+    parsedItems
+      .filter((i) => i.category === "Expenses:Taxes:Sales")
+      .reduce((sum, i) => sum + i.price, 0) || null;
+
+  const receipt: ReceiptShape = {
+    items: normalizedItems,
+    subtotal,
+    tax: taxAmount,
+    total: subtotal,
+  };
+
+  // 7) currency detection (symbol-based, minimal)
+  let currency = "THB";
+  if (/\$/.test(input)) currency = "USD";
+  if (/฿/.test(input)) currency = "THB";
+
+  return {
+    date,
+    payee,
+    currency,
+    receipt,
+    memo: memoResult.memo,
+    paymentAccount,
+  };
 }

@@ -289,8 +289,9 @@ export const commandRegistry: Record<string, CommandMeta> = {
   new: {
     content: "__LEDGER_NEW_ENTRY__",
     description:
-      "Create a new Ledger CLI entry from natural language. Example: `new coffee at starbucks $7.00`",
-    usage: "new <description/amount, eg. `new groceries $22 yesterday`>",
+      'Create a new Ledger CLI entry from natural language. Example: `new coffee, starbucks $7.00` or `new coffee $7.00, starbucks, memo "pumpkin latte with soy milk"` or `new coffee $7.00 at starbucks, yesterday, memo "pumpkin latte with soy milk"`',
+    usage:
+      'new <item> $<price>[, <item> $<price> ...], [vendor], [date], [payment method], [memo "<text>"] — comma-separated, date can be "today", "yesterday", or YYYY/MM/DD, payment maps to cash/credit/bank.',
   },
 
   // Contact Messages
