@@ -161,12 +161,20 @@ async function processAndSaveEntry(
 
   updateHistoryWithLedger(setHistory, ledgerPreview);
 
-  await serverHandleNewCommand({
-    date: result.date,
-    payee: result.payee,
-    currency: result.currency,
-    receipt: result.receipt,
-  });
+  try {
+    await serverHandleNewCommand({
+      date: result.date,
+      payee: result.payee,
+      currency: result.currency,
+      receipt: result.receipt,
+    });
+  } catch (e) {
+    updateHistoryWithError(
+      setHistory,
+      e instanceof Error ? e.message : String(e)
+    );
+    return;
+  }
 
   updateHistoryWithSuccess(setHistory);
 }
