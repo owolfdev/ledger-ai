@@ -1,98 +1,97 @@
-// src/lib/ledger/parse-ledger-entry.ts
+// /lib/ledger/parse-ledger-entry.ts (fixed types, multi-posting)
+// Parse a Ledger CLI entry with 1..N postings.
+
+export type LedgerPosting = {
+  account: string;
+  amount: number; // signed; negative for assets/cash outflow
+  currency: string; // normalized (e.g., 'THB', 'USD')
+  memo?: string;
+};
 
 export interface ParsedLedgerEntry {
-  date: string; // YYYY-MM-DD
+  raw: string;
+  date: string; // YYYY-MM-DD (Postgres DATE-friendly)
   payee: string;
-  amount: number;
-  expense_account: string;
-  asset_account: string;
-  currency: string;
-  business_name?: string; // e.g. 'Personal', 'Channel60'
+  postings: LedgerPosting[];
+  amount: number; // absolute of total negatives
+  currency: string; // primary currency (first seen; default THB)
+  business_name?: string | null;
 }
 
-function normalizeCurrency(input: string | undefined | null): string {
-  if (!input || input === "") return "THB";
-  const symbol = input.trim();
-  if (symbol === "$" || symbol.toUpperCase() === "USD") return "USD";
-  if (symbol === "฿" || symbol.toUpperCase() === "THB") return "THB";
-  if (symbol === "€" || symbol.toUpperCase() === "EUR") return "EUR";
-  // Add more as needed
-  return symbol.replace(/[^A-Za-z]/g, "").toUpperCase();
+function normalizeCurrency(input?: string | null): string {
+  if (!input) return "THB";
+  const s = input.trim();
+  if (s === "$" || s.toUpperCase() === "USD") return "USD";
+  if (s === "฿" || s.toUpperCase() === "THB") return "THB";
+  if (s === "€" || s.toUpperCase() === "EUR") return "EUR";
+  return s.replace(/[^A-Za-z]/g, "").toUpperCase() || "THB";
 }
 
-export function parseLedgerEntry(entry: string): ParsedLedgerEntry {
-  const lines = entry
+export function parseLedgerEntry(text: string): ParsedLedgerEntry {
+  const lines = text
     .trim()
-    .split("\n")
-    .map((line) => line.trim())
+    .split(/\r?\n/)
+    .map((l) => l.replace(/\u00A0/g, " ").trimEnd())
     .filter(Boolean);
 
   if (lines.length < 2)
     throw new Error(
-      "Ledger entry must have header and at least one posting line."
+      "Ledger entry must include a header and at least one posting."
     );
 
-  // 1st line: date + payee
-  const headerRegex = /^(\d{4})[\/\-](\d{2})[\/\-](\d{2})\s+(.+)$/;
-  const headerMatch = lines[0].match(headerRegex);
-  if (!headerMatch) throw new Error("Invalid header line (date and payee)");
+  // Header: YYYY/MM/DD or YYYY-MM-DD + payee
+  const h = lines[0].match(/^(\d{4})[\/-](\d{2})[\/-](\d{2})\s+(.+)$/);
+  if (!h) throw new Error("Invalid header line (expected 'YYYY/MM/DD Payee').");
+  const date = `${h[1]}-${h[2]}-${h[3]}`; // normalize to YYYY-MM-DD
+  const payee = h[4];
 
-  const date = `${headerMatch[1]}-${headerMatch[2]}-${headerMatch[3]}`;
-  const payee = headerMatch[4];
+  // Posting: 'Account:Sub   $12.34' (may be negative)
+  const postingRe = new RegExp(
+    String.raw`^\s*([A-Za-z][A-Za-z0-9:+\- ]*)\s+(-?)(\$|฿|USD|THB|EUR)?\s*(\d+\.\d{2})\s*$`,
+    "i"
+  );
 
-  // Account line: Account:Sub1:Sub2   [currency]amount
-  // Example: "Expenses:Personal:Food:Coffee    $5.00"
-  const accountLineRegex =
-    /^([A-Za-z0-9:\-]+)\s+(-?)(\$|฿|THB|USD|EUR)?\s*([\d,.]+)/i;
+  const postings: LedgerPosting[] = [];
+  let primaryCurrency: string | null = null;
 
-  let expense_account = "";
-  let asset_account = "";
-  let amount = 0;
-  let currency = "THB"; // fallback default
-  let business_name = "Personal"; // fallback
-
-  for (const line of lines.slice(1)) {
-    const match = line.match(accountLineRegex);
-    if (!match) continue;
-
-    const account = match[1];
-    const sign = match[2];
-    const currencyMatch = match[3];
-    const amtRaw = match[4].replace(/,/g, "");
-
-    // Prefer explicit, else fallback
-    if (currencyMatch) {
-      currency = normalizeCurrency(currencyMatch);
-    } else {
-      currency = "THB";
-    }
-
-    const amtValue = parseFloat(amtRaw);
-    if (sign === "-") {
-      asset_account = account;
-    } else {
-      expense_account = account;
-      amount = amtValue;
-
-      // Business: always 2nd segment in Expenses:Business:...
-      const segs = account.split(":");
-      if (segs.length > 1 && segs[0] === "Expenses") {
-        business_name = segs[1];
-      }
-    }
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line || line.startsWith(";")) continue; // skip comments
+    const m = line.match(postingRe);
+    if (!m) continue; // ignore non-posting lines
+    const account = m[1].replace(/\s+/g, " ").trim();
+    const sign = m[2] === "-" ? -1 : 1;
+    const cur = normalizeCurrency(m[3]);
+    const amt = parseFloat(m[4]) * sign;
+    primaryCurrency ||= cur;
+    postings.push({ account, amount: +amt.toFixed(2), currency: cur });
   }
 
-  if (!expense_account || !asset_account || !amount) {
-    throw new Error("Could not parse accounts/amounts from entry");
+  if (postings.length === 0) throw new Error("No postings parsed from entry.");
+
+  const sum = +postings.reduce((s, p) => s + p.amount, 0).toFixed(2);
+  if (Math.abs(sum) > 0.005)
+    throw new Error(`Entry not balanced (sum=${sum.toFixed(2)})`);
+
+  const negatives = postings
+    .filter((p) => p.amount < 0)
+    .reduce((s, p) => s + p.amount, 0);
+  const amount = Math.abs(+negatives.toFixed(2));
+
+  const exp = postings.find((p) => /^Expenses:/i.test(p.account));
+  let business_name: string | null = null;
+  if (exp) {
+    const segs = exp.account.split(":");
+    if (segs.length > 1) business_name = segs[1];
   }
 
   return {
+    raw: text,
     date,
     payee,
+    postings,
     amount,
-    expense_account,
-    asset_account,
-    currency,
+    currency: primaryCurrency || "THB",
     business_name,
   };
 }
