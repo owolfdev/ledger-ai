@@ -1,5 +1,5 @@
-// /lib/ledger/parse-receipt-ocr.ts (v2 flags)
-// Extend trailing flag handling to include digits and multi-char flags near the price.
+// FILE: /lib/ledger/parse-receipt-ocr.ts (restored v2 — stable)
+// Original behavior for conventional receipts. Kept unchanged to avoid regressions.
 
 export type ReceiptItem = { description: string; price: number };
 export type ReceiptData = {

@@ -1,22 +1,22 @@
-// /lib/ledger/segment-ocr-with-llm.ts (v3 tolerant trailing tokens + vendor/date)
-// Broaden trailing handling: allow up to TWO trailing flag tokens (letters/digits/%/§),
-// and tolerate stray closing punctuation at the very end. Fixes missed lines like "... 4.98 0" or "... 1.88 0)".
-// Additionally, extract vendor and date metadata from the FULL raw OCR (kept outside the block),
-// so downstream code can use them without relaxing the block filtering policy.
+// /lib/ledger/segment-ocr-with-llm.ts
+// v4 — robust item detection + vendor/date metadata
+// - Guards out invoice/table headers so they aren't misread as items
+// - Avoids treating dates like "11.02.2030" as prices
+// - Shares vendor/date with both LLM and fallback flows
 
-// top of file
 import {
   KNOWN_VENDOR_WORDS,
   SLOGAN_VENDOR_MAP,
 } from "@/lib/ledger/vendor-config";
 
+// ---------- Types ----------
 export type SegmentResult = {
   block: string;
   confidence: number;
   rationale?: string;
   usedFallback?: boolean;
-  vendor?: string | null; // NEW: inferred vendor (from header/footer)
-  date?: string | null; // NEW: ISO date YYYY-MM-DD (best-effort)
+  vendor?: string | null; // inferred vendor (from header)
+  date?: string | null; // ISO YYYY-MM-DD
 };
 
 export interface LlmClient {
@@ -28,6 +28,7 @@ export interface LlmClient {
   }): Promise<string>;
 }
 
+// ---------- Prompts ----------
 function buildSystemPrompt(): string {
   return [
     "You extract the core purchase section from raw OCR receipts.",
@@ -42,10 +43,17 @@ function buildSystemPrompt(): string {
 }
 
 function buildUserPrompt(raw: string): string {
-  const example = `RAW OCR RECEIPT:\n${raw}\n\nReturn JSON only, e.g.:\n{\n  "block": "ITEM 1234 1.23 N\nSUBTOTAL 1.23\nTAX 0.10\nTOTAL 1.33",\n  "confidence": 0.92,\n  "rationale": "Kept items; first TOTAL after SUBTOTAL; excluded payment block and TOTAL TAX."\n}`;
+  const example =
+    `RAW OCR RECEIPT:\n${raw}\n\n` +
+    `Return JSON only, e.g.:\n{\n` +
+    `  "block": "ITEM 1234 1.23 N\\nSUBTOTAL 1.23\\nTAX 0.10\\nTOTAL 1.33",\n` +
+    `  "confidence": 0.92,\n` +
+    `  "rationale": "Kept items; first TOTAL after SUBTOTAL; excluded payment block and TOTAL TAX."\n` +
+    `}`;
   return example;
 }
 
+// ---------- JSON safe parse ----------
 function safeParseJson<T>(
   s: string
 ): { ok: true; value: T } | { ok: false; error: Error } {
@@ -62,32 +70,16 @@ function safeParseJson<T>(
   }
 }
 
-// ---------------- Vendor / Date extraction (kept separate from 'block') ----------------
+// ---------- Vendor / Date helpers ----------
 const PHONE_RE =
   /(?:\+?\d{1,3}[\s.-]?)?(?:\(\d{2,4}\)|\d{2,4})[\s.-]?\d{2,4}[\s.-]?\d{3,4}/;
 const STORE_META_RE = /\b(?:ST#|STORE|OP#|TE#|TR#|TILL|REG)\b/i;
 const ADDRESS_LIKE_RE =
   /\b(?:AVE|AVENUE|ST|STREET|RD|ROAD|BLVD|DR|DRIVE|FL|FLOOR|SUITE|ZIP|CITY|STATE)\b/i;
 
-// const SLOGAN_VENDOR_MAP: Array<[RegExp, string]> = [
-//   [/\bSave money\. Live better\.?\b/i, "Walmart"],
-//   [/\bJust Do It\b/i, "Nike"],
-//   [/\bI\'m Lovin'? It\b/i, "McDonald's"],
-//   [/\bHave It Your Way\b/i, "Burger King"],
-// ];
-
-// const KNOWN_VENDOR_WORDS = [
-//   "WALMART",
-//   "TARGET",
-//   "COSTCO",
-//   "STARBUCKS",
-//   "AMAZON",
-//   "TESCO",
-//   "7-ELEVEN",
-//   "SEVEN ELEVEN",
-//   "HOME DEPOT",
-//   "LOWE'S",
-// ];
+// Rows we should never treat as items or vendor names (invoice/table headers, billing blocks, etc.)
+const NOT_VENDOR_META =
+  /\b(ISSUED\s+TO|INVOICE\s*NO|INVOICE\s*#|BILL\s+TO|SHIP\s+TO|PAY\s+TO|PO\s*#|P\.?O\.?|RECEIPT\s*(NO|#)|DATE|DUE\s+DATE|ACCOUNT\s+NO|ACCOUNT\s+NAME|DESCRIPTION\s+UNIT\s+PRICE|DESCRIPTION\s+PRICE|UNIT\s+PRICE|QTY|QUANTITY|AMOUNT|TOTAL\s+DUE|BALANCE\s+DUE|AMOUNT\s+DUE|TERMS|CONDITIONS|PAYMENT\s+DUE)\b/i;
 
 function toTitleCase(s: string): string {
   return s
@@ -102,26 +94,31 @@ function pickLikelyVendor(lines: string[], itemsStart: number): string | null {
     itemsStart === -1 ? Math.min(lines.length, 25) : Math.min(itemsStart, 25);
   const header = lines.slice(0, headerEnd);
 
+  // 1) Slogan → brand
   for (const line of header) {
     for (const [re, name] of SLOGAN_VENDOR_MAP) if (re.test(line)) return name;
   }
 
+  // 2) Known vendor names anywhere in header
   for (const line of header) {
     const canon = line
       .replace(/[^A-Za-z0-9\s'-]/g, " ")
       .replace(/\s+/g, " ")
       .trim()
       .toUpperCase();
-    for (const w of KNOWN_VENDOR_WORDS)
+    for (const w of KNOWN_VENDOR_WORDS) {
       if (canon.includes(w)) return toTitleCase(w);
+    }
   }
 
+  // 3) Heuristic: short, mostly-letters header lines
   for (const raw of header) {
     const line = raw.trim();
     if (!line) continue;
     if (PHONE_RE.test(line)) continue;
     if (STORE_META_RE.test(line)) continue;
     if (ADDRESS_LIKE_RE.test(line)) continue;
+    if (NOT_VENDOR_META.test(line)) continue;
     if (
       /\b(MANAGER|ASSISTANT|CASHIER|CUSTOMER COPY|MERCHANT COPY)\b/i.test(line)
     )
@@ -136,6 +133,7 @@ function pickLikelyVendor(lines: string[], itemsStart: number): string | null {
       cleaned.replace(/[^A-Za-z]/g, "").length / Math.max(cleaned.length, 1);
     if (words.length <= 5 && lettersRatio > 0.6) return toTitleCase(cleaned);
   }
+
   return null;
 }
 
@@ -152,9 +150,9 @@ function normalizeYear(y: number): number {
 }
 function toIsoDate(y: number, m: number, d: number): string | null {
   if (m < 1 || m > 12 || d < 1 || d > 31) return null;
-  const yyyy = y.toString().padStart(4, "0");
-  const mm = m.toString().padStart(2, "0");
-  const dd = d.toString().padStart(2, "0");
+  const yyyy = String(y).padStart(4, "0");
+  const mm = String(m).padStart(2, "0");
+  const dd = String(d).padStart(2, "0");
   const dt = new Date(`${yyyy}-${mm}-${dd}T00:00:00Z`);
   if (Number.isNaN(dt.getTime())) return null;
   return `${yyyy}-${mm}-${dd}`;
@@ -200,32 +198,48 @@ function extractDate(lines: string[]): string | null {
   return null;
 }
 
-// ---------------- Core segmentation ----------------
+// ---------- Item detection ----------
+// Allow $500 or $500.00, with optional commas
+const MONEY_RE = /\$?\s*(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{2,3})?/;
+// tokens after price (flags/currency/etc.)
+const TRAIL_TOKEN = /(?:\s+[A-Za-z0-9%§]{1,4}){0,2}/;
+const END_PUNCT = /[)\]>»】）]*$/;
+
+const PRICED_END = new RegExp(
+  `${MONEY_RE.source}${TRAIL_TOKEN.source}(?:${END_PUNCT.source})$`,
+  "i"
+);
+
+// If a money-looking token is followed by something date-ish (e.g. "11.02.2030"),
+// it's probably a date, not a price. Keep this guard.
+const DATEISH_AFTER_MONEY = /\b\d{1,3}\.\d{1,2}[^0-9]{0,3}(?:19|20)\d{2}\b/;
+
+const KEYWORD_LINE =
+  /\b(SUB\s*-?\s*TOTAL|SUBTOTAL|TOTAL\s*TAX|TOTAL\s+PURCHASE|TAX|CHANGE|AMOUNT|APPROVED|AUTH|BALANCE DUE)\b/i;
+
+function isKeyword(l: string): boolean {
+  return KEYWORD_LINE.test(l);
+}
+
+function isItemCandidate(l: string): boolean {
+  if (!PRICED_END.test(l)) return false;
+  if (/\b(SUBTOTAL|TOTAL|TAX)\b/i.test(l)) return false;
+  if (NOT_VENDOR_META.test(l)) return false;
+  if (DATEISH_AFTER_MONEY.test(l)) return false;
+  return true;
+}
+
+// ---------- Fallback segmentation ----------
 export function fallbackSegment(raw: string): SegmentResult {
   const lines = raw
     .split(/\r?\n/)
     .map((l) => l.replace(/[\u2014\u2013]/g, "-").trim())
     .filter(Boolean);
 
-  const money = /\$?(?:\d{1,3}(?:,\d{3})*|\d+)\.(?:\d{2,3})/;
-  // up to two trailing tokens like " N", " 0", " X", " %"; allow a final )]> etc.
-  const TRAIL = /(?:\s+[A-Za-z0-9%§]{1,4}){0,2}/;
-  const END_PUNCT = /[)\]>»】）]*$/; // tolerate stray closers
-  const pricedEnd = new RegExp(
-    `${money.source}${TRAIL.source}(?:${END_PUNCT.source})$`,
-    "i"
-  );
-
-  const isKeyword = (l: string) =>
-    /\b(SUB\s*-?\s*TOTAL|SUBTOTAL|TOTAL\s*TAX|TOTAL\s+PURCHASE|TAX|CHANGE|AMOUNT|APPROVED|AUTH|BALANCE DUE)\b/i.test(
-      l
-    );
-
-  // 1) find first item-like line
+  // 1) first item-like line
   let i0 = -1;
   for (let i = 0; i < lines.length; i++) {
-    const l = lines[i];
-    if (pricedEnd.test(l) && !/\b(SUBTOTAL|TOTAL|TAX)\b/i.test(l)) {
+    if (isItemCandidate(lines[i])) {
       i0 = i;
       break;
     }
@@ -234,7 +248,7 @@ export function fallbackSegment(raw: string): SegmentResult {
   const vendor = pickLikelyVendor(lines, i0);
   const date = extractDate(lines);
 
-  if (i0 === -1)
+  if (i0 === -1) {
     return {
       block: "",
       confidence: 0,
@@ -243,6 +257,7 @@ export function fallbackSegment(raw: string): SegmentResult {
       vendor,
       date,
     };
+  }
 
   // 2) collect items until SUBTOTAL
   const items: string[] = [];
@@ -250,9 +265,9 @@ export function fallbackSegment(raw: string): SegmentResult {
   for (; i < lines.length; i++) {
     const l = lines[i];
     if (/\b(SUB\s*-?\s*TOTAL|SUBTOTAL)\b/i.test(l)) break;
-    if (pricedEnd.test(l) && !isKeyword(l)) items.push(l);
+    if (isItemCandidate(l) && !isKeyword(l)) items.push(l);
   }
-  if (i >= lines.length)
+  if (i >= lines.length) {
     return {
       block: items.join("\n"),
       confidence: 0.45,
@@ -261,8 +276,9 @@ export function fallbackSegment(raw: string): SegmentResult {
       vendor,
       date,
     };
+  }
 
-  // 3) summary: keep SUBTOTAL, any TAX lines, then the FIRST line with TOTAL <amount> (but not TOTAL TAX/PURCHASE)
+  // 3) summary: SUBTOTAL + any TAX lines + first valid TOTAL
   const summary: string[] = [lines[i]]; // SUBTOTAL
   i++;
   let totalLine: string | null = null;
@@ -275,7 +291,7 @@ export function fallbackSegment(raw: string): SegmentResult {
     }
     if (/\bTAX\b/.test(l)) summary.push(l);
   }
-  if (!totalLine)
+  if (!totalLine) {
     return {
       block: [...items, ...summary].join("\n"),
       confidence: 0.55,
@@ -284,6 +300,7 @@ export function fallbackSegment(raw: string): SegmentResult {
       vendor,
       date,
     };
+  }
 
   return {
     block: [...items, ...summary].join("\n"),
@@ -295,28 +312,20 @@ export function fallbackSegment(raw: string): SegmentResult {
   };
 }
 
+// ---------- Main entry ----------
 export async function segmentReceiptOcr(
   raw: string,
   llm?: LlmClient
 ): Promise<SegmentResult> {
-  console.log("RAW from segmentReceiptOcr: ", raw);
-  // Compute metadata (vendor/date) from raw up-front so both LLM and fallback share it.
+  // Pre-compute metadata so both paths share it.
   const preLines = raw
     .split(/\r?\n/)
     .map((l) => l.replace(/[\u2014\u2013]/g, "-").trim())
     .filter(Boolean);
-  // Tentative itemsStart guess for vendor heuristic: first item-like line using the same pricedEnd rule
-  const money = /\$?(?:\d{1,3}(?:,\d{3})*|\d+)\.(?:\d{2,3})/;
-  const TRAIL = /(?:\s+[A-Za-z0-9%§]{1,4}){0,2}/;
-  const END_PUNCT = /[)\]>»】）]*$/;
-  const pricedEnd = new RegExp(
-    `${money.source}${TRAIL.source}(?:${END_PUNCT.source})$`,
-    "i"
-  );
+
   let guessStart = -1;
   for (let i = 0; i < preLines.length; i++) {
-    const l = preLines[i];
-    if (pricedEnd.test(l) && !/\b(SUBTOTAL|TOTAL|TAX)\b/i.test(l)) {
+    if (isItemCandidate(preLines[i])) {
       guessStart = i;
       break;
     }
@@ -339,6 +348,7 @@ export async function segmentReceiptOcr(
         confidence?: number;
         rationale?: string;
       }>(text);
+
       if (
         parsed.ok &&
         parsed.value.block &&
@@ -356,10 +366,12 @@ export async function segmentReceiptOcr(
           date: metaDate ?? null,
         };
       }
-    } catch {}
+    } catch {
+      // ignore and fall back
+    }
   }
+
   const fb = fallbackSegment(raw);
-  // Ensure metadata is included even when fallback is used
   return {
     ...fb,
     vendor: fb.vendor ?? metaVendor ?? null,
@@ -367,6 +379,7 @@ export async function segmentReceiptOcr(
   };
 }
 
+// ---------- OpenAI client ----------
 export function createOpenAiClient(
   apiKey: string,
   model = "gpt-4o-mini"
