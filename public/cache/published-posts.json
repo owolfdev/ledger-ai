@@ -1,5 +1,22 @@
 [
   {
+    "slug": "documentation",
+    "id": "c0626ef8-a803-4ac8-aec2-2b2c3a5ac21c",
+    "type": "blog",
+    "title": "📟 Ledger App — Terminal Command System",
+    "author": "O. Wolfson",
+    "publishDate": "2025-08-10",
+    "description": "",
+    "categories": [],
+    "tags": [],
+    "modifiedDate": "",
+    "image": null,
+    "draft": false,
+    "relatedPosts": [],
+    "link": null,
+    "likes": 0
+  },
+  {
     "slug": "ledger-cli-a-beginners-tutorial-part-2",
     "id": "213c2d8c-4072-4644-b073-acc9fe5e2234",
     "type": "blog",
@@ -20,7 +37,7 @@
       ""
     ],
     "link": null,
-    "likes": 0
+    "likes": 1
   },
   {
     "slug": "ledger-cli-a-beginners-tutorial",

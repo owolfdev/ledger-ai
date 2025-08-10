@@ -1,169 +1,152 @@
-# Terminal Command System (Ledger App) — Technical Reference
+# 📟 Ledger App — Terminal Command System
 
-_Updated: August 2025_
-
----
-
-## 🏗️ **Core Features & Architecture**
-
-- **Smart, extensible React Terminal** (`SmartTerminal`), fully pluggable per-page
-- **Command registry**: CRUD, navigation, theme, AI, custom business logic
-- **AI fallback**: Any input not recognized is streamed to OpenAI with live context
-- **Supabase-backed storage** for all structured data (ledger entries, businesses, users)
-- **Sync system**: Keeps Supabase ledger entries in sync with a local `.ledger` file for compatibility with [Ledger CLI](https://www.ledger-cli.org/)
-- **Automatic “business” tagging**: Every ledger entry is tagged to a business (e.g., Personal, Channel60) and mapped to a business UUID
-- **Production/dev logic**:
-
-  - Local file write (`src/data/ledger/general.ledger`) is enabled **only in development**
-  - Controlled via `.env`: `LOCAL_LEDGER_WRITE=true`
-
-- **Ledger CLI integration** (MVP):
-
-  - In development, Node child process can run Ledger CLI commands against the synced local file
+**Technical Reference — August 2025**
 
 ---
 
-## 📄 **Supabase Table Changes**
+## **1. Overview**
 
-### `ledger_entries` Table
-
-- **New/updated fields:**
-
-  - `business_id` (`uuid`, foreign key to `businesses`)
-  - `currency` (now always stored as a 3-letter code: `THB`, `USD`, etc.)
-  - `expense_account` / `asset_account` always normalized (e.g. `Expenses:Personal:Food:Coffee`)
-  - `entry_text` (canonical, GPT-generated ledger format)
-  - `entry_raw` (original user input, for provenance/debug)
-  - `amount` always stored as decimal **number only** (no symbols)
-
-### `businesses` Table
-
-- Used to look up and enforce which business (Personal, Channel60, etc.) each entry belongs to
-- Required for “business_id” assignment per entry
+The Ledger App is a **React-based smart terminal** for quickly creating, managing, and syncing financial ledger entries.
+It combines **structured parsing**, **AI-assisted inference**, and **Supabase-backed persistence** with optional **Ledger CLI integration** for development workflows.
 
 ---
 
-## 🔄 **Ledger File Sync**
+## **2. Core Features**
 
-- **Action:** `src/app/actions/ledger/sync-ledger-file.ts`
+- **Smart Command Parser**
 
-  - Pulls all ledger entries from Supabase
-  - Converts them to canonical Ledger CLI format:
+  - Supports structured JSON or natural “manual” commands (`new coffee $5 Starbucks, credit card`)
+  - Automatic detection of:
 
-    - Currency symbol inferred from the `currency` field
-    - Amounts and account names normalized
+    - Date (absolute or relative: `2025/08/10`, `yesterday`)
+    - Items & prices (with optional category overrides)
+    - Payment account mapping (`credit card` → `Liabilities:CreditCard`)
+    - Memo extraction (`memo "Lunch meeting"`)
+    - Currency detection (`$` → `USD`, `฿` → `THB`)
 
-  - Writes to local file (`src/data/ledger/general.ledger`) **only if** `LOCAL_LEDGER_WRITE=true`
-  - Logs to console if running in production or not allowed
+  - Extensible regex mapping for expense categories
 
-- **Normalization**
+- **AI Fallback**
 
-  - All amounts in Supabase are stored as numbers
-  - **Currency symbols** in the file are generated dynamically (no risk of mismatches)
-  - **Legacy** entries or entries missing `currency` default to `$` (USD)
-  - `THB` entries use `฿`
+  - If command parsing fails or input is ambiguous, the terminal sends the request to OpenAI
+  - AI generates canonical Ledger CLI entries, respecting account naming conventions
+
+- **Supabase Storage**
+
+  - Primary persistence layer for:
+
+    - Normalized ledger entries (`ledger_entries`)
+    - Business metadata (`businesses`)
+
+  - Enforces `business_id` linking for multi-business/multi-user usage
+  - All numeric amounts stored without currency symbols; currency stored as ISO code
+
+- **Ledger File Sync (Dev Mode)**
+
+  - Optional `.ledger` file sync for compatibility with [Ledger CLI](https://www.ledger-cli.org/)
+  - Controlled by `.env` → `LOCAL_LEDGER_WRITE=true`
+  - Auto-converts Supabase entries into canonical CLI syntax with correct currency symbol
+  - **One-way sync**: Supabase → File (never the reverse)
+
+- **Ledger CLI Integration (Dev Only)**
+
+  - Terminal can run `ledger register`, `ledger balance`, etc., against local file
+  - Disabled in production for security and scalability
 
 ---
 
-## 🧠 **AI + Business Logic**
+## **3. Data Flow Example**
 
-- **On “new” entry:**
-
-  1. AI generates valid Ledger CLI entry in canonical format.
-  2. `parseLedgerEntry()` (see below) extracts all needed fields, **including inferring the business** from the expense account path.
-  3. Business name → Supabase lookup for business UUID (default: Personal)
-  4. Entry is saved to both Supabase and (if enabled) the ledger file.
-
-```ts
-// parseLedgerEntry always extracts business from `Expenses:<Business>:...`
-export function parseLedgerEntry(entry: string): ParsedLedgerEntry { ... }
-```
-
----
-
-## 💻 **Example Data Flow:**
-
-User input:
+User types:
 
 ```bash
-new coffee starbucks Channel 60 $5
+new coffee $4, pastry $5, Starbucks, credit card, memo "pumpkin latte not good", yesterday
 ```
 
-1. AI generates:
+**Step-by-step processing:**
 
-   ```
-   2025/08/08 Starbucks
-       Expenses:Channel60:Food:Coffee    $5.00
-       Assets:Cash                      -$5.00
-   ```
+1. **Tokenization & Parsing**
 
-2. `parseLedgerEntry` parses fields and finds business_name = "Channel60"
-3. System looks up business in Supabase and sets `business_id`
-4. Supabase row:
+   - Detects date (`yesterday`)
+   - Extracts items: `coffee $4`, `pastry $5`
+   - Detects vendor (`Starbucks`)
+   - Maps payment method to `Liabilities:CreditCard`
+   - Extracts memo
+   - Detects currency (`USD`)
+
+2. **Receipt Shape Normalization**
 
    ```json
    {
-     "business_id": "cf72ac8b-b0c6-42ea-bf2c-9ae608e06631",
-     "currency": "USD",
-     "expense_account": "Expenses:Channel60:Food:Coffee",
-     ...
+     "items": [
+       { "description": "coffee", "price": 4 },
+       { "description": "pastry", "price": 5 }
+     ],
+     "subtotal": 9,
+     "tax": null,
+     "total": 9
    }
    ```
 
-5. If local write enabled, entry is appended to the `.ledger` file using correct currency symbol.
+3. **Posting Generation**
+
+   ```ledger
+   2025/08/09 Starbucks
+       Expenses:Personal:Food:Coffee  $4.00
+       Expenses:Personal:Food:Pastry  $5.00
+       Liabilities:CreditCard        $-9.00
+   ```
+
+4. **Supabase Save**
+
+   - Entry stored in `ledger_entries` with:
+
+     - `business_id` inferred from expense account path
+     - `currency` as `"USD"`
+     - Raw input stored in `entry_raw`
+     - Canonical ledger text in `entry_text`
+
+5. **Ledger File Sync** _(if enabled)_
+
+   - Entry appended to `src/data/ledger/general.ledger`
+   - Currency symbol auto-generated from stored `currency`
 
 ---
 
-## 📦 **Ledger CLI Integration (Dev-Only)**
+## **4. Key Files & Responsibilities**
 
-- In **development** mode only (`LOCAL_LEDGER_WRITE=true`), terminal commands can call Node child process to execute `ledger` commands (e.g., register, balance) against the local file
-- **Command output** is streamed back to the terminal UI
-- In production/SaaS: **No ledger CLI integration** (for safety/scalability/security)
-
----
-
-## 🧩 **Extending/Modifying**
-
-- Add more fields to `ledger_entries` if your business logic grows
-- New business: add to `businesses` table, the UI and sync will pick it up automatically
-- New terminal commands:
-
-  - Add to `src/commands/smart/sets/[page].ts`
-  - Register in `registry.ts`
-
-- **AI prompt can be changed** in the terminal “new” command to match any custom rules
+| File / Path                                  | Purpose                                                                                            |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `/commands/smart/new-command-handler.ts`     | Main orchestration for `new` terminal commands — handles both structured JSON and manual commands. |
+| `/lib/ledger/parse-manual-command.ts`        | Tokenizes, parses, and validates free-form commands into structured `ReceiptShape` + metadata.     |
+| `/lib/ledger/build-postings-from-receipt.ts` | Converts parsed receipt into Ledger CLI postings with correct accounts.                            |
+| `/lib/ledger/render-ledger.ts`               | Renders date, payee, and postings into canonical `.ledger` text.                                   |
+| `/app/actions/ledger/create-ledger-entry.ts` | Persists structured entry data into Supabase.                                                      |
+| `/app/actions/ledger/sync-ledger-file.ts`    | Pulls Supabase entries and writes to local `.ledger` file in dev mode.                             |
+| `/lib/ledger/account-map.ts`                 | Maps keywords and descriptions to default expense/asset accounts.                                  |
+| `/lib/ledger/schemas.ts`                     | Zod schemas for validating structured ledger input.                                                |
 
 ---
 
-## ✅ **Current Best Practices**
+## **5. Best Practices**
 
-- Always write all canonical ledger data to Supabase first
-- File sync is one-way: from Supabase to file
-- No sensitive logic or writes in production SaaS environments
-- All multi-user logic should enforce user_id/business_id for all queries
-
----
-
-## **FAQ (Updates)**
-
-- **How is “business” assigned?**
-
-  - Always parsed from expense account (`Expenses:Channel60:...`) or defaults to Personal.
-
-- **What about non-standard currencies?**
-
-  - All amounts are stored as number, currency is stored as ISO code, and the symbol is added only at file write time.
-
-- **How do I run Ledger CLI commands?**
-
-  - Only available in dev, via terminal commands which spawn a child process (see Node.js `child_process`).
+- **Always save to Supabase first**, then sync to local file if enabled.
+- Keep business mappings (`businesses` table) up to date — parsing relies on correct account pathing.
+- Add new category regex patterns in `/lib/ledger/account-map.ts` for common items (`pastry`, `sandwich`, etc.).
+- Use development mode for testing Ledger CLI integration; production runs without file writes.
 
 ---
 
-Let me know if you want a **code block for the key sync/read/write actions** or a **diagram** of the architecture!
+## **6. Extending the System**
+
+- **New Categories**: Add to `account-map.ts` patterns.
+- **New Payment Methods**: Extend `PARSER_GRAMMAR.paymentMethods.map` in `parse-manual-command.ts`.
+- **Alternate Currencies**: Adjust currency detection regex or accept explicit ISO codes in input.
+- **Custom AI Rules**: Modify AI prompt in `/commands/smart/new-command-handler.ts`.
 
 ---
 
+/Users/wolf/Documents/Development/Projects/Ledger/ledger-app/src
 ├── actions
 │   └── comments
 │   ├── add-comment.ts
@@ -191,8 +174,10 @@ Let me know if you want a **code block for the key sync/read/write actions** or 
 │   │   │   └── save-post.ts
 │   │   ├── ledger
 │   │   │   ├── create-ledger-entry.ts
+│   │   │   ├── create-ledger-from-structured.ts
 │   │   │   ├── get-ledger-entries.ts
 │   │   │   ├── read-ledger-file.ts
+│   │   │   ├── route-new-commands.ts
 │   │   │   └── sync-ledger-file.ts
 │   │   ├── like-actions.ts
 │   │   ├── mdx
@@ -220,10 +205,17 @@ Let me know if you want a **code block for the key sync/read/write actions** or 
 │   │   │   └── route.ts
 │   │   ├── mdx-raw
 │   │   │   └── route.ts
-│   │   └── openai
+│   │   ├── openai
+│   │   │   └── route.ts
+│   │   └── openai-image-analyze
 │   │   └── route.ts
 │   ├── apple-icon.png
 │   ├── auth
+│   │   ├── \_archinve
+│   │   │   ├── sign-up
+│   │   │   │   └── page.tsx
+│   │   │   └── sign-up-success
+│   │   │   └── page.tsx
 │   │   ├── confirm
 │   │   │   └── route.ts
 │   │   ├── error
@@ -231,10 +223,6 @@ Let me know if you want a **code block for the key sync/read/write actions** or 
 │   │   ├── forgot-password
 │   │   │   └── page.tsx
 │   │   ├── login
-│   │   │   └── page.tsx
-│   │   ├── sign-up
-│   │   │   └── page.tsx
-│   │   ├── sign-up-success
 │   │   │   └── page.tsx
 │   │   └── update-password
 │   │   └── page.tsx
@@ -246,6 +234,8 @@ Let me know if you want a **code block for the key sync/read/write actions** or 
 │   │   └── page.tsx
 │   ├── favicon.ico
 │   ├── globals.css
+│   ├── image-process
+│   │   └── page.tsx
 │   ├── layout.tsx
 │   ├── loading-bak.tsx
 │   ├── loading.tsx
@@ -272,6 +262,7 @@ Let me know if you want a **code block for the key sync/read/write actions** or 
 ├── commands
 │   ├── smart
 │   │   ├── handle-command.ts
+│   │   ├── new-command-handler.ts
 │   │   ├── registry.ts
 │   │   ├── sets
 │   │   │   ├── about.ts
@@ -353,6 +344,9 @@ Let me know if you want a **code block for the key sync/read/write actions** or 
 │   │   └── noisy-logo
 │   │   ├── noisy-logo-test.tsx
 │   │   └── noisy-logo.tsx
+│   ├── image
+│   │   ├── image-analyzer.tsx
+│   │   └── image-to-ocr.tsx
 │   ├── like
 │   │   └── like-button.tsx
 │   ├── login-form.tsx
@@ -490,8 +484,17 @@ Let me know if you want a **code block for the key sync/read/write actions** or 
 │   │   └── config.js
 │   ├── keyword-utils.ts
 │   ├── ledger
+│   │   ├── account-map.ts
+│   │   ├── auto-balance-ledger-entry.ts
+│   │   ├── build-postings-from-receipt.ts
 │   │   ├── is-local-write-enabled.ts
-│   │   └── parse-ledger-entry.ts
+│   │   ├── parse-ledger-entry.ts
+│   │   ├── parse-manual-command.ts
+│   │   ├── parse-receipt-ocr.ts
+│   │   ├── render-ledger.ts
+│   │   ├── schemas.ts
+│   │   ├── segment-ocr-with-llm.ts
+│   │   └── validate-receipt-ocr.ts
 │   ├── ledger-config.ts
 │   ├── ledger-date-parse.ts
 │   ├── ledger-date.ts
@@ -530,13 +533,3 @@ Let me know if you want a **code block for the key sync/read/write actions** or 
 │   ├── middleware.ts
 │   └── server.ts
 └── utils.ts
-
-flowchart TD
-A[User input in React Terminal] --> B[AI parses to Ledger CLI format]
-B --> C[parseLedgerEntry extracts fields]
-C --> D[Lookup business in Supabase]
-D --> E[Write ledger entry row to Supabase]
-E -->|If LOCAL_LEDGER_WRITE=true| F[Sync all entries from Supabase to .ledger file]
-F --> G[Local .ledger file updated]
-G -->|Dev only| H[Run Ledger CLI commands]
-H --> I[Show CLI output in terminal UI]

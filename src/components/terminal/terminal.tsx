@@ -6,6 +6,7 @@ import TerminalOutputRenderer from "./terminal-output-renderer";
 import { TerminalOutputRendererProps } from "@/types/terminal";
 import type { CommandMeta } from "@/commands/utils";
 import { usePathname } from "next/navigation";
+import TerminalImageUpload from "./terminal-image-upload"; // ⬅️ add import
 
 export type TerminalProps = {
   storageKey?: string;
@@ -304,45 +305,52 @@ export default function Terminal({
             await onCommand?.(input, setHistory, history);
             setInput("");
           }}
-          className="flex items-center gap-2 mt-2 mb-8"
+          className="flex flex-col gap-2 mt-2 mb-8"
         >
-          <span className="text-primary select-none">$</span>
-          <Textarea
-            ref={inputRef}
-            value={input}
-            autoComplete="off"
-            autoCapitalize="off" // 👈 disables auto-capitalization
-            autoCorrect="off" // 👈 disables auto-correct
-            inputMode="text" // 👈 regular keyboard
-            spellCheck={false}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={async (e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                if (!input.trim()) return;
-                lastCommandRef.current = input;
-                await onCommand?.(input, setHistory, history);
-                setInput("");
-              } else if (e.key === "Escape") {
-                justEscapedRef.current = false;
-                inputRef.current?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "center",
-                });
-                inputRef.current?.focus();
-              }
-            }}
-            rows={1}
-            className="flex-1 bg-transparent px-0 py-2 border-0 outline-none focus:ring-0 resize-none scrollbar-none font-mono !text-base autofill:bg-transparent"
-            style={{
-              minHeight: 32,
-              maxHeight: 96,
-              overflow: "hidden",
-              boxShadow: "none",
-              backgroundColor: "transparent",
-            }}
-            placeholder="Type a command..."
+          {/* ⬅️ our new button */}
+          <TerminalImageUpload
+            onRunCommand={(cmd) => onCommand?.(cmd, setHistory, history)}
           />
+          <div className="flex items-center gap-2">
+            <span className="text-primary select-none">$</span>
+
+            <Textarea
+              ref={inputRef}
+              value={input}
+              autoComplete="off"
+              autoCapitalize="off" // 👈 disables auto-capitalization
+              autoCorrect="off" // 👈 disables auto-correct
+              inputMode="text" // 👈 regular keyboard
+              spellCheck={false}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={async (e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (!input.trim()) return;
+                  lastCommandRef.current = input;
+                  await onCommand?.(input, setHistory, history);
+                  setInput("");
+                } else if (e.key === "Escape") {
+                  justEscapedRef.current = false;
+                  inputRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                  });
+                  inputRef.current?.focus();
+                }
+              }}
+              rows={1}
+              className="flex-1 bg-transparent px-0 py-2 border-0 outline-none focus:ring-0 resize-none scrollbar-none font-mono !text-base autofill:bg-transparent"
+              style={{
+                minHeight: 32,
+                maxHeight: 96,
+                overflow: "hidden",
+                boxShadow: "none",
+                backgroundColor: "transparent",
+              }}
+              placeholder="Type a command..."
+            />
+          </div>
         </form>
       </div>
     </div>
