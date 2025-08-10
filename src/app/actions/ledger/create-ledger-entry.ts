@@ -10,6 +10,10 @@ export async function createLedgerEntry(data: {
   entry_text: string;
   entry_raw: string;
 }) {
+  console.log("CHECK HERE!: ");
+  console.log("entry text", data.entry_text);
+  console.log("entry raw", data.entry_raw);
+
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   const user = auth?.user;

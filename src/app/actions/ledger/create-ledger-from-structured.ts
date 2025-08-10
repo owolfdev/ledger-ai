@@ -18,6 +18,9 @@ export interface CreateLedgerFromStructuredInput {
 export async function createLedgerFromStructured(
   input: CreateLedgerFromStructuredInput
 ) {
+  console.log("CHECK HERE!: ");
+  console.log("input!: ", input);
+
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   const user = auth?.user;
