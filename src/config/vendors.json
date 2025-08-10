@@ -1,0 +1,30 @@
+{
+  "knownNames": [
+    "WALMART",
+    "TARGET",
+    "COSTCO",
+    "STARBUCKS",
+    "AMAZON",
+    "TESCO",
+    "7-ELEVEN",
+    "7-11",
+    "SEVEN ELEVEN",
+    "HOME DEPOT",
+    "LOWE'S",
+    "SHELL",
+    "FOODLAND",
+    "GOURMET MARKET",
+    "GROCERY",
+    "GROCERY STORE",
+    "AMANTEE",
+    "MUJI",
+    "VISTA CAFE",
+    "VERASU"
+  ],
+  "slogans": [
+    { "pattern": "Save money. Live better.", "vendor": "Walmart" },
+    { "pattern": "Just Do It", "vendor": "Nike" },
+    { "pattern": "I'm Lovin' It", "vendor": "McDonald's" },
+    { "pattern": "Have It Your Way", "vendor": "Burger King" }
+  ]
+}

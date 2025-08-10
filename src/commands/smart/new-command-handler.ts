@@ -1,4 +1,4 @@
-// /commands/smart/new-command-handler.ts
+// /commands/smart/new-command-handler.ts (patched)
 "use client";
 
 import { TerminalOutputRendererProps } from "@/types/terminal";
@@ -32,7 +32,8 @@ interface StructuredInput {
   tax?: number | null;
   total?: number | null;
   date?: string;
-  payee?: string;
+  payee?: string; // canonical
+  vendor?: string; // alias from OCR UI
   currency?: string;
   memo?: string | null;
   paymentAccount?: string;
@@ -81,11 +82,21 @@ function normalizeReceiptData(structured: StructuredInput): ReceiptShape {
   throw new Error("Invalid structured JSON: missing items[]");
 }
 
+function todayISO(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 function processStructuredInput(structured: StructuredInput): ProcessingResult {
   const receipt = normalizeReceiptData(structured);
+  const payee = structured.payee || structured.vendor || "Unknown"; // map vendor→payee
+  const date = structured.date || todayISO();
   return {
-    date: structured.date || new Date().toISOString().slice(0, 10),
-    payee: structured.payee || "Unknown",
+    date,
+    payee,
     currency: structured.currency || DEFAULT_CONFIG.currency,
     receipt,
     paymentAccount: structured.paymentAccount ?? undefined,
@@ -165,7 +176,7 @@ async function processAndSaveEntry(
     paymentAccount: payload.paymentAccount || DEFAULT_CONFIG.paymentAccount,
     includeTaxLine: DEFAULT_CONFIG.includeTaxLine,
     mapAccount: accountMap,
-    vendor: payload.payee,
+    vendor: payload.payee, // used by mappers that rely on payee
   });
 
   const ledgerPreview = renderLedger(

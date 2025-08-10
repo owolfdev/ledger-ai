@@ -73,6 +73,8 @@ export default function TerminalImageUpload({
           validateReceiptOcrMath(parsed);
 
           const jsonPayload = {
+            vendor: seg.vendor,
+            date: seg.date,
             items: parsed.items,
             subtotal: parsed.subtotal,
             tax: parsed.tax,
