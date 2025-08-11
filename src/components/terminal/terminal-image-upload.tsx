@@ -1,4 +1,3 @@
-// FILE: /src/components/terminal/terminal-image-upload.tsx (add tax/subtotal inference)
 "use client";
 import React, { useRef, useState } from "react";
 import Tesseract from "tesseract.js";
@@ -10,7 +9,7 @@ import {
 import { parseReceiptOcrInvoice } from "@/lib/ledger/parse-receipt-ocr-invoice";
 import { validateReceiptOcrMath } from "@/lib/ledger/validate-receipt-ocr";
 
-// --- Helpers ---------------------------------------------------------------
+// ---- helpers ----
 function round2(n: number) {
   return Math.round(n * 100) / 100;
 }
@@ -19,14 +18,6 @@ function sumItems(items: { price: number }[]) {
     items.reduce((s, i) => s + (Number.isFinite(i.price) ? i.price : 0), 0)
   );
 }
-
-/**
- * Coalesce missing subtotal/tax to satisfy validation rules:
- * - If subtotal & total exist but tax is null → tax = total - subtotal (>=0 within sane bounds)
- * - If total & tax exist but subtotal is null → subtotal = total - tax
- * - If only total exists → try subtotal = sum(items), tax = total - subtotal
- * Bounds: tax must be >= -0.01 and <= max(0.35*subtotal, subtotal) to avoid wild inference.
- */
 function coalesceSummary(parsed: ReceiptData): ReceiptData {
   const out: ReceiptData = { ...parsed };
   const itemsSum = sumItems(out.items);
@@ -37,15 +28,13 @@ function coalesceSummary(parsed: ReceiptData): ReceiptData {
 
   if (hasSub && hasTot && !hasTax) {
     const diff = round2((out.total as number) - (out.subtotal as number));
-    const maxTax = Math.max(0.35 * (out.subtotal as number), 0); // allow up to 35% as a guard
+    const maxTax = Math.max(0.35 * (out.subtotal as number), 0);
     if (diff >= -0.01 && diff <= maxTax + 0.01) out.tax = diff < 0 ? 0 : diff;
   }
-
   if (hasTot && hasTax && !hasSub) {
     const sub = round2((out.total as number) - (out.tax as number));
     if (sub >= 0) out.subtotal = sub;
   }
-
   if (hasTot && !hasSub && !hasTax) {
     const inferredTax = round2((out.total as number) - itemsSum);
     if (inferredTax >= -0.01) {
@@ -53,8 +42,36 @@ function coalesceSummary(parsed: ReceiptData): ReceiptData {
       out.tax = inferredTax < 0 ? 0 : inferredTax;
     }
   }
-
   return out;
+}
+
+// Upload to server for sharp preprocess + Supabase upload
+async function preprocessAndUpload(file: File) {
+  const fd = new FormData();
+  fd.append("file", file); // must be "file"
+
+  const res = await fetch("/api/receipt-preprocess", {
+    method: "POST",
+    body: fd,
+  });
+
+  if (!res.ok) {
+    let msg = `Preprocess failed (${res.status})`;
+    try {
+      const j = await res.json();
+      if (j?.error) msg = j.error;
+    } catch {
+      msg = await res.text();
+    }
+    throw new Error(msg);
+  }
+
+  return (await res.json()) as {
+    ok: true;
+    url: string; // public (or signed) URL of processed image
+    mime: string; // image/jpeg
+    width: number; // 1500
+  };
 }
 
 export default function TerminalImageUpload({
@@ -66,87 +83,85 @@ export default function TerminalImageUpload({
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const resizeImage = (file: File, callback: (blob: Blob) => void) => {
-    const img = new window.Image();
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) img.src = e.target.result as string;
-    };
-    img.onload = () => {
-      const targetW = 1000;
-      const scale = targetW / img.width;
-      const targetH = Math.max(1, Math.round(img.height * scale));
-      const canvas = document.createElement("canvas");
-      canvas.width = targetW;
-      canvas.height = targetH;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      ctx.filter = "grayscale(1) contrast(1.2)";
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob((blob) => blob && callback(blob), "image/jpeg", 0.85);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     setLoading(true);
     setProgress(0);
 
-    resizeImage(file, (blob) => {
-      Tesseract.recognize(blob, "eng", {
+    try {
+      // 1) sharp on server + upload to Supabase
+      const processed = await preprocessAndUpload(file);
+      const imageUrl = processed.url;
+
+      // 2) OCR on the *processed* image (fetch → Blob)
+      const resp = await fetch(imageUrl, { cache: "no-store" });
+      if (!resp.ok)
+        throw new Error(`Failed to fetch processed image (${resp.status})`);
+      const ocrBlob = await resp.blob();
+
+      const {
+        data: { text },
+      } = await Tesseract.recognize(ocrBlob, "eng", {
         logger: (m) => {
-          if (m.status === "recognizing text" && typeof m.progress === "number")
+          if (
+            m.status === "recognizing text" &&
+            typeof m.progress === "number"
+          ) {
             setProgress(Math.round(m.progress * 100));
+          }
         },
-      })
-        .then(async ({ data: { text } }) => {
-          const seg = await segmentReceiptOcr(text);
+      });
 
-          const tryParsers = [
-            () => (seg.block ? parseReceiptOcr(seg.block) : null),
-            () => (seg.block ? parseReceiptOcrInvoice(seg.block) : null),
-            () => parseReceiptOcr(text),
-            () => parseReceiptOcrInvoice(text),
-          ];
+      // 3) Segment + parse (receipt-first, then invoice)
+      const seg = await segmentReceiptOcr(text);
+      const tryParsers = [
+        () => (seg.block ? parseReceiptOcr(seg.block) : null),
+        () =>
+          seg.block
+            ? (parseReceiptOcrInvoice(seg.block) as unknown as ReceiptData)
+            : null,
+        () => parseReceiptOcr(text),
+        () => parseReceiptOcrInvoice(text) as unknown as ReceiptData,
+      ];
 
-          let parsed: ReceiptData | null = null;
-          for (const fn of tryParsers) {
-            parsed = fn();
-            if (parsed && parsed.items.length > 0) break;
-          }
+      let parsed: ReceiptData | null = null;
+      for (const fn of tryParsers) {
+        const out = fn();
+        if (out && out.items?.length) {
+          parsed = out;
+          break;
+        }
+      }
 
-          if (!parsed || parsed.items.length === 0) {
-            alert("No valid items found in OCR result");
-            return;
-          }
+      if (!parsed || parsed.items.length === 0) {
+        alert("No valid items found in OCR result");
+        return;
+      }
 
-          // NEW: coalesce missing subtotal/tax so schema validation passes
-          parsed = coalesceSummary(parsed);
+      parsed = coalesceSummary(parsed);
+      validateReceiptOcrMath(parsed); // non-blocking
 
-          // Optional math check (non-blocking)
-          validateReceiptOcrMath(parsed);
-
-          const jsonPayload = {
-            vendor: seg.vendor,
-            date: seg.date,
-            items: parsed.items,
-            subtotal: parsed.subtotal,
-            tax: parsed.tax,
-            total: parsed.total,
-            rawLines: parsed.rawLines,
-            section: parsed.section,
-          };
-
-          onRunCommand(`new ${JSON.stringify(jsonPayload)}`);
-        })
-        .catch((err) => {
-          console.error("OCR error", err);
-          alert("OCR failed: " + (err?.message || err));
-        })
-        .finally(() => setLoading(false));
-    });
+      // 4) Send to terminal as `new { ... }`, now with imageUrl
+      const jsonPayload = {
+        vendor: seg.vendor,
+        date: seg.date,
+        items: parsed.items,
+        subtotal: parsed.subtotal,
+        tax: parsed.tax,
+        total: parsed.total,
+        rawLines: parsed.rawLines,
+        section: parsed.section,
+        imageUrl, // NEW
+      };
+      onRunCommand(`new ${JSON.stringify(jsonPayload)}`);
+    } catch (err: unknown) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "Image processing failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

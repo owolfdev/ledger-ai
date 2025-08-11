@@ -11,6 +11,7 @@ export interface CreateLedgerFromStructuredInput {
   date: string; // YYYY-MM-DD
   payee: string; // merchant
   receipt: ReceiptShape; // structured items/subtotal/tax/total
+  imageUrl?: string; // optional image URL
   currency?: string; // default THB
   paymentAccount?: string; // default Assets:Cash
 }
@@ -54,6 +55,7 @@ export async function createLedgerFromStructured(
         amount: +amountPaid.toFixed(2),
         currency,
         entry_text,
+        image_url: input.imageUrl,
       },
     ])
     .select("id")

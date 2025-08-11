@@ -80,10 +80,11 @@ export type ReceiptShape = z.infer<typeof ReceiptShapeSchema>;
 export const NewCommandPayloadSchema = z.object({
   date: DateYMD,
   payee: z.string().min(1),
-  currency: CurrencyISO, // e.g., USD, THB
+  currency: CurrencyISO,
   receipt: ReceiptShapeSchema,
   paymentAccount: AccountPath.optional(),
   memo: z.string().max(1000).optional().nullable(),
+  imageUrl: z.string().url().optional().nullable(), // <--- NEW
 });
 export type NewCommandPayload = z.infer<typeof NewCommandPayloadSchema>;
 
