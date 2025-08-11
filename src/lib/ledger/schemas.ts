@@ -11,7 +11,7 @@ export const DateYMD = z
 // Ledger account path like Assets:Cash or Expenses:Personal:Food:Coffee
 export const AccountPath = z
   .string()
-  .regex(/^[A-Z][A-Za-z]*(?::[A-Z][A-Za-z]*)*$/u, "Invalid account path");
+  .regex(/^[A-Z][\w &-]*(?::[A-Z][\w &-]*)*$/u, "Invalid account path");
 
 // ISO currency code (3 letters)
 export const CurrencyISO = z
@@ -20,10 +20,7 @@ export const CurrencyISO = z
   .transform((s) => s.toUpperCase());
 
 // Money (finite, 2dp max). Store as number; rounding handled elsewhere.
-export const Money = z
-  .number({ message: "Amount must be a number" })
-  .finite()
-  .refine((n) => Number.isFinite(n), "Amount must be finite");
+export const Money = z.number({ message: "Amount must be a number" }).finite();
 
 export const ReceiptItemSchema = z.object({
   description: z.string().min(1),
@@ -84,7 +81,10 @@ export const NewCommandPayloadSchema = z.object({
   receipt: ReceiptShapeSchema,
   paymentAccount: AccountPath.optional(),
   memo: z.string().max(1000).optional().nullable(),
-  imageUrl: z.string().url().optional().nullable(), // <--- NEW
+  imageUrl: z
+    .union([z.string().url(), z.string().regex(/^[^\\s]+$/)])
+    .optional()
+    .nullable(),
 });
 export type NewCommandPayload = z.infer<typeof NewCommandPayloadSchema>;
 

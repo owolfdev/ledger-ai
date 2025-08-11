@@ -339,12 +339,9 @@ export default function Terminal({
                   inputRef.current?.focus();
                 }
               }}
-              rows={1}
-              className="flex-1 bg-transparent px-0 py-2 border-0 outline-none focus:ring-0 resize-none scrollbar-none font-mono !text-base autofill:bg-transparent"
+              className="flex-1 bg-transparent px-0 py-2 outline-none focus:ring-0 font-mono !text-base autofill:bg-transparent pl-2 min-h-28 border"
               style={{
                 minHeight: 32,
-                maxHeight: 96,
-                overflow: "hidden",
                 boxShadow: "none",
                 backgroundColor: "transparent",
               }}

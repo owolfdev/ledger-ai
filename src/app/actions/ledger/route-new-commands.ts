@@ -7,6 +7,7 @@ import {
   type ReceiptShape,
 } from "@/lib/ledger/build-postings-from-receipt";
 import { renderLedger } from "@/lib/ledger/render-ledger";
+import { appendLedgerEntryText } from "@/app/actions/ledger/after-save-ledger-sync";
 
 export type NewCommandPayload = {
   date: string; // YYYY-MM-DD (local)
@@ -81,15 +82,12 @@ export async function handleNewCommand(
   payload: NewCommandPayload
 ): Promise<HandleNewResult> {
   const supabase = await createClient();
-
-  // Require auth — DB has user_id NOT NULL
   const {
     data: { user },
     error: userErr,
   } = await supabase.auth.getUser();
   if (userErr || !user) return { ok: false, error: "Not authenticated." };
 
-  // 1) Build postings with the same payment account used in client preview
   const built = buildPostingsFromReceipt(payload.receipt, {
     currency: payload.currency,
     paymentAccount: payload.paymentAccount || "Assets:Cash",
@@ -97,36 +95,15 @@ export async function handleNewCommand(
     vendor: payload.payee,
   });
 
-  // 2) Normalize to fully-typed, balanced postings
   const postings = normalizePostings(built, payload.currency);
-
-  if (DBG) {
-    console.log("[handleNew] payload:", payload);
-    console.log(
-      "[handleNew] postings (normalized):",
-      postings.map((p, i) => ({
-        i,
-        account: p.account,
-        amount: p.amount,
-        currency: p.currency,
-      }))
-    );
-  }
-
-  // 3) Render canonical text from normalized postings
-  //    (renderLedger typically ignores currency symbol and uses date/payee + amount alignment)
   const entry_text = renderLedger(
     payload.date,
     payload.payee,
-    postings as unknown as BuiltPosting[],
+    postings,
     payload.currency
   );
-
   const amountHeader = payload.receipt.total ?? payload.receipt.subtotal ?? 0;
 
-  if (DBG) console.log("[handleNew] entry_text:", entry_text);
-
-  // 4) Insert header
   const { data: headerRow, error: insHeaderErr } = await supabase
     .from("ledger_entries")
     .insert({
@@ -143,11 +120,6 @@ export async function handleNewCommand(
     .single();
 
   if (insHeaderErr || !headerRow) {
-    if (DBG)
-      console.error(
-        "[handleNew] insert ledger_entries failed",
-        insHeaderErr?.message
-      );
     return {
       ok: false,
       error: insHeaderErr?.message || "insert ledger_entries failed",
@@ -155,7 +127,6 @@ export async function handleNewCommand(
   }
   const entry_id = headerRow.id as number;
 
-  // 5) Insert postings (typed)
   const rows = postings.map((p, i) => ({
     entry_id,
     account: p.account,
@@ -164,7 +135,6 @@ export async function handleNewCommand(
     sort_order: i,
   }));
 
-  // Sanity: ensure zero-sum (avoid DB drift)
   const zeroSum = round2(rows.reduce((s, r) => s + r.amount, 0));
   if (Math.abs(zeroSum) > EPS) {
     await supabase.from("ledger_entries").delete().eq("id", entry_id);
@@ -174,25 +144,24 @@ export async function handleNewCommand(
     };
   }
 
-  if (rows.length > 0) {
-    const { error: insPostsErr } = await supabase
-      .from("ledger_postings")
-      .insert(rows);
-    if (insPostsErr) {
-      if (DBG)
-        console.error(
-          "[handleNew] insert ledger_postings failed",
-          insPostsErr.message
-        );
-      await supabase.from("ledger_entries").delete().eq("id", entry_id);
-      return {
-        ok: false,
-        error: `insert ledger_postings failed: ${insPostsErr.message}`,
-      };
-    }
+  const { error: insPostsErr } = await supabase
+    .from("ledger_postings")
+    .insert(rows);
+  if (insPostsErr) {
+    await supabase.from("ledger_entries").delete().eq("id", entry_id);
+    return {
+      ok: false,
+      error: `insert ledger_postings failed: ${insPostsErr.message}`,
+    };
   }
 
-  if (DBG)
-    console.log("[handleNew] success", { entry_id, postings: rows.length });
+  // --- DEV ONLY APPEND SYNC ---
+  // Non-blocking: do not fail the request if local write fails
+  try {
+    await appendLedgerEntryText(entry_text);
+  } catch (_) {
+    // swallow in production builds; logs are enough during dev
+  }
+
   return { ok: true, entry_id, postings: rows.length };
 }

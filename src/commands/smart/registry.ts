@@ -5,6 +5,7 @@ import { globalCommandKeys } from "./sets/global";
 import { adminCommandKeys } from "./sets/admin";
 // import { getContactMessages } from "@/app/actions/contact/get-contact-messages";
 import { User } from "@/types/user";
+import { entriesListCommand } from "@/commands/smart/entries-command";
 
 export const commandRegistry: Record<string, CommandMeta> = {
   // --- Basic/Navigation ---
@@ -88,6 +89,30 @@ export const commandRegistry: Record<string, CommandMeta> = {
     content: "__SUPABASE_LOGOUT__",
     description: "Sign out the current Supabase user.",
     usage: "logout",
+  },
+
+  // Ledger CLI
+
+  entries: {
+    description:
+      "List recent ledger entries (usage: entries [limit] [--sort date|created|amount] [asc|desc])",
+    content: (
+      arg?: string,
+      pageCtx?: string,
+      cmds?: Record<string, CommandMeta>,
+      user?: User | null
+    ) => entriesListCommand(arg || "", pageCtx || "", cmds || {}, user || null),
+    usage: "entries [limit] [--sort date|created|amount] [asc|desc]",
+  },
+  ent: {
+    description: "Alias of entries",
+    content: (
+      arg?: string,
+      pageCtx?: string,
+      cmds?: Record<string, CommandMeta>,
+      user?: User | null
+    ) => entriesListCommand(arg || "", pageCtx || "", cmds || {}, user || null),
+    usage: "ent [limit] [--sort date|created|amount] [asc|desc]",
   },
 
   // --- Blog/Projects (NOTE: logic handled in handle-command.ts) ---
