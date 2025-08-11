@@ -1,6 +1,10 @@
+//src/app/api/receipt-image/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import { createClient } from "@/utils/supabase/server";
+
+// Sharp needs Node runtime (NOT edge)
+export const runtime = "nodejs";
 
 // Bucket name you created in Supabase Storage
 const BUCKET = "receipts";
@@ -14,7 +18,7 @@ export async function POST(req: NextRequest) {
     const inputBuf = Buffer.from(await file.arrayBuffer());
 
     // Preprocess for OCR: 1500px wide, grayscale, normalize, compress
-    const processed = await sharp(inputBuf)
+    const processed = await sharp(inputBuf, { failOn: "none" })
       .rotate() // auto-orient based on EXIF
       .resize({ width: 1500, withoutEnlargement: false })
       .grayscale()
