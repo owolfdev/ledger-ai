@@ -6,6 +6,11 @@ export type TerminalOutput = {
   format?: "plain" | "markdown" | "mdx";
 };
 
-export type TerminalOutputRendererProps = TerminalOutput & {
+export interface TerminalOutputRendererProps {
+  type?: "input" | "output";
+  content: string;
+  format?: "plain" | "markdown" | "mdx" | "component";
   className?: string;
-};
+  component?: string; // Component name for custom rendering
+  props?: Record<string, unknown>; // Props to pass to the component
+}

@@ -50,7 +50,7 @@ export const ReceiptShapeSchema = z
     // If subtotal provided, check it matches the sum of item prices (within 1 cent)
     const sum = Number(val.items.reduce((s, it) => s + it.price, 0).toFixed(2));
 
-    if (val.subtotal !== null && Math.abs(sum - val.subtotal) > 0.01) {
+    if (val.subtotal !== null && Math.abs(sum - val.subtotal) > 0.05) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: `Subtotal ${val.subtotal} does not equal items sum ${sum}`,

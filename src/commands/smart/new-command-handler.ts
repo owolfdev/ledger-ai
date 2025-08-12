@@ -124,6 +124,26 @@ function toPayload(result: ProcessingResult): NewCommandPayload {
   });
 }
 
+// NEW: Helper to format Zod errors for display
+function formatZodErrorForAlert(error: unknown): string {
+  if (error instanceof Error) {
+    try {
+      // Try to parse as Zod error JSON
+      const parsed = JSON.parse(error.message);
+      if (Array.isArray(parsed)) {
+        // Format multiple validation errors as bullet points
+        return parsed
+          .map((err: { message: string }) => `• ${err.message}`)
+          .join("\n");
+      }
+    } catch {
+      // Not JSON, use the raw error message
+      return error.message;
+    }
+  }
+  return String(error);
+}
+
 function updateHistoryWithLedger(
   setHistory: SetHistory,
   ledgerPreview: string
@@ -150,11 +170,13 @@ function updateHistoryWithSuccess(setHistory: SetHistory): void {
 }
 
 function updateHistoryWithError(setHistory: SetHistory, message: string): void {
+  const formattedMessage = formatZodErrorForAlert(message);
+
   setHistory((h) => [
     ...h.slice(0, -1),
     {
       type: "output",
-      content: `<my-alert message="❌ ${message}" />`,
+      content: `<custom-alert message="❌ ${formattedMessage}" />`,
       format: "markdown",
     },
   ]);
@@ -169,9 +191,30 @@ async function processAndSaveEntry(
   try {
     payload = toPayload(result);
   } catch (err) {
-    const msg =
-      err instanceof Error ? err.message : "Invalid data. Please check input.";
-    updateHistoryWithError(setHistory, msg);
+    // Format the error properly here
+    let formattedError: string;
+
+    if (err instanceof Error) {
+      // Check if it's a Zod validation error (contains JSON array)
+      if (err.message.trim().startsWith("[")) {
+        try {
+          const zodErrors = JSON.parse(err.message);
+          formattedError = Array.isArray(zodErrors)
+            ? zodErrors
+                .map((e: { message: string }) => `• ${e.message}`)
+                .join("\n")
+            : err.message;
+        } catch {
+          formattedError = err.message;
+        }
+      } else {
+        formattedError = err.message;
+      }
+    } else {
+      formattedError = "Invalid data. Please check input.";
+    }
+
+    updateHistoryWithError(setHistory, formattedError);
     return;
   }
 

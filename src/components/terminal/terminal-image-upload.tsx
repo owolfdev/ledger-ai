@@ -1,49 +1,19 @@
+// MODIFIED FILE: src/components/terminal/terminal-image-upload.tsx
+// Changes: Replace manual parser selection with confidence-based selection
+
 "use client";
 import React, { useRef, useState } from "react";
 import Tesseract from "tesseract.js";
 import { segmentReceiptOcr } from "@/lib/ledger/segment-ocr-with-llm";
-import {
-  parseReceiptOcr,
-  type ReceiptData,
-} from "@/lib/ledger/parse-receipt-ocr";
-import { parseReceiptOcrInvoice } from "@/lib/ledger/parse-receipt-ocr-invoice";
 import { validateReceiptOcrMath } from "@/lib/ledger/validate-receipt-ocr";
 
-// ---- helpers ----
-function round2(n: number) {
-  return Math.round(n * 100) / 100;
-}
-function sumItems(items: { price: number }[]) {
-  return round2(
-    items.reduce((s, i) => s + (Number.isFinite(i.price) ? i.price : 0), 0)
-  );
-}
-function coalesceSummary(parsed: ReceiptData): ReceiptData {
-  const out: ReceiptData = { ...parsed };
-  const itemsSum = sumItems(out.items);
-  const hasSub =
-    typeof out.subtotal === "number" && Number.isFinite(out.subtotal);
-  const hasTax = typeof out.tax === "number" && Number.isFinite(out.tax);
-  const hasTot = typeof out.total === "number" && Number.isFinite(out.total);
-
-  if (hasSub && hasTot && !hasTax) {
-    const diff = round2((out.total as number) - (out.subtotal as number));
-    const maxTax = Math.max(0.35 * (out.subtotal as number), 0);
-    if (diff >= -0.01 && diff <= maxTax + 0.01) out.tax = diff < 0 ? 0 : diff;
-  }
-  if (hasTot && hasTax && !hasSub) {
-    const sub = round2((out.total as number) - (out.tax as number));
-    if (sub >= 0) out.subtotal = sub;
-  }
-  if (hasTot && !hasSub && !hasTax) {
-    const inferredTax = round2((out.total as number) - itemsSum);
-    if (inferredTax >= -0.01) {
-      out.subtotal = itemsSum;
-      out.tax = inferredTax < 0 ? 0 : inferredTax;
-    }
-  }
-  return out;
-}
+// ---- NEW IMPORTS ----
+import {
+  parseReceiptWithConfidence,
+  enhancedCoalesceSummary,
+  assessOcrQuality,
+  type ParseResult,
+} from "@/lib/ledger/enhanced-ocr-pipeline";
 
 // Upload to server for sharp preprocess + Supabase upload
 async function preprocessAndUpload(file: File) {
@@ -114,14 +84,27 @@ export default function TerminalImageUpload({
         },
       });
 
-      // 3) Segment + parse (receipt-first, then invoice)
+      // ---- QUALITY CHECK (NEW) ----
+      const ocrQuality = assessOcrQuality(text);
+      console.log("OCR Quality Assessment:", ocrQuality);
+
+      if (ocrQuality.confidence < 0.2) {
+        throw new Error(
+          `OCR quality too low (${ocrQuality.confidence.toFixed(
+            2
+          )}): ${ocrQuality.issues.join(", ")}`
+        );
+      }
+
+      // 3) Segment + parse with ENHANCED PIPELINE
       const seg = await segmentReceiptOcr(text);
+
+      // ---- REPLACE OLD PARSER LOGIC ----
+      // OLD CODE (remove this):
+      /*
       const tryParsers = [
         () => (seg.block ? parseReceiptOcr(seg.block) : null),
-        () =>
-          seg.block
-            ? (parseReceiptOcrInvoice(seg.block) as unknown as ReceiptData)
-            : null,
+        () => seg.block ? (parseReceiptOcrInvoice(seg.block) as unknown as ReceiptData) : null,
         () => parseReceiptOcr(text),
         () => parseReceiptOcrInvoice(text) as unknown as ReceiptData,
       ];
@@ -134,30 +117,76 @@ export default function TerminalImageUpload({
           break;
         }
       }
+      */
 
-      if (!parsed || parsed.items.length === 0) {
-        alert("No valid items found in OCR result");
-        return;
+      // NEW CODE (replace with this):
+      const parseResult: ParseResult | null = await parseReceiptWithConfidence(
+        text,
+        seg.block
+      );
+
+      if (!parseResult) {
+        throw new Error(
+          "All parsers failed to extract valid items from receipt"
+        );
       }
 
-      parsed = coalesceSummary(parsed);
-      validateReceiptOcrMath(parsed); // non-blocking
+      // Check confidence threshold for AI fallback
+      if (parseResult.confidence < 0.4) {
+        console.warn(
+          `Low confidence parse (${parseResult.confidence.toFixed(
+            2
+          )}), consider AI fallback`
+        );
+        // TODO: This is where you'd trigger AI image analysis fallback (questions 3&4)
+      }
 
-      // 4) Send to terminal as `new { ... }`, now with imageUrl
+      if (!parseResult.mathValid && parseResult.confidence < 0.6) {
+        console.warn(
+          "Math validation failed and low confidence - may need manual review"
+        );
+        // TODO: This could trigger user correction interface (question 4)
+      }
+
+      // 4) Enhanced coalescing
+      const processedData = enhancedCoalesceSummary(parseResult.data);
+
+      // 5) Final validation (non-blocking)
+      const finalValidation = validateReceiptOcrMath(processedData);
+      if (!finalValidation.isValid) {
+        console.warn("Final math validation failed:", finalValidation.errors);
+      }
+
+      // 6) Send to terminal as `new { ... }`, now with enhanced metadata
       const jsonPayload = {
         vendor: seg.vendor,
         date: seg.date,
-        items: parsed.items,
-        subtotal: parsed.subtotal,
-        tax: parsed.tax,
-        total: parsed.total,
-        rawLines: parsed.rawLines,
-        section: parsed.section,
-        imageUrl, // NEW
+        items: processedData.items,
+        subtotal: processedData.subtotal,
+        tax: processedData.tax,
+        total: processedData.total,
+        rawLines: processedData.rawLines,
+        section: processedData.section,
+        imageUrl,
+        // ---- ENHANCED METADATA (NEW) ----
+        _meta: {
+          ocrQuality: ocrQuality.confidence,
+          parseConfidence: parseResult.confidence,
+          parser: parseResult.parser,
+          mathValid: parseResult.mathValid,
+          finalMathValid: finalValidation.isValid,
+          processingErrors: [
+            ...ocrQuality.issues,
+            ...parseResult.errors,
+            ...finalValidation.errors,
+          ],
+        },
       };
+
+      console.log("Final payload metadata:", jsonPayload._meta);
       onRunCommand(`new ${JSON.stringify(jsonPayload)}`);
     } catch (err: unknown) {
-      console.error(err);
+      console.error("Enhanced OCR processing failed:", err);
       alert(err instanceof Error ? err.message : "Image processing failed");
     } finally {
       setLoading(false);
