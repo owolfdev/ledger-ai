@@ -1,5 +1,7 @@
 # 📟 Ledger App — Terminal Command System
 
+updated
+
 **Technical Reference — August 2025**
 
 ---
