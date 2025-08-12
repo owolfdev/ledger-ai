@@ -2,7 +2,6 @@
 import type { MDXComponents } from "mdx/types";
 import React from "react";
 import Image from "next/image";
-import Link from "next/link";
 import Code from "@/components/code/code";
 import InlineCode from "@/components/code/inline-code";
 import Pre from "@/components/code/pre";
