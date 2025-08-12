@@ -15,6 +15,15 @@
     Expenses:Personal:SalesTax     $0.24
     Assets:Cash                   $-46.30
 
+2012/05/07 Walmart
+    Expenses:Personal:Groceries    $1.98
+    Expenses:Personal:Groceries    $0.98
+    Expenses:Personal:Groceries    $0.50
+    Expenses:Personal:Groceries    $0.98
+    Expenses:Personal:Groceries    $1.28
+    Expenses:Personal:Groceries    $1.18
+    Assets:Cash                   $-6.90
+
 2025/08/12 Farmer's Table
     Expenses:Personal:Food:Meat    $4.50
     Expenses:Personal:Food:Grains  $3.79
@@ -24,4 +33,22 @@
     Expenses:Personal:Food:Fruit   $0.84
     Expenses:Personal:Food:Dairy   $4.88
     Assets:Cash                   $-21.01
+
+2025/08/13 Farmer's Table
+    Expenses:Personal:Food:Meat    $4.50
+    Expenses:Personal:Food:Grains  $3.79
+    Expenses:Personal:Food:Condiments $3.99
+    Expenses:Personal:Food:Vegetables $1.62
+    Expenses:Personal:Food:Vegetables $1.39
+    Expenses:Personal:Food:Fruit   $0.84
+    Expenses:Personal:Food:Dairy   $4.88
+    Assets:Cash                   $-21.01
+
+2030/02/11 Borcele Bank
+    Expenses:Personal:Misc         $100.00
+    Expenses:Personal:Misc         $100.00
+    Expenses:Personal:Misc         $100.00
+    Expenses:Personal:Misc         $100.00
+    Expenses:Personal:SalesTax     $40.00
+    Assets:Cash                   $-440.00
 
