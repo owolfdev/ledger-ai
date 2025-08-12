@@ -7,7 +7,7 @@ import Image from "next/image";
 
 type PageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Record<string, string | string[] | undefined>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 function parseId(idParam: string): number | null {
