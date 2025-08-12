@@ -102,7 +102,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
       cmds?: Record<string, CommandMeta>,
       user?: User | null
     ) => entriesListCommand(arg || "", pageCtx || "", cmds || {}, user || null),
-    usage: "entries [limit] [--sort date|created|amount] [asc|desc]",
+    usage: "entries [limit] [date|created|amount] [asc|desc] [--sum]",
   },
   ent: {
     description: "Alias of entries",
@@ -112,7 +112,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
       cmds?: Record<string, CommandMeta>,
       user?: User | null
     ) => entriesListCommand(arg || "", pageCtx || "", cmds || {}, user || null),
-    usage: "ent [limit] [--sort date|created|amount] [asc|desc]",
+    usage: "ent [limit] [date|created|amount] [asc|desc] [--sum]",
   },
 
   // --- Blog/Projects (NOTE: logic handled in handle-command.ts) ---

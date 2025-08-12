@@ -7,7 +7,8 @@ import {
   type ReceiptShape,
 } from "@/lib/ledger/build-postings-from-receipt";
 import { renderLedger } from "@/lib/ledger/render-ledger";
-import { appendLedgerEntryText } from "@/app/actions/ledger/after-save-ledger-sync";
+import { syncLedgerFileFromDB } from "@/app/actions/ledger/after-save-ledger-sync";
+import { isLocalLedgerWriteEnabled } from "@/lib/ledger/is-local-write-enabled";
 
 export type NewCommandPayload = {
   date: string; // YYYY-MM-DD (local)
@@ -16,7 +17,7 @@ export type NewCommandPayload = {
   receipt: ReceiptShape;
   paymentAccount?: string; // e.g., Liabilities:CreditCard
   memo?: string | null;
-  imageUrl?: string | null; // 👈 NEW
+  imageUrl?: string | null;
 };
 
 export type HandleNewResult =
@@ -27,14 +28,12 @@ const DBG = process.env.NEXT_PUBLIC_LEDGER_DEBUG === "true";
 const EPS = 0.005;
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-// Infer the posting shape produced by the builder
 type BuiltPosting = ReturnType<typeof buildPostingsFromReceipt>[number];
 
-// Render/DB friendly, fully-typed posting
 type NormalizedPosting = {
   account: string;
-  amount: number; // always concrete
-  currency: string; // concrete; defaulted to payload currency
+  amount: number;
+  currency: string;
 };
 
 function toNumberOrNull(v: unknown): number | null {
@@ -45,14 +44,12 @@ function normalizePostings(
   src: BuiltPosting[],
   defaultCurrency: string
 ): NormalizedPosting[] {
-  // 1) Read amounts (some may be missing/undefined)
   const interim = src.map((p) => ({
     account: (p as { account: string }).account,
     amount: toNumberOrNull((p as { amount?: number }).amount),
     currency: (p as { currency?: string }).currency ?? defaultCurrency,
   }));
 
-  // 2) Compute sum of known amounts and locate last unknown (usually payment)
   let sum = 0;
   let lastUnknown = -1;
   for (let i = 0; i < interim.length; i++) {
@@ -62,7 +59,6 @@ function normalizePostings(
   }
   sum = round2(sum);
 
-  // 3) If we have unknown → make it balancing; else if slightly off → fix last posting
   const out: NormalizedPosting[] = interim.map((p) => ({
     account: p.account,
     amount: p.amount ?? 0,
@@ -72,7 +68,6 @@ function normalizePostings(
   if (lastUnknown !== -1) {
     out[lastUnknown].amount = round2(-sum);
   } else if (Math.abs(sum) > EPS && out.length > 0) {
-    // Fix rounding drift on the last posting
     out[out.length - 1].amount = round2(out[out.length - 1].amount - sum);
   }
 
@@ -100,7 +95,7 @@ export async function handleNewCommand(
   const entry_text = renderLedger(
     payload.date,
     payload.payee,
-    postings,
+    postings as unknown as BuiltPosting[],
     payload.currency
   );
   const amountHeader = payload.receipt.total ?? payload.receipt.subtotal ?? 0;
@@ -116,7 +111,7 @@ export async function handleNewCommand(
       currency: payload.currency,
       entry_text,
       memo: payload.memo ?? null,
-      image_url: payload.imageUrl ?? null, // 👈 NEW persist
+      image_url: payload.imageUrl ?? null,
     })
     .select("id")
     .single();
@@ -157,12 +152,15 @@ export async function handleNewCommand(
     };
   }
 
-  // --- DEV ONLY APPEND SYNC ---
-  // Non-blocking: do not fail the request if local write fails
-  try {
-    await appendLedgerEntryText(entry_text);
-  } catch (_) {
-    // swallow in production builds; logs are enough during dev
+  // ---- DEV FILE SYNC (rewrite from DB; no append to avoid duplicates) ----
+  if (isLocalLedgerWriteEnabled()) {
+    try {
+      const res = await syncLedgerFileFromDB();
+      if (!res.ok) console.warn("[ledger-sync] failed:", res.error);
+      else console.log("[ledger-sync] OK");
+    } catch (e) {
+      console.warn("[ledger-sync] exception:", e);
+    }
   }
 
   return { ok: true, entry_id, postings: rows.length };
