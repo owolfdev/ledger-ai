@@ -16,6 +16,7 @@ export type NewCommandPayload = {
   receipt: ReceiptShape;
   paymentAccount?: string; // e.g., Liabilities:CreditCard
   memo?: string | null;
+  imageUrl?: string | null; // 👈 NEW
 };
 
 export type HandleNewResult =
@@ -115,6 +116,7 @@ export async function handleNewCommand(
       currency: payload.currency,
       entry_text,
       memo: payload.memo ?? null,
+      image_url: payload.imageUrl ?? null, // 👈 NEW persist
     })
     .select("id")
     .single();

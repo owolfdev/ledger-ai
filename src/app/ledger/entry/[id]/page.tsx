@@ -3,6 +3,7 @@
 
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import Image from "next/image";
 
 type PageProps = {
   params: { id: string };
@@ -72,19 +73,6 @@ export default async function LedgerEntryPage({ params }: PageProps) {
             )}
           </div>
         </div>
-
-        {entry.image_url ? (
-          <div className="mt-4">
-            <a
-              href={entry.image_url}
-              target="_blank"
-              rel="noreferrer"
-              className="underline text-sm"
-            >
-              View attached image
-            </a>
-          </div>
-        ) : null}
       </section>
 
       {postings && postings.length > 0 ? (
@@ -111,6 +99,36 @@ export default async function LedgerEntryPage({ params }: PageProps) {
           </pre>
         </section>
       ) : null}
+
+      <section className="rounded-2xl border p-4">
+        {entry.image_url ? (
+          <figure className="mt-4">
+            <div className="relative w-full overflow-hidden rounded-xl border bg-black/5">
+              {/* use plain <img> to avoid Next/Image remote domain setup */}
+              <Image
+                src={entry.image_url}
+                alt={`Receipt image for ${entry.description} on ${entry.entry_date}`}
+                className="block max-h-[520px] w-full object-contain bg-white"
+                loading="lazy"
+                width={1000}
+                height={1000}
+              />
+            </div>
+            <figcaption className="mt-2 text-xs text-neutral-500">
+              <a
+                href={entry.image_url}
+                target="_blank"
+                rel="noreferrer"
+                className="underline hover:no-underline"
+              >
+                Open full size
+              </a>
+            </figcaption>
+          </figure>
+        ) : null}
+
+        {/*  */}
+      </section>
     </div>
   );
 }

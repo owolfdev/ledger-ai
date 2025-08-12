@@ -37,6 +37,7 @@ interface StructuredInput {
   currency?: string;
   memo?: string | null;
   paymentAccount?: string;
+  imageUrl?: string | null; // 👈 NEW
 }
 
 interface ProcessingResult {
@@ -46,6 +47,7 @@ interface ProcessingResult {
   receipt: ReceiptShape;
   paymentAccount?: string;
   memo?: string | null;
+  imageUrl?: string | null; // 👈 NEW
 }
 
 function isValidStructuredInput(obj: unknown): obj is StructuredInput {
@@ -101,6 +103,7 @@ function processStructuredInput(structured: StructuredInput): ProcessingResult {
     receipt,
     paymentAccount: structured.paymentAccount ?? undefined,
     memo: structured.memo ?? null,
+    imageUrl: structured.imageUrl ?? null, // 👈 NEW
   };
 }
 
@@ -117,6 +120,7 @@ function toPayload(result: ProcessingResult): NewCommandPayload {
     },
     paymentAccount: result.paymentAccount,
     memo: result.memo ?? null,
+    imageUrl: result.imageUrl ?? null, // 👈 NEW
   });
 }
 

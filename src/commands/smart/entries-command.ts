@@ -1,87 +1,107 @@
 // ================================================
 // FILE: src/commands/smart/entries-command.ts
 // PURPOSE: List ledger entries from Supabase with links to /ledger/entry/:id
+// Supports sort flags: `date` (default) or `created`, plus optional `asc|desc`, `[limit]`, and `--sum`
+// Examples:
+//   ent                  -> date desc, limit 20
+//   ent 50               -> date desc, limit 50
+//   ent created          -> created_at desc, limit 20
+//   ent created asc      -> created_at asc, limit 20
+//   ent date 10 asc      -> date asc, limit 10
+//   ent --sum            -> shows totals of listed rows
+//   ent created desc 50 --sum
 // ================================================
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@/types/user";
+import type { CommandMeta } from "./utils";
 
-export type EntriesArgs = {
-  limit?: number; // default 20
-  sort?: "date" | "created" | "amount";
-  dir?: "asc" | "desc";
-};
+export type SortKey = "date" | "created";
+export type Dir = "asc" | "desc";
 
-function parseArgs(raw: string): EntriesArgs {
-  const out: EntriesArgs = { limit: 20, sort: "date", dir: "desc" };
-  if (!raw) return out;
+export interface EntriesArgs {
+  sort: SortKey;
+  dir: Dir;
+  limit: number;
+  sum: boolean;
+}
+
+function parseArgs(raw?: string): EntriesArgs {
+  // defaults: newest first by transaction date
+  let sort: SortKey = "date";
+  let dir: Dir = "desc";
+  let limit = 20;
+  let sum = false;
+
+  if (!raw) return { sort, dir, limit, sum };
+
   const parts = raw.trim().split(/\s+/).filter(Boolean);
   for (let i = 0; i < parts.length; i++) {
     const t = parts[i].toLowerCase();
+    if (t === "date" || t === "created") {
+      sort = t as SortKey;
+      continue;
+    }
+    if (t === "asc" || t === "--asc") {
+      dir = "asc";
+      continue;
+    }
+    if (t === "desc" || t === "--desc") {
+      dir = "desc";
+      continue;
+    }
+    if (t === "sum" || t === "--sum") {
+      sum = true;
+      continue;
+    }
     if (/^\d+$/.test(t)) {
-      out.limit = Math.max(1, Math.min(200, parseInt(t, 10)));
+      limit = Math.max(1, Math.min(200, parseInt(t, 10)));
       continue;
-    }
-    if (t === "--asc" || t === "asc") {
-      out.dir = "asc";
-      continue;
-    }
-    if (t === "--desc" || t === "desc") {
-      out.dir = "desc";
-      continue;
-    }
-    if (t.startsWith("--sort=")) {
-      const v = t.split("=")[1] as EntriesArgs["sort"];
-      if (v) out.sort = v;
-      continue;
-    }
-    if (t === "--sort" && parts[i + 1]) {
-      const v = parts[++i].toLowerCase();
-      if (v === "date" || v === "created" || v === "amount") {
-        out.sort = v as "date" | "created" | "amount";
-        continue;
-      }
     }
   }
-  return out;
+  return { sort, dir, limit, sum };
 }
 
-function currencySymbol(currency?: string) {
+function currencySymbol(currency?: string | null) {
   if (!currency || currency === "") return "฿"; // legacy fallback
   if (currency === "THB") return "฿";
   if (currency === "USD") return "$";
   if (currency === "EUR") return "€";
-  return currency; // show code for other currencies
+  return currency; // fallback to code
 }
 
+// Match CommandMeta.content signature (all params optional)
 export async function entriesListCommand(
-  arg: string,
+  arg?: string,
   _pageCtx?: string,
-  _commands?: unknown,
+  _set?: Record<string, CommandMeta>,
   user?: User | null
 ): Promise<string> {
-  const { limit = 20, sort = "date", dir = "desc" } = parseArgs(arg);
+  const { sort, dir, limit, sum } = parseArgs(arg);
   const supabase = createClient();
 
-  // Build query
-  let query = supabase
+  type Row = {
+    id: number;
+    entry_date: string;
+    description: string;
+    amount: number;
+    currency: string | null;
+    is_cleared: boolean | null;
+  };
+
+  const orderCol = sort === "created" ? "created_at" : "entry_date";
+
+  let q = supabase
     .from("ledger_entries")
     .select("id, entry_date, description, amount, currency, is_cleared")
-    .order(
-      sort === "created"
-        ? "created_at"
-        : sort === "amount"
-        ? "amount"
-        : "entry_date",
-      { ascending: dir === "asc" }
-    )
+    .order(orderCol, { ascending: dir === "asc" })
+    .order("id", { ascending: dir === "asc" }) // deterministic tiebreaker
     .limit(limit);
 
-  if (user?.id) query = query.eq("user_id", user.id);
+  if (user?.id) q = q.eq("user_id", user.id);
 
-  const { data, error } = await query;
-  if (error) {
+  const { data, error } = await q.returns<Row[]>();
+  if (error)
     return `<my-alert message="Failed to fetch entries: ${error.message}" />`;
-  }
   if (!data || data.length === 0) return "No entries found.";
 
   const lines = data.map((e) => {
@@ -93,11 +113,39 @@ export async function entriesListCommand(
     )}${cleared} → [/ledger/entry/${e.id}](/ledger/entry/${e.id})`;
   });
 
-  return [
-    `Showing **${data.length}** entr${
-      data.length === 1 ? "y" : "ies"
-    } (sort: ${sort} ${dir}, limit: ${limit})`,
-    "",
-    ...lines,
-  ].join("\n");
+  // Optional totals
+  let totalsBlock = "";
+  if (sum) {
+    const byCcy = new Map<string, number>();
+    for (const r of data) {
+      const ccy = (r.currency || "THB").toUpperCase();
+      byCcy.set(ccy, (byCcy.get(ccy) || 0) + Number(r.amount || 0));
+    }
+    const entries = Array.from(byCcy.entries());
+    if (entries.length === 1) {
+      const [ccy, total] = entries[0];
+      totalsBlock = `\n\n**Total:** ${currencySymbol(ccy)}${total.toFixed(
+        2
+      )} (${ccy})`;
+    } else if (entries.length > 1) {
+      const lines = entries
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(
+          ([ccy, total]) =>
+            `- ${ccy}: ${currencySymbol(ccy)}${total.toFixed(2)}`
+        )
+        .join("\n");
+      totalsBlock = `\n\n**Totals by currency:**\n${lines}`;
+    }
+  }
+
+  return (
+    [
+      `Showing **${data.length}** entr${
+        data.length === 1 ? "y" : "ies"
+      } (sort: ${sort} ${dir}, limit: ${limit})`,
+      "",
+      ...lines,
+    ].join("\n") + totalsBlock
+  );
 }
