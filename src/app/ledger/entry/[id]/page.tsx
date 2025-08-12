@@ -6,7 +6,7 @@ import { createClient } from "@/utils/supabase/server";
 import Image from "next/image";
 
 type PageProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
   searchParams: Record<string, string | string[] | undefined>;
 };
 
@@ -18,7 +18,8 @@ function parseId(idParam: string): number | null {
 }
 
 export default async function LedgerEntryPage({ params }: PageProps) {
-  const id = parseId(params.id);
+  const p = await params;
+  const id = parseId(p.id);
   if (id == null) return notFound();
 
   const supabase = await createClient();
@@ -135,6 +136,7 @@ export default async function LedgerEntryPage({ params }: PageProps) {
 
 // Optional: metadata for better titles
 export async function generateMetadata({ params }: PageProps) {
-  const id = parseId(params.id);
+  const p = await params;
+  const id = parseId(p.id);
   return { title: id ? `Ledger Entry #${id}` : "Ledger Entry" };
 }
