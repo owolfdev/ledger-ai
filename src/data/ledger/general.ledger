@@ -1,6 +1,22 @@
+2025/04/03 Starbucks
+    Expenses:Personal:Food:Coffee  $6.00
+    Assets:Cash                   $-6.00
+
+2025/07/01 Starbucks
+    Expenses:Personal:Food:Coffee  $6.00
+    Assets:Cash                   $-6.00
+
 2025/08/13 Supabase
     Expenses:MyOnlineBusiness:Subscription:Software ฿1000.00
     Assets:Cash                   ฿-1000.00
+
+2025/08/01 Starbucks
+    Expenses:Personal:Food:Coffee  $6.00
+    Assets:Cash                   $-6.00
+
+2025/08/10 Starbucks
+    Expenses:Personal:Food:Coffee  $6.00
+    Assets:Cash                   $-6.00
 
 2025/08/12 Starbucks
     Expenses:Channel60:Food:Coffee ฿150.00
@@ -15,7 +31,44 @@
     Expenses:MyOnlineBusiness:Supplies:General ฿500.00
     Assets:Cash                   ฿-500.00
 
+2025/08/13 Starbucks
+    Expenses:Personal:Food:Coffee  $6.00
+    Assets:Cash                   $-6.00
+
+2025/08/13 Agency
+    Expenses:Channel60:Marketing:Advertising ฿1000.00
+    Assets:Cash                   ฿-1000.00
+
 2025/08/14 Starbucks
     Expenses:Personal:Food:Coffee  $6.00
     Assets:Cash                   $-6.00
+
+2025/08/14 Home Depot
+    Expenses:Channel60:Supplies:General ฿300.00
+    Assets:Cash                   ฿-300.00
+
+2025/08/14 Starbucks --date yesterday
+    Expenses:Personal:Food:Coffee  $6.00
+    Assets:Cash                   $-6.00
+
+2025/08/14 Starbucks --date 2025/08/10
+    Expenses:Personal:Food:Coffee  $6.00
+    Assets:Cash                   $-6.00
+
+2025/08/14 Starbucks --date 2025/08/10
+    Expenses:Personal:Food:Coffee  $6.00
+    Assets:Cash                   $-6.00
+
+2025/08/14 Starbucks --date 2025/08/10
+    Expenses:Personal:Food:Coffee  $6.00
+    Assets:Cash                   $-6.00
+
+2025/08/14 Starbucks
+    Expenses:Personal:Food:Coffee  $6.00
+    Assets:Cash                   $-6.00
+
+2025/08/14 Cafe
+    Expenses:Personal:Food:Coffee  $6.00
+    Expenses:Personal:Food:Dining  $12.00
+    Liabilities:CreditCard        $-18.00
 

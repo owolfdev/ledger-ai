@@ -21,35 +21,34 @@ export const PARSER_GRAMMAR = {
   },
   items: {
     description:
-      "One or more <desc> $<amount> pairs, optionally with quantity, unit price, and category override.",
-    examples: [
-      "coffee $5",
-      "2x coffee @ $5",
-      "apples $10 Expenses:Personal:Groceries",
-      "tax $2.78",
-    ],
+      "One or more <desc> <amount> pairs, optionally with quantity and unit price.",
+    examples: ["coffee $5", "2x coffee @ $5", "coffee $6, pastry $4"],
+  },
+  vendor: {
+    description: "Vendor/merchant using @ symbol (like email addresses).",
+    examples: ["@ Starbucks", "@ HomeDepot", '@ "Coffee Shop"'],
   },
   business: {
-    description:
-      "Optional business context for account categorization. Defaults to 'Personal'.",
+    description: "Business context using prefix or --business flag.",
     examples: [
-      "business MyBrickAndMortar",
-      "biz MyOnlineBusiness",
-      "new:MyBrickAndMortar fruit $5",
+      "MyBrick: items...",
+      "--business MyOnlineBusiness",
+      "--business Personal",
     ],
   },
-  paymentMethods: {
-    description: "Optional, defaults to cash. Maps aliases to account names.",
+  payment: {
+    description: "Payment method using --payment flag.",
+    examples: ["--payment cash", '--payment "credit card"', "--payment paypal"],
     map: {
+      cash: "Assets:Cash",
       "credit card": "Liabilities:CreditCard",
       "bank card": "Assets:Bank:Checking",
       paypal: "Assets:PayPal",
-      cash: "Assets:Cash",
     },
   },
   memo: {
-    description: 'Optional memo stored in DB. Format: memo "<text>"',
-    example: 'memo "weekly groceries"',
+    description: "Optional memo using --memo flag.",
+    examples: ['--memo "client meeting"', '--memo "weekly supplies"'],
   },
   currency: {
     description:
@@ -68,6 +67,8 @@ function tokenize(input: string): string[] {
   let buffer = "";
   let inQuotes = false;
 
+  // First split by commas (for multiple items)
+  const commaSeparated = [];
   for (const char of input.trim()) {
     if (char === '"') {
       inQuotes = !inQuotes;
@@ -75,16 +76,73 @@ function tokenize(input: string): string[] {
       continue;
     }
     if (char === "," && !inQuotes) {
-      tokens.push(buffer.trim());
+      commaSeparated.push(buffer.trim());
       buffer = "";
     } else {
       buffer += char;
     }
   }
-  if (buffer) tokens.push(buffer.trim());
+  if (buffer) commaSeparated.push(buffer.trim());
+
+  // Then split each comma-separated part by spaces (for flags)
+  for (const part of commaSeparated.filter((p) => p.length > 0)) {
+    const spaceSeparated = [];
+    buffer = "";
+    inQuotes = false;
+
+    for (const char of part) {
+      if (char === '"') {
+        inQuotes = !inQuotes;
+        buffer += char;
+        continue;
+      }
+      if (char === " " && !inQuotes) {
+        if (buffer.trim()) spaceSeparated.push(buffer.trim());
+        buffer = "";
+      } else {
+        buffer += char;
+      }
+    }
+    if (buffer.trim()) spaceSeparated.push(buffer.trim());
+
+    // Now reconstruct meaningful tokens
+    // Keep item parts together, but separate flags
+    let currentToken = "";
+    let i = 0;
+
+    while (i < spaceSeparated.length) {
+      const token = spaceSeparated[i];
+
+      // If we hit a flag, save current token and start flag processing
+      if (token.startsWith("--")) {
+        if (currentToken.trim()) {
+          tokens.push(currentToken.trim());
+          currentToken = "";
+        }
+        tokens.push(token);
+        // Add the flag value if it exists
+        if (
+          i + 1 < spaceSeparated.length &&
+          !spaceSeparated[i + 1].startsWith("--")
+        ) {
+          i++;
+          tokens.push(spaceSeparated[i]);
+        }
+      } else {
+        // Add to current token
+        currentToken += (currentToken ? " " : "") + token;
+      }
+      i++;
+    }
+
+    // Don't forget the last token
+    if (currentToken.trim()) {
+      tokens.push(currentToken.trim());
+    }
+  }
+
   return tokens.filter((t) => t.length > 0);
 }
-
 function parseDateToken(token: string): string | null {
   const lower = token.toLowerCase();
 
@@ -93,7 +151,7 @@ function parseDateToken(token: string): string | null {
   }
   if (lower === "yesterday") {
     const d = new Date();
-    d.setDate(d.getDate() - 1); // local subtraction
+    d.setDate(d.getDate() - 1);
     return formatLocalDate(d);
   }
 
@@ -110,8 +168,8 @@ function extractBusinessFromInput(input: string): {
   business?: string;
   cleanInput: string;
 } {
-  // Pattern 1: new:BusinessName syntax
-  const prefixMatch = input.match(/^new:(\w+)\s+(.+)/i);
+  // Pattern: BusinessName: (prefix syntax)
+  const prefixMatch = input.match(/^(\w+):\s*(.+)/i);
   if (prefixMatch) {
     return {
       business: prefixMatch[1],
@@ -119,132 +177,133 @@ function extractBusinessFromInput(input: string): {
     };
   }
 
-  // Continue with original input for token-based parsing
+  // Continue with original input for flag-based parsing
   return { cleanInput: input };
 }
 
-function extractBusiness(tokens: string[]): {
+function extractFlags(tokens: string[]): {
   business?: string;
+  payment?: string;
+  memo?: string;
+  date?: string;
   tokens: string[];
 } {
   const updatedTokens: string[] = [];
   let business: string | undefined;
-
-  for (const t of tokens) {
-    // Pattern: "business BusinessName" or "biz BusinessName"
-    const businessMatch = t.match(/^(business|biz)\s+(\w+)$/i);
-    if (businessMatch) {
-      business = businessMatch[2];
-      continue; // drop business token
-    }
-    updatedTokens.push(t);
-  }
-
-  return { business, tokens: updatedTokens };
-}
-
-function parseItemsAndMaybeInlineVendor(tokens: string[]): {
-  items: ParsedItem[];
-  stopIndex: number; // index in tokens after the last consumed item token
-  vendorInline?: string; // vendor found within the last item token (no trailing comma case)
-} {
-  const items: ParsedItem[] = [];
-  let stopIndex = tokens.length;
-  let vendorInline: string | undefined;
-
-  // full item regex (entire token is an item)
-  const fullItemRe =
-    /^(?:(\d+)x\s*)?(.+?)(?:\s+@\s*\$?(\d+(?:\.\d{1,2})?))?\s+\$?(\d+(?:\.\d{1,2})?)(?:\s+(Expenses:[\w:]+))?$/i;
-  // item prefix with tail (captures inline vendor/payment tail)
-  const prefixWithTailRe =
-    /^(?:(\d+)x\s*)?(.+?)(?:\s+@\s*\$?(\d+(?:\.\d{1,2})?))?\s+\$?(\d+(?:\.\d{1,2})?)\b(?:\s+(.+))?$/i;
+  let payment: string | undefined;
+  let memo: string | undefined;
+  let date: string | undefined;
 
   for (let i = 0; i < tokens.length; i++) {
-    const t = tokens[i];
+    const token = tokens[i];
 
-    // Case 1: whole token is an item
-    const mFull = t.match(fullItemRe);
-    if (mFull) {
-      const [, qtyStr, descRaw, _unitPriceStr, priceStr, categoryOverride] =
-        mFull;
-      const quantity = qtyStr ? parseInt(qtyStr, 10) : 1;
-      const description = descRaw.trim();
-      const price = parseFloat(priceStr);
-      let category = categoryOverride || undefined;
-
-      if (description.toLowerCase() === "tax" && !category) {
-        category = "Expenses:Taxes:Sales";
-      }
-
-      items.push({ description, price, quantity, category });
-      continue; // keep parsing items
+    // --business flag
+    if (token === "--business" && i + 1 < tokens.length) {
+      business = tokens[i + 1];
+      i++; // Skip the value token
+      continue;
     }
 
-    // Case 2: token starts like an item but has trailing words (inline vendor)
-    const mPrefix = t.match(prefixWithTailRe);
-    if (mPrefix) {
-      const [, qtyStr, descRaw, _unitPriceStr, priceStr, tail] = mPrefix;
-      const quantity = qtyStr ? parseInt(qtyStr, 10) : 1;
-      const description = descRaw.trim();
-      const price = parseFloat(priceStr);
-      let category: string | undefined;
-      if (description.toLowerCase() === "tax") {
-        category = "Expenses:Taxes:Sales";
-      }
-      items.push({ description, price, quantity, category });
-
-      vendorInline = tail ? tail.trim() : undefined;
-      stopIndex = i + 1; // we consumed this token
-      break; // stop: the rest is vendor/payment/memo
+    // --payment flag
+    if (token === "--payment" && i + 1 < tokens.length) {
+      payment = tokens[i + 1];
+      i++; // Skip the value token
+      continue;
     }
 
-    // Case 3: not an item — stop here, next token is vendor
-    stopIndex = i;
-    break;
-  }
-
-  if (stopIndex === tokens.length) {
-    // consumed all tokens as items; vendor will be missing, caller will default
-  }
-
-  return { items, stopIndex, vendorInline };
-}
-
-function mapPaymentMethod(token: string): string {
-  const lower = token.toLowerCase();
-  for (const [alias, account] of Object.entries(
-    PARSER_GRAMMAR.paymentMethods.map
-  )) {
-    if (lower === alias) return account;
-  }
-  return PARSER_GRAMMAR.paymentMethods.map.cash;
-}
-
-function extractMemo(tokens: string[]): { memo?: string; tokens: string[] } {
-  const updatedTokens: string[] = [];
-  let memo: string | undefined;
-
-  for (const t of tokens) {
-    if (t.toLowerCase().startsWith("memo ")) {
-      const match = t.match(/^memo\s+"(.+)"$/i);
-      if (match) {
-        memo = match[1];
-        continue; // drop memo token
-      }
+    // --memo flag
+    if (token === "--memo" && i + 1 < tokens.length) {
+      const memoValue = tokens[i + 1];
+      // Remove quotes if present
+      memo = memoValue.replace(/^"(.*)"$/, "$1");
+      i++; // Skip the value token
+      continue;
     }
-    updatedTokens.push(t);
+
+    // --date flag
+    if (token === "--date" && i + 1 < tokens.length) {
+      const dateValue = tokens[i + 1];
+      const parsedDate = parseDateToken(dateValue);
+      if (parsedDate) {
+        date = parsedDate;
+      }
+      i++; // Skip the value token
+      continue;
+    }
+
+    // Keep non-flag tokens
+    updatedTokens.push(token);
   }
-  return { memo, tokens: updatedTokens };
+
+  return { business, payment, memo, date, tokens: updatedTokens };
 }
 
-// Enhanced example syntax:
-// new <item> $<price>[, <item> $<price>]... [,<vendor>] [,<payment method>] [, memo "<text>"] [<date>] [, business <name>]
-// new:BusinessName <item> $<price> [,<vendor>] [,<payment method>]
+function parseItemsAndVendor(tokens: string[]): {
+  items: ParsedItem[];
+  vendor?: string;
+} {
+  const items: ParsedItem[] = [];
+  let vendor: string | undefined;
+
+  // Process each token to find items and vendor
+  for (const token of tokens) {
+    // Check if token contains @ vendor syntax
+    const atIndex = token.indexOf(" @ ");
+    if (atIndex !== -1) {
+      // Split token at @ symbol
+      const itemPart = token.substring(0, atIndex).trim();
+      vendor = token.substring(atIndex + 3).trim(); // +3 for ' @ '
+
+      // Parse the item part if it exists
+      if (itemPart) {
+        const parsedItem = parseItemToken(itemPart);
+        if (parsedItem) items.push(parsedItem);
+      }
+    } else if (token.startsWith("@ ")) {
+      // Standalone vendor token: @ Starbucks
+      vendor = token.substring(2).trim();
+    } else {
+      // Regular item token
+      const parsedItem = parseItemToken(token);
+      if (parsedItem) items.push(parsedItem);
+    }
+  }
+
+  return { items, vendor };
+}
+
+function parseItemToken(token: string): ParsedItem | null {
+  // Item regex: [quantity x] description amount
+  const itemRegex = /^(?:(\d+)x\s*)?(.+?)\s+[\$฿]?(\d+(?:\.\d{1,2})?)$/i;
+  const match = token.match(itemRegex);
+
+  if (!match) return null;
+
+  const [, qtyStr, description, priceStr] = match;
+  const quantity = qtyStr ? parseInt(qtyStr, 10) : 1;
+  const price = parseFloat(priceStr);
+
+  return {
+    description: description.trim(),
+    price,
+    quantity,
+  };
+}
+
+function mapPaymentMethod(method: string): string {
+  const lower = method.toLowerCase().replace(/['"]/g, ""); // Remove quotes
+
+  const paymentMap = PARSER_GRAMMAR.payment.map;
+  return paymentMap[lower as keyof typeof paymentMap] || paymentMap.cash;
+}
+
+// Enhanced grammar:
+// new [BusinessName:]<items> [@ vendor] [--flags]
 //
 // Examples:
-// new fruit 500, soap 200 Gourmet Market, business MyBrickAndMortar
-// new:MyOnlineBusiness subscription 1000 Supabase
-// new coffee $5 Starbucks, biz Personal
+// new coffee $6, pastry $4 @ Starbucks
+// new MyBrick: supplies $50 @ HomeDepot --payment cash
+// new coffee $6 @ Starbucks --business Personal --memo "meeting"
 export function parseManualNewCommand(input: string): {
   date: string;
   payee: string;
@@ -252,96 +311,73 @@ export function parseManualNewCommand(input: string): {
   receipt: ReceiptShape;
   memo?: string;
   paymentAccount: string;
-  business?: string; // NEW: business context
+  business?: string;
 } {
-  // 1) Check for prefix business syntax (new:BusinessName)
+  // 1) Check for prefix business syntax (BusinessName:)
   const { business: prefixBusiness, cleanInput } =
     extractBusinessFromInput(input);
 
-  let tokens = tokenize(cleanInput);
+  // 2) Tokenize the cleaned input
+  const tokens = tokenize(cleanInput);
 
-  // 2) optional date (first token only)
-  let date = formatLocalDate(new Date());
-  let dateTokenIndex = -1;
-
-  for (let i = 0; i < tokens.length; i++) {
-    const maybeDate = parseDateToken(tokens[i]);
-    if (maybeDate) {
-      date = maybeDate;
-      dateTokenIndex = i;
-      break; // stop after finding the first valid date
-    }
-  }
-
-  if (dateTokenIndex >= 0) {
-    tokens.splice(dateTokenIndex, 1); // remove the date token so it doesn't interfere with vendor/items
-  }
-
-  // 3) memo extraction (removes memo tokens)
-  const memoResult = extractMemo(tokens);
-  tokens = memoResult.tokens;
-
-  // 4) business extraction (removes business tokens)
-  const businessResult = extractBusiness(tokens);
-  tokens = businessResult.tokens;
-
-  // Use prefix business if found, otherwise use token business, otherwise default to undefined
-  const business = prefixBusiness || businessResult.business;
-
-  // 5) parse items, allow inline vendor on last item token
+  // 3) Extract flags (--business, --payment, --memo, --date)
   const {
-    items: parsedItems,
-    stopIndex,
-    vendorInline,
-  } = parseItemsAndMaybeInlineVendor(tokens);
+    business: flagBusiness,
+    payment,
+    memo,
+    date: flagDate,
+    tokens: remainingTokens,
+  } = extractFlags(tokens);
+
+  // 4) Use prefix business if found, otherwise flag business
+  const business = prefixBusiness || flagBusiness;
+
+  // 5) Use flag date if provided, otherwise default to today
+  // const date = flagDate || formatLocalDate(new Date());
+  const finalDate = flagDate || formatLocalDate(new Date());
+
+  // 6) Parse items and vendor from remaining tokens
+  const { items: parsedItems, vendor } = parseItemsAndVendor(remainingTokens);
+
   if (parsedItems.length === 0) {
     throw new Error("No valid items found in input.");
   }
 
-  // Normalize to ReceiptItem[] for ReceiptShape
-  const normalizedItems: ReceiptItem[] = parsedItems.map((it) => ({
-    description: it.description,
-    price: it.price,
+  // 7) Normalize to ReceiptItem[] for ReceiptShape
+  const normalizedItems: ReceiptItem[] = parsedItems.map((item) => ({
+    description: item.description,
+    price: item.price,
   }));
 
-  // 6) vendor
-  const vendorToken = vendorInline ?? tokens[stopIndex] ?? "Unknown Vendor";
-  const payee = vendorToken;
+  // 8) Set vendor/payee
+  const payee = vendor || "Unknown Vendor";
 
-  // 7) payment method (next token, if present and not memo)
-  let paymentAccount: string = PARSER_GRAMMAR.paymentMethods.map.cash;
+  // 9) Map payment method
+  const paymentAccount = payment
+    ? mapPaymentMethod(payment)
+    : PARSER_GRAMMAR.payment.map.cash;
 
-  const pmCandidateIndex = vendorInline ? stopIndex : stopIndex + 1;
-  if (tokens[pmCandidateIndex]) {
-    paymentAccount = mapPaymentMethod(tokens[pmCandidateIndex]); // now works for all mapped values
-  }
-
-  // 8) receipt totals
-  const subtotal = normalizedItems.reduce((sum, i) => sum + i.price, 0);
-  const taxAmount =
-    parsedItems
-      .filter((i) => i.category === "Expenses:Taxes:Sales")
-      .reduce((sum, i) => sum + i.price, 0) || null;
-
+  // 10) Build receipt totals
+  const subtotal = normalizedItems.reduce((sum, item) => sum + item.price, 0);
   const receipt: ReceiptShape = {
     items: normalizedItems,
     subtotal,
-    tax: taxAmount,
+    tax: null,
     total: subtotal,
   };
 
-  // 9) currency detection (symbol-based, minimal)
+  // 11) Currency detection (symbol-based)
   let currency = "THB";
   if (/\$/.test(input)) currency = "USD";
   if (/฿/.test(input)) currency = "THB";
 
   return {
-    date,
+    date: finalDate,
     payee,
     currency,
     receipt,
-    memo: memoResult.memo,
+    memo: memo || undefined,
     paymentAccount,
-    business, // NEW: return business context
+    business,
   };
 }

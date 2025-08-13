@@ -344,34 +344,49 @@ export const commandRegistry: Record<string, CommandMeta> = {
   new: {
     content: "__LEDGER_NEW_ENTRY__",
     description:
-      "Create a new double-entry ledger transaction from natural language. Automatically categorizes expenses and supports multiple businesses. Items are mapped to appropriate accounts (e.g., 'coffee' → Food:Coffee, 'napkins' → Supplies:Packaging).",
-    usage: `new <item> <amount>[, <item> <amount>...], <vendor> [options]
+      "Create a new double-entry ledger transaction from natural language. Uses intuitive @ syntax for vendors and --flags for options. Automatically categorizes expenses and supports multiple businesses.",
+    usage: `new [business:]<items> [@ vendor] [--options]
+  
+  **Syntax:**
+  • **Items:** \`<description> <amount>[, <description> <amount>...]\`
+  • **Vendor:** \`@ VendorName\` (like email addresses)
+  • **Business:** \`BusinessName:\` (prefix) or \`--business BusinessName\`
+  • **Options:** \`--payment\`, \`--memo\`, \`--date\`
   
   **Basic Examples:**
-  • \`new coffee 150 Starbucks\` — Simple expense (defaults to Personal business)
-  • \`new fruit 500, soap 200 Gourmet Market\` — Multiple items
-  • \`new subscription 1000 Supabase, business MyOnlineBusiness\` — Specify business
+  • \`new coffee 150\` — Simple expense (defaults to Personal business)
+  • \`new coffee 150 @ Starbucks\` — With vendor
+  • \`new coffee $6, pastry $4 @ Starbucks\` — Multiple items
+  • \`new supplies 500 @ HomeDepot --payment cash\` — With payment method
   
   **Business Context:**
-  • \`new:MyBrickAndMortar napkins 300 supplier\` — Prefix syntax
-  • \`new supplies 500 vendor, biz MyOnlineBusiness\` — Token syntax
+  • \`new MyBrick: supplies 300 @ supplier\` — Prefix syntax
+  • \`new coffee 150 @ Starbucks --business MyOnline\` — Flag syntax
   • No business specified defaults to "Personal"
   
-  **Optional Parameters:**
-  • **Date:** \`yesterday\`, \`2025/08/10\`, or \`today\` (default)
-  • **Payment:** \`credit card\`, \`bank card\`, \`paypal\`, or \`cash\` (default)
-  • **Memo:** \`memo "weekly supplies order"\`
-  • **Currency:** Auto-detected from symbols (\`฿\` = THB, \`$\` = USD)
+  **Payment Methods:**
+  • \`--payment cash\` → Assets:Cash (default)
+  • \`--payment "credit card"\` → Liabilities:CreditCard
+  • \`--payment paypal\` → Assets:PayPal
+  • \`--payment "bank card"\` → Assets:Bank:Checking
   
-  **Full Example:**
-  \`new coffee 150, pastry 100 Starbucks, yesterday, credit card, business Personal, memo "morning meeting"\`
+  **Date & Other Options:**
+  • \`--date yesterday\` — Use yesterday's date
+  • \`--date 2025-08-10\` — Use specific date (YYYY-MM-DD format)
+  • \`--date 2025/08/10\` — Alternative date format (YYYY/MM/DD)
+  • \`--memo "client meeting"\` — Add memo/note
+  • Currency auto-detected: \`$\` = USD, \`฿\` = THB
+  
+  **Full Examples:**
+  • \`new coffee $6, lunch $12 @ Cafe --business Personal --payment "credit card" --memo "client meeting"\`
+  • \`new Channel60: marketing 1000 @ Agency --payment cash --date yesterday\`
+  • \`new subscription 50 @ Netflix --business Personal --memo "monthly" --date 2025-08-10\`
   
   **Account Mapping:**
   • Personal: \`Expenses:Personal:Food:Coffee\`
-  • MyBrickAndMortar: \`Expenses:MyBrickAndMortar:Supplies:Packaging\`  
-  • MyOnlineBusiness: \`Expenses:MyOnlineBusiness:Subscription:Software\``,
+  • MyBrick: \`Expenses:MyBrick:Supplies:General\`  
+  • MyOnline: \`Expenses:MyOnline:Subscription:Software\``,
   },
-
   // Contact Messages
   // In your commandRegistry, under messages:
   messages: {
