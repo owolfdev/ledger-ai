@@ -9,6 +9,21 @@ export function formatLocalDate(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
+function normalizeBusiness(businessName?: string): string | undefined {
+  if (!businessName) return undefined;
+
+  // Map common variations to exact database names
+  const businessMap: Record<string, string> = {
+    personal: "Personal",
+    channel60: "Channel60",
+    myonlinebusiness: "MyOnlineBusiness",
+    myonline: "MyOnlineBusiness", // Allow shorthand
+  };
+
+  const normalized = businessMap[businessName.toLowerCase()];
+  return normalized || businessName; // Return normalized or original if not found
+}
+
 function todayLocal(): string {
   return formatLocalDate(new Date());
 }
@@ -378,6 +393,6 @@ export function parseManualNewCommand(input: string): {
     receipt,
     memo: memo || undefined,
     paymentAccount,
-    business,
+    business: normalizeBusiness(business), // ← Apply normalization
   };
 }

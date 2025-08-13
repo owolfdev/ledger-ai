@@ -99,51 +99,28 @@ export async function entriesListCommand(
   const supabase = createClient();
 
   try {
-    // Step 1: Resolve business name to ID if provided
-    let businessId: string | null = null;
-    if (args.business) {
-      console.log("Looking up business:", args.business);
-      let businessQuery = supabase
-        .from("businesses")
-        .select("id")
-        .eq("name", args.business);
-
-      if (user?.id) {
-        businessQuery = businessQuery.eq("user_id", user.id);
-      }
-
-      const { data: businessData, error: businessError } =
-        await businessQuery.single();
-
-      if (businessError || !businessData) {
-        return `No business found with name: "${args.business}"`;
-      }
-
-      businessId = businessData.id;
-      console.log("Found business ID:", businessId);
-    }
-
-    // Step 2: Start with basic query
+    // Step 1: Start with basic query (no business_id lookup needed)
     console.log("Building base query...");
     let query = supabase
       .from("ledger_entries")
       .select(
-        "id, entry_date, description, amount, currency, is_cleared, businesses(name)"
+        "id, entry_date, description, amount, currency, is_cleared, entry_text"
       );
 
-    // Step 3: Add user filter if exists
+    // Step 2: Add user filter if exists
     if (user?.id) {
       console.log("Adding user filter:", user.id);
       query = query.eq("user_id", user.id);
     }
 
-    // Step 4: Add business filter if provided
-    if (businessId) {
-      console.log("Adding business filter:", businessId);
-      query = query.eq("business_id", businessId); // ← ADD the = query assignment
+    // Step 3: Add business filter using account name pattern
+    if (args.business) {
+      console.log("Adding business filter via account pattern:", args.business);
+      // Filter by entries that contain "Expenses:{BusinessName}:" in entry_text
+      query = query.like("entry_text", `%Expenses:${args.business}:%`);
     }
 
-    // Step 5: Add other filters
+    // Step 4: Add other filters
     if (args.vendor) {
       console.log("Adding vendor filter:", args.vendor);
       query = query.ilike("description", `%${args.vendor}%`);
@@ -162,7 +139,7 @@ export async function entriesListCommand(
       query = query.gte("entry_date", startDate).lte("entry_date", endDate);
     }
 
-    // Step 6: Count mode
+    // Step 5: Count mode
     if (args.count) {
       console.log("Executing count query...");
       let countQuery = supabase
@@ -170,13 +147,16 @@ export async function entriesListCommand(
         .select("*", { count: "exact", head: true });
 
       if (user?.id) {
-        countQuery = countQuery.eq("user_id", user.id); // ADD = countQuery
+        countQuery = countQuery.eq("user_id", user.id);
       }
-      if (businessId) {
-        countQuery = countQuery.eq("business_id", businessId);
+      if (args.business) {
+        countQuery = countQuery.like(
+          "entry_text",
+          `%Expenses:${args.business}:%`
+        );
       }
       if (args.vendor) {
-        countQuery = countQuery.ilike("description", `%${args.vendor}%`); // ADD = countQuery
+        countQuery = countQuery.ilike("description", `%${args.vendor}%`);
       }
       if (args.month) {
         const [yearStr, monthStr] = args.month.split("-");
@@ -188,7 +168,7 @@ export async function entriesListCommand(
         const endDate = lastDay.toISOString().split("T")[0];
         countQuery = countQuery
           .gte("entry_date", startDate)
-          .lte("entry_date", endDate); // ADD = countQuery
+          .lte("entry_date", endDate);
       }
 
       const { count, error } = await countQuery;
@@ -206,7 +186,7 @@ export async function entriesListCommand(
       );
     }
 
-    // Step 7: Add ordering and limits for data query
+    // Step 6: Add ordering and limits for data query
     const orderCol = args.sort === "created" ? "created_at" : "entry_date";
     console.log("Adding order and limit...");
 
@@ -215,7 +195,7 @@ export async function entriesListCommand(
       .order("id", { ascending: args.dir === "asc" })
       .limit(args.limit);
 
-    // Step 8: Execute query
+    // Step 7: Execute query
     console.log("Executing data query...");
     const { data, error } = await query;
 
@@ -228,16 +208,18 @@ export async function entriesListCommand(
       return "No entries found.";
     }
 
-    // Step 9: Format results
-    // Step 9: Format results (data is now properly typed)
+    // Step 8: Format results with business extracted from entry_text
     const lines = data.map((e) => {
       const amt = Number(e.amount);
       const sym = currencySymbol(e.currency);
       const cleared = e.is_cleared ? " ✅" : "";
-      // Get first business from array (should only be one)
-      const businessName = e.businesses?.[0]?.name
-        ? ` [${e.businesses[0].name}]`
-        : "";
+
+      // Extract business from entry_text pattern "Expenses:BusinessName:"
+      let businessName = "";
+      const businessMatch = e.entry_text?.match(/Expenses:([^:]+):/);
+      if (businessMatch && businessMatch[1] !== "Taxes") {
+        businessName = ` [${businessMatch[1]}]`;
+      }
 
       return `- ${e.entry_date} • ${
         e.description
@@ -245,7 +227,8 @@ export async function entriesListCommand(
         e.id
       }](/ledger/entry/${e.id})`;
     });
-    // Step 10: Optional totals
+
+    // Step 9: Optional totals
     let totalsBlock = "";
     if (args.sum) {
       const total = data.reduce(
