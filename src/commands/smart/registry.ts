@@ -95,25 +95,55 @@ export const commandRegistry: Record<string, CommandMeta> = {
 
   entries: {
     description:
-      "List recent ledger entries (usage: entries [limit] [--sort date|created|amount] [asc|desc])",
+      "List and filter ledger entries with powerful search options. Supports business filtering, vendor search, date ranges, and counting.",
     content: (
       arg?: string,
       pageCtx?: string,
       cmds?: Record<string, CommandMeta>,
       user?: User | null
     ) => entriesListCommand(arg || "", pageCtx || "", cmds || {}, user || null),
-    usage: "entries [limit] [date|created|amount] [asc|desc] [--sum]",
+    usage: `entries [limit] [date|created] [asc|desc] [options]
+  
+  **Basic Usage:**
+  • \`entries\` — List 20 most recent entries
+  • \`entries 50\` — List 50 most recent entries  
+  • \`entries created asc\` — Sort by creation date, oldest first
+  
+  **Filtering Options:**
+  • \`--business <name>\` — Filter by business (Personal, MyOnlineBusiness, etc.)
+  • \`--vendor <name>\` — Filter by vendor/description (case-insensitive)
+  • \`--month YYYY-MM\` — Filter by specific month
+  • \`--count\` — Show count only, no entries listed
+  • \`--sum\` — Show total amount at bottom
+  
+  **Examples:**
+  • \`entries --business MyOnlineBusiness\` — All entries for specific business
+  • \`entries --vendor Starbucks --month 2025-08\` — Starbucks purchases in August
+  • \`entries --business Personal --count\` — Count personal entries
+  • \`entries --month 2025-08 --sum\` — August entries with total
+  • \`entries created desc 10 --business Channel60\` — Latest 10 Channel60 entries`,
   },
   ent: {
-    description: "Alias of entries",
+    description: "Alias for entries command with same functionality",
     content: (
       arg?: string,
       pageCtx?: string,
       cmds?: Record<string, CommandMeta>,
       user?: User | null
     ) => entriesListCommand(arg || "", pageCtx || "", cmds || {}, user || null),
-    usage: "ent [limit] [date|created|amount] [asc|desc] [--sum]",
+    usage: `ent [limit] [date|created] [asc|desc] [options]
+  
+  **Quick Examples:**
+  • \`ent\` — Recent entries
+  • \`ent count\` — Total entry count
+  • \`ent --business Personal\` — Personal business entries
+  • \`ent --vendor coffee\` — Find coffee purchases
+  • \`ent --month 2025-08 --sum\` — August total
+  
+  See \`help entries\` for full documentation.`,
   },
+
+  //
 
   // --- Blog/Projects (NOTE: logic handled in handle-command.ts) ---
   update: {

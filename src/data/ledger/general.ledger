@@ -2,3 +2,20 @@
     Expenses:MyOnlineBusiness:Subscription:Software ฿1000.00
     Assets:Cash                   ฿-1000.00
 
+2025/08/12 Starbucks
+    Expenses:Channel60:Food:Coffee ฿150.00
+    Expenses:Channel60:Food:Bakery ฿100.00
+    Liabilities:CreditCard        ฿-250.00
+
+2025/08/13 Supabase
+    Expenses:MyOnlineBusiness:Subscription:Software ฿1000.00
+    Assets:Cash                   ฿-1000.00
+
+2025/08/13 vendor
+    Expenses:MyOnlineBusiness:Supplies:General ฿500.00
+    Assets:Cash                   ฿-500.00
+
+2025/08/14 Starbucks
+    Expenses:Personal:Food:Coffee  $6.00
+    Assets:Cash                   $-6.00
+

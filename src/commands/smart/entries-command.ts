@@ -1,17 +1,6 @@
 // ================================================
 // FILE: src/commands/smart/entries-command.ts
-// PURPOSE: List ledger entries from Supabase with links to /ledger/entry/:id
-// Supports sort flags: `date` (default) or `created`, plus optional `asc|desc`, `[limit]`, `--sum`, and `--count`
-// Examples:
-//   ent                  -> date desc, limit 20
-//   ent 50               -> date desc, limit 50
-//   ent created          -> created_at desc, limit 20
-//   ent created asc      -> created_at asc, limit 20
-//   ent date 10 asc      -> date asc, limit 10
-//   ent --sum            -> shows totals of listed rows
-//   ent --count          -> shows only the total count (no entries listed)
-//   ent created desc 50 --sum
-//   ent count            -> alias for --count
+// PURPOSE: List ledger entries with business filtering
 // ================================================
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@/types/user";
@@ -25,31 +14,38 @@ export interface EntriesArgs {
   dir: Dir;
   limit: number;
   sum: boolean;
-  count: boolean; // NEW: count-only mode
+  count: boolean;
+  vendor?: string;
+  month?: string;
+  business?: string;
 }
 
 function parseArgs(raw?: string): EntriesArgs {
-  // defaults: newest first by transaction date
   let sort: SortKey = "date";
   let dir: Dir = "desc";
   let limit = 20;
   let sum = false;
   let count = false;
+  let vendor: string | undefined;
+  let month: string | undefined;
+  let business: string | undefined;
 
   if (!raw) return { sort, dir, limit, sum, count };
 
   const parts = raw.trim().split(/\s+/).filter(Boolean);
+
   for (let i = 0; i < parts.length; i++) {
     const t = parts[i].toLowerCase();
+
     if (t === "date" || t === "created") {
       sort = t as SortKey;
       continue;
     }
-    if (t === "asc" || t === "--asc") {
+    if (t === "asc") {
       dir = "asc";
       continue;
     }
-    if (t === "desc" || t === "--desc") {
+    if (t === "desc") {
       dir = "desc";
       continue;
     }
@@ -61,114 +57,219 @@ function parseArgs(raw?: string): EntriesArgs {
       count = true;
       continue;
     }
+    if (t === "--vendor" && i + 1 < parts.length) {
+      vendor = parts[i + 1];
+      i++;
+      continue;
+    }
+    if (t === "--month" && i + 1 < parts.length) {
+      month = parts[i + 1];
+      i++;
+      continue;
+    }
+    if (t === "--business" && i + 1 < parts.length) {
+      business = parts[i + 1];
+      i++;
+      continue;
+    }
     if (/^\d+$/.test(t)) {
       limit = Math.max(1, Math.min(200, parseInt(t, 10)));
       continue;
     }
   }
-  return { sort, dir, limit, sum, count };
+
+  return { sort, dir, limit, sum, count, vendor, month, business };
 }
 
 function currencySymbol(currency?: string | null) {
-  if (!currency || currency === "") return "฿"; // legacy fallback
+  if (!currency || currency === "") return "฿";
   if (currency === "THB") return "฿";
   if (currency === "USD") return "$";
   if (currency === "EUR") return "€";
-  return currency; // fallback to code
+  return currency;
 }
 
-// Match CommandMeta.content signature (all params optional)
 export async function entriesListCommand(
   arg?: string,
   _pageCtx?: string,
   _set?: Record<string, CommandMeta>,
   user?: User | null
 ): Promise<string> {
-  const { sort, dir, limit, sum, count } = parseArgs(arg);
+  const args = parseArgs(arg);
   const supabase = createClient();
 
-  // NEW: Count-only mode
-  if (count) {
-    let countQuery = supabase
+  try {
+    // Step 1: Resolve business name to ID if provided
+    let businessId: string | null = null;
+    if (args.business) {
+      console.log("Looking up business:", args.business);
+      let businessQuery = supabase
+        .from("businesses")
+        .select("id")
+        .eq("name", args.business);
+
+      if (user?.id) {
+        businessQuery = businessQuery.eq("user_id", user.id);
+      }
+
+      const { data: businessData, error: businessError } =
+        await businessQuery.single();
+
+      if (businessError || !businessData) {
+        return `No business found with name: "${args.business}"`;
+      }
+
+      businessId = businessData.id;
+      console.log("Found business ID:", businessId);
+    }
+
+    // Step 2: Start with basic query
+    console.log("Building base query...");
+    let query = supabase
       .from("ledger_entries")
-      .select("*", { count: "exact", head: true });
+      .select(
+        "id, entry_date, description, amount, currency, is_cleared, businesses(name)"
+      );
 
-    if (user?.id) countQuery = countQuery.eq("user_id", user.id);
-
-    const { count: totalCount, error } = await countQuery;
-    if (error)
-      return `<my-alert message="Failed to count entries: ${error.message}" />`;
-
-    return `**${totalCount || 0}** total entries`;
-  }
-
-  type Row = {
-    id: number;
-    entry_date: string;
-    description: string;
-    amount: number;
-    currency: string | null;
-    is_cleared: boolean | null;
-  };
-
-  const orderCol = sort === "created" ? "created_at" : "entry_date";
-
-  let q = supabase
-    .from("ledger_entries")
-    .select("id, entry_date, description, amount, currency, is_cleared")
-    .order(orderCol, { ascending: dir === "asc" })
-    .order("id", { ascending: dir === "asc" }) // deterministic tiebreaker
-    .limit(limit);
-
-  if (user?.id) q = q.eq("user_id", user.id);
-
-  const { data, error } = await q.returns<Row[]>();
-  if (error)
-    return `<my-alert message="Failed to fetch entries: ${error.message}" />`;
-  if (!data || data.length === 0) return "No entries found.";
-
-  const lines = data.map((e) => {
-    const amt = Number(e.amount);
-    const sym = currencySymbol(e.currency);
-    const cleared = e.is_cleared ? " ✅" : "";
-    return `- ${e.entry_date} • ${e.description} — ${sym}${amt.toFixed(
-      2
-    )}${cleared} → [/ledger/entry/${e.id}](/ledger/entry/${e.id})`;
-  });
-
-  // Optional totals
-  let totalsBlock = "";
-  if (sum) {
-    const byCcy = new Map<string, number>();
-    for (const r of data) {
-      const ccy = (r.currency || "THB").toUpperCase();
-      byCcy.set(ccy, (byCcy.get(ccy) || 0) + Number(r.amount || 0));
+    // Step 3: Add user filter if exists
+    if (user?.id) {
+      console.log("Adding user filter:", user.id);
+      query = query.eq("user_id", user.id);
     }
-    const entries = Array.from(byCcy.entries());
-    if (entries.length === 1) {
-      const [ccy, total] = entries[0];
-      totalsBlock = `\n\n**Total:** ${currencySymbol(ccy)}${total.toFixed(
-        2
-      )} (${ccy})`;
-    } else if (entries.length > 1) {
-      const lines = entries
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(
-          ([ccy, total]) =>
-            `- ${ccy}: ${currencySymbol(ccy)}${total.toFixed(2)}`
-        )
-        .join("\n");
-      totalsBlock = `\n\n**Totals by currency:**\n${lines}`;
-    }
-  }
 
-  return (
-    [
-      `Showing **${data.length}** entr${
-        data.length === 1 ? "y" : "ies"
-      } (sort: ${sort} ${dir}, limit: ${limit})`,
-      "",
-      ...lines,
-    ].join("\n") + totalsBlock
-  );
+    // Step 4: Add business filter if provided
+    if (businessId) {
+      console.log("Adding business filter:", businessId);
+      query = query.eq("business_id", businessId); // ← ADD the = query assignment
+    }
+
+    // Step 5: Add other filters
+    if (args.vendor) {
+      console.log("Adding vendor filter:", args.vendor);
+      query = query.ilike("description", `%${args.vendor}%`);
+    }
+
+    if (args.month) {
+      console.log("Adding month filter:", args.month);
+      const [yearStr, monthStr] = args.month.split("-");
+      const year = parseInt(yearStr);
+      const month = parseInt(monthStr);
+      const firstDay = new Date(year, month - 1, 1);
+      const lastDay = new Date(year, month, 0);
+      const startDate = firstDay.toISOString().split("T")[0];
+      const endDate = lastDay.toISOString().split("T")[0];
+      console.log(`Month filter: ${startDate} to ${endDate}`);
+      query = query.gte("entry_date", startDate).lte("entry_date", endDate);
+    }
+
+    // Step 6: Count mode
+    if (args.count) {
+      console.log("Executing count query...");
+      let countQuery = supabase
+        .from("ledger_entries")
+        .select("*", { count: "exact", head: true });
+
+      if (user?.id) {
+        countQuery = countQuery.eq("user_id", user.id); // ADD = countQuery
+      }
+      if (businessId) {
+        countQuery = countQuery.eq("business_id", businessId);
+      }
+      if (args.vendor) {
+        countQuery = countQuery.ilike("description", `%${args.vendor}%`); // ADD = countQuery
+      }
+      if (args.month) {
+        const [yearStr, monthStr] = args.month.split("-");
+        const year = parseInt(yearStr);
+        const month = parseInt(monthStr);
+        const firstDay = new Date(year, month - 1, 1);
+        const lastDay = new Date(year, month, 0);
+        const startDate = firstDay.toISOString().split("T")[0];
+        const endDate = lastDay.toISOString().split("T")[0];
+        countQuery = countQuery
+          .gte("entry_date", startDate)
+          .lte("entry_date", endDate); // ADD = countQuery
+      }
+
+      const { count, error } = await countQuery;
+
+      if (error) {
+        console.error("Count query error:", error);
+        return `<my-alert message="Failed to count entries: ${error.message}" />`;
+      }
+
+      return (
+        `**${count || 0}** entries` +
+        (args.vendor ? ` matching "${args.vendor}"` : "") +
+        (args.business ? ` for business "${args.business}"` : "") +
+        (args.month ? ` in ${args.month}` : "")
+      );
+    }
+
+    // Step 7: Add ordering and limits for data query
+    const orderCol = args.sort === "created" ? "created_at" : "entry_date";
+    console.log("Adding order and limit...");
+
+    query = query
+      .order(orderCol, { ascending: args.dir === "asc" })
+      .order("id", { ascending: args.dir === "asc" })
+      .limit(args.limit);
+
+    // Step 8: Execute query
+    console.log("Executing data query...");
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Data query error:", error);
+      return `<my-alert message="Failed to fetch entries: ${error.message}" />`;
+    }
+
+    if (!data || data.length === 0) {
+      return "No entries found.";
+    }
+
+    // Step 9: Format results
+    // Step 9: Format results (data is now properly typed)
+    const lines = data.map((e) => {
+      const amt = Number(e.amount);
+      const sym = currencySymbol(e.currency);
+      const cleared = e.is_cleared ? " ✅" : "";
+      // Get first business from array (should only be one)
+      const businessName = e.businesses?.[0]?.name
+        ? ` [${e.businesses[0].name}]`
+        : "";
+
+      return `- ${e.entry_date} • ${
+        e.description
+      }${businessName} — ${sym}${amt.toFixed(2)}${cleared} → [/ledger/entry/${
+        e.id
+      }](/ledger/entry/${e.id})`;
+    });
+    // Step 10: Optional totals
+    let totalsBlock = "";
+    if (args.sum) {
+      const total = data.reduce(
+        (sum: number, r: { amount?: number | null }) =>
+          sum + Number(r.amount || 0),
+        0
+      );
+      totalsBlock = `\n\n**Total:** ฿${total.toFixed(2)}`;
+    }
+
+    const filterDesc =
+      (args.business ? ` for ${args.business}` : "") +
+      (args.vendor ? ` matching "${args.vendor}"` : "") +
+      (args.month ? ` in ${args.month}` : "");
+
+    return (
+      [
+        `Showing **${data.length}** entries (sort: ${args.sort} ${args.dir}, limit: ${args.limit}${filterDesc})`,
+        "",
+        ...lines,
+      ].join("\n") + totalsBlock
+    );
+  } catch (error) {
+    console.error("Unexpected error:", error);
+    return `<my-alert message="Unexpected error: ${error}" />`;
+  }
 }
