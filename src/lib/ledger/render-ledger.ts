@@ -4,17 +4,34 @@
 export type Posting = { account: string; amount: number; currency?: string };
 
 export function renderLedger(
-  date: string, // YYYY-MM-DD
+  date: string,
   payee: string,
   postings: Posting[],
   currency = "THB"
 ): string {
-  const ymd = date.replace(/-/g, "/"); // Ledger header prefers slashes
-  const pad = (n: number) =>
-    n >= 0 ? ` $${n.toFixed(2)}` : `$${n.toFixed(2)}`;
+  const ymd = date.replace(/-/g, "/");
+
+  // Currency symbol mapping
+  const currencySymbol = (curr: string) => {
+    if (curr === "THB") return "฿";
+    if (curr === "USD") return "$";
+    if (curr === "EUR") return "€";
+    return curr; // fallback
+  };
+
+  const pad = (amount: number, curr: string) => {
+    const symbol = currencySymbol(curr);
+    return amount >= 0
+      ? ` ${symbol}${amount.toFixed(2)}`
+      : `${symbol}${amount.toFixed(2)}`;
+  };
+
   const lines = [
     `${ymd} ${payee}`,
-    ...postings.map((p) => `    ${p.account.padEnd(30)}${pad(p.amount)}`),
+    ...postings.map(
+      (p) =>
+        `    ${p.account.padEnd(30)}${pad(p.amount, p.currency || currency)}`
+    ),
   ];
   return lines.join("\n");
 }

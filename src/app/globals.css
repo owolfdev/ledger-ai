@@ -185,7 +185,6 @@ html {
 /* Markdown Styles */
 .terminal-markdown {
   font-family: var(--font-mono, monospace);
-  font-size: 0.95rem;
   color: var(--foreground);
 }
 

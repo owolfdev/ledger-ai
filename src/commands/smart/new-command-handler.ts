@@ -37,7 +37,8 @@ interface StructuredInput {
   currency?: string;
   memo?: string | null;
   paymentAccount?: string;
-  imageUrl?: string | null; // 👈 NEW
+  imageUrl?: string | null;
+  business?: string; // NEW: business context
 }
 
 interface ProcessingResult {
@@ -47,7 +48,8 @@ interface ProcessingResult {
   receipt: ReceiptShape;
   paymentAccount?: string;
   memo?: string | null;
-  imageUrl?: string | null; // 👈 NEW
+  imageUrl?: string | null;
+  business?: string; // NEW: business context
 }
 
 function isValidStructuredInput(obj: unknown): obj is StructuredInput {
@@ -103,7 +105,8 @@ function processStructuredInput(structured: StructuredInput): ProcessingResult {
     receipt,
     paymentAccount: structured.paymentAccount ?? undefined,
     memo: structured.memo ?? null,
-    imageUrl: structured.imageUrl ?? null, // 👈 NEW
+    imageUrl: structured.imageUrl ?? null,
+    business: structured.business, // NEW: pass business through
   };
 }
 
@@ -120,7 +123,8 @@ function toPayload(result: ProcessingResult): NewCommandPayload {
     },
     paymentAccount: result.paymentAccount,
     memo: result.memo ?? null,
-    imageUrl: result.imageUrl ?? null, // 👈 NEW
+    imageUrl: result.imageUrl ?? null,
+    business: result.business, // NEW: pass business through
   });
 }
 
@@ -223,9 +227,11 @@ async function processAndSaveEntry(
     paymentAccount: payload.paymentAccount || DEFAULT_CONFIG.paymentAccount,
     includeTaxLine: DEFAULT_CONFIG.includeTaxLine,
     mapAccount: accountMap,
-    vendor: payload.payee, // used by mappers that rely on payee
+    vendor: payload.payee,
+    business: payload.business, // NEW: pass business through
   });
 
+  // renderLedger doesn't need business parameter - it uses the accounts from posts
   const ledgerPreview = renderLedger(
     payload.date,
     payload.payee,
@@ -281,6 +287,7 @@ export async function handleNew(
       receipt: parsed.receipt,
       paymentAccount: parsed.paymentAccount,
       memo: parsed.memo ?? null,
+      business: parsed.business, // NEW: pass business through
     };
 
     await processAndSaveEntry(result, setHistory);

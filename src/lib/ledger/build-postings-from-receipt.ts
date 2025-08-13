@@ -1,12 +1,12 @@
 // /lib/ledger/build-postings-from-receipt.ts
 // Deterministically convert OCR-structured receipt data into balanced postings.
-
 import {
   mapAccount as defaultMapAccount,
   type MapAccountOptions,
 } from "./account-map";
 
 export type ReceiptItem = { description: string; price: number };
+
 export type ReceiptShape = {
   items: ReceiptItem[];
   subtotal: number | null;
@@ -21,7 +21,8 @@ export type BuildOpts = {
   paymentAccount?: string; // default Assets:Cash
   mapAccount?: MapAccountFn; // category resolver (now accepts ctx)
   includeTaxLine?: boolean; // if true and tax present, split out SalesTax
-  vendor?: string; // new: pass vendor context to mapper
+  vendor?: string; // pass vendor context to mapper
+  business?: string; // NEW: pass business context to mapper
 };
 
 const DEFAULT_PAYMENT = "Assets:Cash";
@@ -34,17 +35,27 @@ export function buildPostingsFromReceipt(
 ): Posting[] {
   const currency = opts.currency || "THB";
   const pay = opts.paymentAccount || DEFAULT_PAYMENT;
-  const map = opts.mapAccount || defaultMapAccount; // use shared account map by default
+  const map = opts.mapAccount || defaultMapAccount;
+
+  // Build context object for mapAccount calls
+  const mapContext: MapAccountOptions = {
+    vendor: opts.vendor,
+    business: opts.business, // NEW: pass business context
+  };
 
   const positives: Posting[] = receipt.items.map((it) => ({
-    account: map(it.description, { vendor: opts.vendor, price: it.price }),
+    account: map(it.description, {
+      ...mapContext,
+      price: it.price,
+    }),
     amount: +(+it.price).toFixed(2),
     currency,
   }));
 
   if (opts.includeTaxLine && receipt.tax && receipt.tax > 0) {
+    // Tax account doesn't use business context (always goes to Expenses:Taxes:Sales)
     positives.push({
-      account: "Expenses:Personal:SalesTax",
+      account: map("tax", mapContext),
       amount: +(+receipt.tax).toFixed(2),
       currency,
     });
@@ -52,11 +63,10 @@ export function buildPostingsFromReceipt(
 
   const sumPos = +positives.reduce((s, p) => s + p.amount, 0).toFixed(2);
   const total = receipt.total ?? receipt.subtotal ?? sumPos;
-
   const negative: Posting = { account: pay, amount: -total, currency };
-
   const postings = [...positives, negative];
   const sum = +postings.reduce((s, p) => s + p.amount, 0).toFixed(2);
+
   if (Math.abs(sum) > 0.005) {
     const diff = -sum;
     let idx = -1;
@@ -73,8 +83,13 @@ export function buildPostingsFromReceipt(
         amount: +(positives[idx].amount + diff).toFixed(2),
       };
     } else {
+      // Use business context for fallback account too
+      const fallbackAccount = opts.business
+        ? `Expenses:${opts.business}:Misc`
+        : "Expenses:Personal:Misc";
+
       positives.push({
-        account: "Expenses:Personal:Misc",
+        account: fallbackAccount,
         amount: +diff.toFixed(2),
         currency,
       });

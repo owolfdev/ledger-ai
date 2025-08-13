@@ -307,13 +307,8 @@ export default function Terminal({
           }}
           className="flex flex-col gap-2 mt-2 mb-8"
         >
-          {/* ⬅️ our new button */}
-          <TerminalImageUpload
-            onRunCommand={(cmd) => onCommand?.(cmd, setHistory, history)}
-          />
           <div className="flex items-center gap-2">
             <span className="text-primary select-none">$</span>
-
             <Textarea
               ref={inputRef}
               value={input}
@@ -339,13 +334,19 @@ export default function Terminal({
                   inputRef.current?.focus();
                 }
               }}
-              className="flex-1 bg-transparent px-0 py-2 outline-none focus:ring-0 font-mono !text-base autofill:bg-transparent pl-2 min-h-28 border"
+              className="flex-1 bg-transparent px-0 py-2 outline-none focus:ring-0 font-mono !text-lg md:!text-base autofill:bg-transparent pl-2 min-h-28 border-none resize-none"
               style={{
                 minHeight: 32,
                 boxShadow: "none",
                 backgroundColor: "transparent",
               }}
               placeholder="Type a command..."
+            />
+          </div>
+          <div className="pt-2">
+            {/* ⬅️ our new button */}
+            <TerminalImageUpload
+              onRunCommand={(cmd) => onCommand?.(cmd, setHistory, history)}
             />
           </div>
         </form>

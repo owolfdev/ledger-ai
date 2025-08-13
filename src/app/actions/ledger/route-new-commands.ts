@@ -18,6 +18,7 @@ export type NewCommandPayload = {
   paymentAccount?: string; // e.g., Liabilities:CreditCard
   memo?: string | null;
   imageUrl?: string | null;
+  business?: string; // NEW: business context
 };
 
 export type HandleNewResult =
@@ -89,6 +90,7 @@ export async function handleNewCommand(
     paymentAccount: payload.paymentAccount || "Assets:Cash",
     includeTaxLine: true,
     vendor: payload.payee,
+    business: payload.business, // NEW: pass business context
   });
 
   const postings = normalizePostings(built, payload.currency);

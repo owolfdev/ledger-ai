@@ -1,174 +1,191 @@
 // /lib/ledger/account-map.ts
-// Deterministic description→account mapper. Keep rules ordered by priority. No AI.
+// Deterministic description→account mapper with business context support
 
 export type MapAccountOptions = {
   vendor?: string;
   price?: number; // for future threshold-based routing
+  business?: string; // NEW: business context for account hierarchy
 };
 
-const FALLBACK_ACCOUNT = "Expenses:Personal:Misc";
-
-// Vendor equals rules (highest confidence)
-const VENDOR_EXACT: Array<{ name: string; account: string }> = [
-  // { name: "apple store", account: "Expenses:Personal:Electronics:Apple" },
-  // { name: "samsung", account: "Expenses:Personal:Electronics:Mobile" },
-  // { name: "starbucks", account: "Expenses:Personal:Food:Coffee" },
-  // { name: "shell", account: "Expenses:Personal:Transport:Fuel" },
-  // { name: "tesco", account: "Expenses:Personal:Groceries" },
-  // { name: "safeway", account: "Expenses:Personal:Groceries" },
-];
-
-// Vendor contains rules (high confidence)
-const VENDOR_CONTAINS: Array<{ pattern: RegExp; account: string }> = [
-  { pattern: /7\s*eleven|7-?11/i, account: "Expenses:Personal:Groceries" },
-  {
-    pattern: /amazon\s*coffee|cafe amazon/i,
-    account: "Expenses:Personal:Food:Coffee",
-  },
-  { pattern: /walmart/i, account: "Expenses:Personal:Groceries" },
-  { pattern: /costco/i, account: "Expenses:Personal:Groceries" },
-];
-
-// Description rules (ordered by specificity)
-const DESC_RULES: Array<{ pattern: RegExp; account: string }> = [
+// Business rules - maps description patterns to account categories (without business prefix)
+const DESC_CATEGORY_RULES: Array<{ pattern: RegExp; category: string }> = [
   // Electronics
   {
     pattern: /(iphone|ipad|macbook|apple\s*watch|airpods)/i,
-    account: "Expenses:Personal:Electronics:Apple",
+    category: "Electronics:Apple",
   },
   {
     pattern: /(pixel\s*(phone|buds|tablet)|google\s*(nest|home))/i,
-    account: "Expenses:Personal:Electronics:Google",
+    category: "Electronics:Google",
   },
   {
     pattern: /(samsung\s*(galaxy|buds|tablet)|android\s*phone)/i,
-    account: "Expenses:Personal:Electronics:Mobile",
+    category: "Electronics:Mobile",
   },
   {
     pattern: /(laptop|notebook|ultrabook)/i,
-    account: "Expenses:Personal:Electronics:Laptops",
+    category: "Electronics:Laptops",
   },
   {
     pattern: /(headphone|earbud|speaker|bluetooth)/i,
-    account: "Expenses:Personal:Electronics:Audio",
+    category: "Electronics:Audio",
   },
   {
     pattern: /(usb\s*c?|charger|power\s*bank|cable|adapter)/i,
-    account: "Expenses:Personal:Electronics:Accessories",
+    category: "Electronics:Accessories",
   },
 
   // Food sub-categories
   {
     pattern: /(butter|milk|cheese|yogurt|cream|dairy|egg|eggs)/i,
-    account: "Expenses:Personal:Food:Dairy",
+    category: "Food:Dairy",
   },
   {
     pattern: /(chicken|beef|pork|meat)/i,
-    account: "Expenses:Personal:Food:Meat",
+    category: "Food:Meat",
   },
   {
     pattern: /(oat|grain|rice|bread|cereal|pasta|noodle)/i,
-    account: "Expenses:Personal:Food:Grains",
+    category: "Food:Grains",
   },
   {
     pattern: /(olive|oil|vinegar|sauce|ketchup|condiment|mayonnaise)/i,
-    account: "Expenses:Personal:Food:Condiments",
+    category: "Food:Condiments",
   },
   {
     pattern:
       /(bean|onion|garlic|veg|vegetable|lettuce|tomato|pepper|carrot|broccoli)/i,
-    account: "Expenses:Personal:Food:Vegetables",
+    category: "Food:Vegetables",
   },
   {
     pattern: /(lemon|apple|banana|grape|fruit|mango|orange|berry)/i,
-    account: "Expenses:Personal:Food:Fruit",
+    category: "Food:Fruit",
   },
   {
     pattern: /(peanut\s*butter|jam|jelly)/i,
-    account: "Expenses:Personal:Food:Pantry",
+    category: "Food:Pantry",
   },
   {
     pattern: /(coffee|latte|espresso|americano)/i,
-    account: "Expenses:Personal:Food:Coffee",
+    category: "Food:Coffee",
   },
   {
     pattern: /(tea|matcha|oolong|earl\s*grey)/i,
-    account: "Expenses:Personal:Food:Tea",
+    category: "Food:Tea",
   },
   {
     pattern: /(restaurant|dine|meal|lunch|dinner|snack|takeaway|take\s*out)/i,
-    account: "Expenses:Personal:Food:Dining",
+    category: "Food:Dining",
   },
   {
     pattern: /(pastr(y|ies)|cake|donut|croissant|muffin|bagel|scone)/i,
-    account: "Expenses:Personal:Food:Bakery",
+    category: "Food:Bakery",
+  },
+  {
+    pattern: /(groceries|grocery)/i,
+    category: "Food:Groceries",
   },
 
   // Transport & fuel
   {
     pattern: /(gas|fuel|petrol|diesel)/i,
-    account: "Expenses:Personal:Transport:Fuel",
+    category: "Transport:Fuel",
   },
   {
     pattern: /(grab|uber|taxi|ride|fare|bts|mrt|metro|bus|train)/i,
-    account: "Expenses:Personal:Transport:Transit",
+    category: "Transport:Transit",
+  },
+
+  // Business-specific categories
+  {
+    pattern: /(subscription|saas|software|hosting|domain)/i,
+    category: "Subscription:Software",
+  },
+  {
+    pattern: /(supabase|vercel|netlify|aws|digital\s*ocean)/i,
+    category: "Subscription:Infrastructure",
+  },
+  {
+    pattern: /(supplies|inventory|stock|materials)/i,
+    category: "Supplies:General",
+  },
+  {
+    pattern: /(napkin|paper|cup|bag|packaging)/i,
+    category: "Supplies:Packaging",
+  },
+  {
+    pattern: /(marketing|advertising|ads|promotion)/i,
+    category: "Marketing:Advertising",
   },
 
   // Household
-  // {
-  //   pattern: /(detergent|cleaner|soap|shampoo|toothpaste|toilet\s*paper)/i,
-  //   account: "Expenses:Personal:Household:Supplies",
-  // },
   {
     pattern: /(towel|linen|sheet|blanket|pillow)/i,
-    account: "Expenses:Personal:Household:HomeGoods",
-  },
-
-  // Clothing
-  {
-    pattern: /(shirt|pants|jeans|dress|skirt|jacket|shoe|sneaker|sock)/i,
-    account: "Expenses:Personal:Clothing",
-  },
-
-  // Health
-  {
-    pattern: /(vitamin|supplement|medicine|pharmacy|clinic)/i,
-    account: "Expenses:Personal:Health",
-  },
-
-  // Toiletries
-  {
-    pattern:
-      /(toothpaste|toothbrush|floss|mouthwash|shampoo|conditioner|soap|lotion|deodorant)/i,
-    account: "Expenses:Personal:Toiletries",
+    category: "Household:HomeGoods",
   },
   {
     pattern: /(detergent|cleaner|soap|shampoo|toothpaste|toilet\s*paper)/i,
-    account: "Expenses:Personal:Household:Supplies",
+    category: "Household:Supplies",
   },
 
-  // Entertainment
+  // Personal categories
+  {
+    pattern: /(shirt|pants|jeans|dress|skirt|jacket|shoe|sneaker|sock)/i,
+    category: "Clothing",
+  },
+  {
+    pattern: /(vitamin|supplement|medicine|pharmacy|clinic)/i,
+    category: "Health",
+  },
+  {
+    pattern:
+      /(toothpaste|toothbrush|floss|mouthwash|shampoo|conditioner|soap|lotion|deodorant)/i,
+    category: "Toiletries",
+  },
   {
     pattern: /(movie|cinema|netflix|spotify|game|concert)/i,
-    account: "Expenses:Personal:Entertainment",
+    category: "Entertainment",
   },
 
-  // Taxes (usually handled earlier, but keep as safety net)
-  { pattern: /^tax$/i, account: "Expenses:Taxes:Sales" },
+  // Taxes (special case - goes to Expenses:Taxes, not business-specific)
+  { pattern: /^tax$/i, category: "Taxes:Sales" },
 ];
 
-function findVendorAccount(vendor?: string): string | undefined {
-  if (!vendor) return undefined;
-  const v = vendor.toLowerCase().trim();
-  const exact = VENDOR_EXACT.find((r) => r.name === v);
-  if (exact) return exact.account;
-  const contains = VENDOR_CONTAINS.find((r) => r.pattern.test(v));
-  return contains?.account;
+// Vendor-specific mappings (without business prefix)
+const VENDOR_EXACT: Array<{ name: string; category: string }> = [
+  // Add vendor-specific mappings here
+];
+
+const VENDOR_CONTAINS: Array<{ pattern: RegExp; category: string }> = [
+  { pattern: /7\s*eleven|7-?11/i, category: "Groceries" },
+  { pattern: /amazon\s*coffee|cafe amazon/i, category: "Food:Coffee" },
+  { pattern: /walmart/i, category: "Groceries" },
+  { pattern: /costco/i, category: "Groceries" },
+];
+
+function buildAccountFromCategory(category: string, business: string): string {
+  // Special case: Taxes don't use business prefix
+  if (category.startsWith("Taxes:")) {
+    return `Expenses:${category}`;
+  }
+
+  return `Expenses:${business}:${category}`;
 }
 
-function findDescriptionAccount(desc: string): string | undefined {
-  for (const r of DESC_RULES) {
-    if (r.pattern.test(desc)) return r.account;
+function findVendorCategory(vendor?: string): string | undefined {
+  if (!vendor) return undefined;
+  const v = vendor.toLowerCase().trim();
+
+  const exact = VENDOR_EXACT.find((r) => r.name === v);
+  if (exact) return exact.category;
+
+  const contains = VENDOR_CONTAINS.find((r) => r.pattern.test(v));
+  return contains?.category;
+}
+
+function findDescriptionCategory(desc: string): string | undefined {
+  for (const r of DESC_CATEGORY_RULES) {
+    if (r.pattern.test(desc)) return r.category;
   }
   return undefined;
 }
@@ -178,25 +195,35 @@ export function mapAccount(
   opts: MapAccountOptions = {}
 ): string {
   const desc = description.toLowerCase().trim();
+  const business = opts.business || "Personal";
 
-  // Prefer vendor-based mapping if strong signal.
-  const vendorAccount = findVendorAccount(opts.vendor);
-  if (vendorAccount) return vendorAccount;
+  // Prefer vendor-based mapping if strong signal
+  const vendorCategory = findVendorCategory(opts.vendor);
+  if (vendorCategory) {
+    return buildAccountFromCategory(vendorCategory, business);
+  }
 
-  // Description-based mapping.
-  const descAccount = findDescriptionAccount(desc);
-  if (descAccount) return descAccount;
+  // Description-based mapping
+  const descCategory = findDescriptionCategory(desc);
+  if (descCategory) {
+    return buildAccountFromCategory(descCategory, business);
+  }
 
-  // Optional: price-based routing could be added here (e.g., capitalizeAbove threshold).
-
-  return FALLBACK_ACCOUNT;
+  // Fallback to Misc
+  return `Expenses:${business}:Misc`;
 }
 
-// Minimal smoke tests (dev-time). Guarded to avoid side effects in prod bundles.
+// Helper function to get available business names (for future business management)
+export function getDefaultBusiness(): string {
+  return "Personal";
+}
+
+// Minimal smoke tests (dev-time)
 if (process.env.NODE_ENV === "development") {
-  // Why: quick sanity check during local builds
-  const _a = mapAccount("iPhone 15 Pro");
-  const _b = mapAccount("butter");
-  const _c = mapAccount("regular gas 91", { vendor: "Shell" });
+  const _a = mapAccount("iPhone 15 Pro"); // Should be Expenses:Personal:Electronics:Apple
+  const _b = mapAccount("butter", { business: "MyBrickAndMortar" }); // Should be Expenses:MyBrickAndMortar:Food:Dairy
+  const _c = mapAccount("supabase subscription", {
+    business: "MyOnlineBusiness",
+  }); // Should be Expenses:MyOnlineBusiness:Subscription:Infrastructure
   void [_a, _b, _c];
 }

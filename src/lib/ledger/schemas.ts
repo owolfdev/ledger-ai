@@ -1,6 +1,5 @@
 // /lib/ledger/schemas.ts
 // Zod schemas shared by parser, client UI, and server actions.
-
 import { z } from "zod";
 
 // YYYY-MM-DD (local date)
@@ -12,6 +11,16 @@ export const DateYMD = z
 export const AccountPath = z
   .string()
   .regex(/^[A-Z][\w &-]*(?::[A-Z][\w &-]*)*$/u, "Invalid account path");
+
+// Business name (alphanumeric, underscores allowed)
+export const BusinessName = z
+  .string()
+  .regex(
+    /^[A-Za-z][A-Za-z0-9_]*$/u,
+    "Business name must start with letter and contain only letters, numbers, and underscores"
+  )
+  .min(1, "Business name cannot be empty")
+  .max(50, "Business name cannot exceed 50 characters");
 
 // ISO currency code (3 letters)
 export const CurrencyISO = z
@@ -26,6 +35,7 @@ export const ReceiptItemSchema = z.object({
   description: z.string().min(1),
   price: Money, // non-negative validation below at receipt level (allows returns if needed)
 });
+
 export type ReceiptItem = z.infer<typeof ReceiptItemSchema>;
 
 export const ReceiptShapeSchema = z
@@ -46,10 +56,8 @@ export const ReceiptShapeSchema = z
         });
       }
     }
-
     // If subtotal provided, check it matches the sum of item prices (within 1 cent)
     const sum = Number(val.items.reduce((s, it) => s + it.price, 0).toFixed(2));
-
     if (val.subtotal !== null && Math.abs(sum - val.subtotal) > 0.05) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -57,7 +65,6 @@ export const ReceiptShapeSchema = z
         path: ["subtotal"],
       });
     }
-
     // If total provided, check it roughly equals subtotal + tax (when both present)
     if (val.total !== null) {
       const sub = val.subtotal ?? sum;
@@ -72,6 +79,7 @@ export const ReceiptShapeSchema = z
       }
     }
   });
+
 export type ReceiptShape = z.infer<typeof ReceiptShapeSchema>;
 
 export const NewCommandPayloadSchema = z.object({
@@ -85,7 +93,9 @@ export const NewCommandPayloadSchema = z.object({
     .union([z.string().url(), z.string().regex(/^[^\\s]+$/)])
     .optional()
     .nullable(),
+  business: BusinessName.optional(), // NEW: business context
 });
+
 export type NewCommandPayload = z.infer<typeof NewCommandPayloadSchema>;
 
 // Helper: validate and return typed payload

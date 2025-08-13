@@ -314,9 +314,32 @@ export const commandRegistry: Record<string, CommandMeta> = {
   new: {
     content: "__LEDGER_NEW_ENTRY__",
     description:
-      'Create a new Ledger CLI entry from natural language. Example: `new coffee, starbucks $7.00` or `new coffee $7.00, starbucks, memo "pumpkin latte with soy milk"` or `new coffee $7.00 at starbucks, yesterday, memo "pumpkin latte with soy milk"`',
-    usage:
-      'new <item> $<price>[, <item> $<price> ...], [vendor], [date], [payment method], [memo "<text>"] — comma-separated, date can be "today", "yesterday", or YYYY/MM/DD, payment maps to cash/credit/bank.',
+      "Create a new double-entry ledger transaction from natural language. Automatically categorizes expenses and supports multiple businesses. Items are mapped to appropriate accounts (e.g., 'coffee' → Food:Coffee, 'napkins' → Supplies:Packaging).",
+    usage: `new <item> <amount>[, <item> <amount>...], <vendor> [options]
+  
+  **Basic Examples:**
+  • \`new coffee 150 Starbucks\` — Simple expense (defaults to Personal business)
+  • \`new fruit 500, soap 200 Gourmet Market\` — Multiple items
+  • \`new subscription 1000 Supabase, business MyOnlineBusiness\` — Specify business
+  
+  **Business Context:**
+  • \`new:MyBrickAndMortar napkins 300 supplier\` — Prefix syntax
+  • \`new supplies 500 vendor, biz MyOnlineBusiness\` — Token syntax
+  • No business specified defaults to "Personal"
+  
+  **Optional Parameters:**
+  • **Date:** \`yesterday\`, \`2025/08/10\`, or \`today\` (default)
+  • **Payment:** \`credit card\`, \`bank card\`, \`paypal\`, or \`cash\` (default)
+  • **Memo:** \`memo "weekly supplies order"\`
+  • **Currency:** Auto-detected from symbols (\`฿\` = THB, \`$\` = USD)
+  
+  **Full Example:**
+  \`new coffee 150, pastry 100 Starbucks, yesterday, credit card, business Personal, memo "morning meeting"\`
+  
+  **Account Mapping:**
+  • Personal: \`Expenses:Personal:Food:Coffee\`
+  • MyBrickAndMortar: \`Expenses:MyBrickAndMortar:Supplies:Packaging\`  
+  • MyOnlineBusiness: \`Expenses:MyOnlineBusiness:Subscription:Software\``,
   },
 
   // Contact Messages

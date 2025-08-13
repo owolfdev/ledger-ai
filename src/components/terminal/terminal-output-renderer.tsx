@@ -77,7 +77,11 @@ export default function TerminalOutputRenderer({
       });
 
     const result = processor.processSync(content).result;
-    return <div className={`terminal-markdown ${className}`}>{result}</div>;
+    return (
+      <div className={`terminal-markdown text-lg md:text-sm ${className}`}>
+        {result}
+      </div>
+    );
   }
 
   return <span className={className}>{content}</span>;

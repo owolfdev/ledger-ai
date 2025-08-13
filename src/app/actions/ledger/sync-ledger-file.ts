@@ -19,7 +19,12 @@ export async function syncLedgerFile() {
   const supabase = await createClient();
   const { data: entries, error } = await supabase
     .from("ledger_entries")
-    .select("*")
+    .select(
+      `
+    *,
+    ledger_postings(*)
+  `
+    )
     .order("entry_date", { ascending: true });
 
   if (error) throw error;
@@ -33,14 +38,30 @@ export async function syncLedgerFile() {
   }
 
   const content = entries
-    .map((e) => {
-      const symbol = currencySymbol(e.currency);
-      const amount = parseFloat(e.amount).toFixed(2);
-      return (
-        `${e.entry_date.replace(/-/g, "/")} ${e.description}\n` +
-        `    ${e.expense_account}    ${symbol}${amount}\n` +
-        `    ${e.asset_account}   -${symbol}${amount}`
-      );
+    .map((entry) => {
+      const lines = [
+        `${entry.entry_date.replace(/-/g, "/")} ${entry.description}`,
+      ];
+
+      // Add each posting as a separate line
+      entry.ledger_postings
+        .sort(
+          (a: { sort_order: number }, b: { sort_order: number }) =>
+            a.sort_order - b.sort_order
+        )
+        .forEach(
+          (posting: {
+            currency: string | undefined;
+            amount: string;
+            account: string;
+          }) => {
+            const symbol = currencySymbol(posting.currency);
+            const amount = parseFloat(posting.amount).toFixed(2);
+            lines.push(`    ${posting.account}    ${symbol}${amount}`);
+          }
+        );
+
+      return lines.join("\n");
     })
     .join("\n\n");
 
