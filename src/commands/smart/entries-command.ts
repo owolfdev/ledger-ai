@@ -1,7 +1,7 @@
 // ================================================
 // FILE: src/commands/smart/entries-command.ts
 // PURPOSE: List ledger entries from Supabase with links to /ledger/entry/:id
-// Supports sort flags: `date` (default) or `created`, plus optional `asc|desc`, `[limit]`, and `--sum`
+// Supports sort flags: `date` (default) or `created`, plus optional `asc|desc`, `[limit]`, `--sum`, and `--count`
 // Examples:
 //   ent                  -> date desc, limit 20
 //   ent 50               -> date desc, limit 50
@@ -9,7 +9,9 @@
 //   ent created asc      -> created_at asc, limit 20
 //   ent date 10 asc      -> date asc, limit 10
 //   ent --sum            -> shows totals of listed rows
+//   ent --count          -> shows only the total count (no entries listed)
 //   ent created desc 50 --sum
+//   ent count            -> alias for --count
 // ================================================
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@/types/user";
@@ -23,6 +25,7 @@ export interface EntriesArgs {
   dir: Dir;
   limit: number;
   sum: boolean;
+  count: boolean; // NEW: count-only mode
 }
 
 function parseArgs(raw?: string): EntriesArgs {
@@ -31,8 +34,9 @@ function parseArgs(raw?: string): EntriesArgs {
   let dir: Dir = "desc";
   let limit = 20;
   let sum = false;
+  let count = false;
 
-  if (!raw) return { sort, dir, limit, sum };
+  if (!raw) return { sort, dir, limit, sum, count };
 
   const parts = raw.trim().split(/\s+/).filter(Boolean);
   for (let i = 0; i < parts.length; i++) {
@@ -53,12 +57,16 @@ function parseArgs(raw?: string): EntriesArgs {
       sum = true;
       continue;
     }
+    if (t === "count" || t === "--count") {
+      count = true;
+      continue;
+    }
     if (/^\d+$/.test(t)) {
       limit = Math.max(1, Math.min(200, parseInt(t, 10)));
       continue;
     }
   }
-  return { sort, dir, limit, sum };
+  return { sort, dir, limit, sum, count };
 }
 
 function currencySymbol(currency?: string | null) {
@@ -76,8 +84,23 @@ export async function entriesListCommand(
   _set?: Record<string, CommandMeta>,
   user?: User | null
 ): Promise<string> {
-  const { sort, dir, limit, sum } = parseArgs(arg);
+  const { sort, dir, limit, sum, count } = parseArgs(arg);
   const supabase = createClient();
+
+  // NEW: Count-only mode
+  if (count) {
+    let countQuery = supabase
+      .from("ledger_entries")
+      .select("*", { count: "exact", head: true });
+
+    if (user?.id) countQuery = countQuery.eq("user_id", user.id);
+
+    const { count: totalCount, error } = await countQuery;
+    if (error)
+      return `<my-alert message="Failed to count entries: ${error.message}" />`;
+
+    return `**${totalCount || 0}** total entries`;
+  }
 
   type Row = {
     id: number;
