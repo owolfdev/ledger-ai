@@ -15,28 +15,42 @@ const PostingSchema = z.object({
 });
 
 // Entry update schema
+// Update your Zod schema to be more explicit about null handling:
+
 const UpdateEntrySchema = z.object({
   id: z.number().positive(),
   description: z.string().min(1, "Description is required").max(200),
   entry_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
   memo: z.string().max(1000).optional(),
   is_cleared: z.boolean(),
-  image_url: z
-    .union([z.string().url(), z.string().length(0), z.null(), z.undefined()])
-    .optional(), // More flexible image URL validation
+  image_url: z.union([z.string().url(), z.null()]).optional(), // Simplified: either a valid URL or null
   postings: z
     .array(PostingSchema)
     .min(2, "Must have at least 2 postings")
     .optional(),
 });
 
-//
 export type UpdateEntryInput = z.infer<typeof UpdateEntrySchema>;
+
+// Define the proper type for the update data
+type LedgerEntryUpdate = {
+  description: string;
+  entry_date: string;
+  memo: string | null;
+  is_cleared: boolean;
+  amount: number | string; // Supabase accepts both
+  updated_at: string;
+  image_url?: string | null; // Optional field that can be null
+};
 
 export async function updateLedgerEntry(input: UpdateEntryInput) {
   try {
+    console.log("=== SERVER ACTION DEBUG ===");
+    console.log("Raw input:", input);
+
     // Validate input
     const validatedData = UpdateEntrySchema.parse(input);
+    console.log("Validated data:", validatedData);
 
     // Validate balance if postings are included
     if (validatedData.postings) {
@@ -86,35 +100,46 @@ export async function updateLedgerEntry(input: UpdateEntryInput) {
         .filter((p) => p.amount > 0)
         .reduce((sum, p) => sum + p.amount, 0);
     }
-    // Prepare update object
-    const updateData = {
+
+    // Prepare update object with proper typing
+    const updateData: LedgerEntryUpdate = {
       description: validatedData.description,
       entry_date: validatedData.entry_date,
       memo: validatedData.memo || null,
       is_cleared: validatedData.is_cleared,
       amount: newAmount,
       updated_at: new Date().toISOString(),
-      image_url: validatedData.image_url,
     };
 
-    // Fix: Handle image URL update properly
+    // Handle image URL update properly
+    console.log(
+      "Has image_url property:",
+      validatedData.hasOwnProperty("image_url")
+    );
+    console.log("image_url value:", validatedData.image_url);
+    console.log("image_url type:", typeof validatedData.image_url);
+
     if (validatedData.hasOwnProperty("image_url")) {
-      // Handle all cases: string URL, empty string, null, undefined
       if (
         validatedData.image_url === null ||
         validatedData.image_url === "" ||
         validatedData.image_url === undefined
       ) {
         updateData.image_url = null; // Explicitly set to null for removal
+        console.log("Setting image_url to null for removal");
       } else if (
         typeof validatedData.image_url === "string" &&
         validatedData.image_url.length > 0
       ) {
         updateData.image_url = validatedData.image_url; // Valid URL
+        console.log("Setting image_url to:", validatedData.image_url);
       } else {
         updateData.image_url = null; // Default to null for any other case
+        console.log("Default: Setting image_url to null");
       }
     }
+
+    console.log("Final updateData:", updateData);
 
     // Update the entry
     const { data: updatedEntry, error: updateError } = await supabase
@@ -128,6 +153,8 @@ export async function updateLedgerEntry(input: UpdateEntryInput) {
       console.error("Entry update error:", updateError);
       return { success: false, error: "Failed to update entry" };
     }
+
+    console.log("Database update successful:", updatedEntry);
 
     // Update postings if provided
     if (validatedData.postings) {
@@ -172,6 +199,7 @@ export async function updateLedgerEntry(input: UpdateEntryInput) {
   } catch (error) {
     console.error("Server action error:", error);
     if (error instanceof z.ZodError) {
+      console.log("Zod validation errors:", error.errors);
       return {
         success: false,
         error: "Validation failed",

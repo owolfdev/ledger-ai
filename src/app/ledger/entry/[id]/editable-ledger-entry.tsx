@@ -286,6 +286,8 @@ export default function EditableLedgerEntry({
     businessMatch && businessMatch[1] !== "Taxes" ? businessMatch[1] : null;
 
   // Fix 3: Properly type the handleSave function payload
+  // Fix your handleSave function in the React component:
+
   const handleSave = () => {
     startTransition(async () => {
       try {
@@ -295,8 +297,13 @@ export default function EditableLedgerEntry({
           memo: editData.memo || undefined,
           entry_date: editData.entry_date,
           is_cleared: editData.is_cleared,
-          image_url: editData.image_url || undefined,
+          image_url: editData.image_url, // ALWAYS include this, even if null
         };
+
+        // DEBUG: Log what we're sending
+        console.log("=== CLIENT DEBUG ===");
+        console.log("editData.image_url:", editData.image_url);
+        console.log("payload before sending:", payload);
 
         // Include postings if in advanced mode
         if (editMode === "advanced") {
@@ -310,6 +317,8 @@ export default function EditableLedgerEntry({
         }
 
         const result = await updateLedgerEntry(payload);
+
+        console.log("Server response:", result);
 
         if (result.success) {
           setIsEditing(false);
