@@ -69,24 +69,22 @@ export async function POST(req: Request) {
       cacheControl: "31536000",
     };
 
-    const [{ error: upErrA }, { error: upErrB }] = await Promise.all([
-      supabase.storage.from(BUCKET).upload(basePath, baseBuf, commonOpts),
-      supabase.storage.from(BUCKET).upload(binPath, binBuf, commonOpts),
-    ]);
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET)
+      .upload(basePath, baseBuf, commonOpts);
 
-    if (upErrA || upErrB) {
-      const msg = upErrA?.message ?? upErrB?.message ?? "Upload error";
-      return NextResponse.json({ error: msg }, { status: 500 });
+    if (uploadError) {
+      return NextResponse.json({ error: uploadError.message }, { status: 500 });
     }
 
-    const { data: pubA } = supabase.storage.from(BUCKET).getPublicUrl(basePath);
-    const { data: pubB } = supabase.storage.from(BUCKET).getPublicUrl(binPath);
+    const { data: publicData } = supabase.storage
+      .from(BUCKET)
+      .getPublicUrl(basePath);
+    const cb = Date.now();
 
-    const cb = Date.now(); // cache-buster for CDN edges
     return NextResponse.json({
       ok: true,
-      url: `${pubA.publicUrl}?cb=${cb}`,
-      urlBin: `${pubB.publicUrl}?cb=${cb}`,
+      url: `${publicData.publicUrl}?cb=${cb}`,
       mime: "image/jpeg",
       width: 1500,
     });

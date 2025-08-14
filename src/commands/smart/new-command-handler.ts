@@ -254,6 +254,8 @@ async function processAndSaveEntry(
   updateHistoryWithSuccess(setHistory);
 }
 
+// Updated section in /commands/smart/new-command-handler.ts
+
 export async function handleNew(
   setHistory: SetHistory,
   cmd: string,
@@ -287,7 +289,8 @@ export async function handleNew(
       receipt: parsed.receipt,
       paymentAccount: parsed.paymentAccount,
       memo: parsed.memo ?? null,
-      business: parsed.business, // NEW: pass business through
+      imageUrl: parsed.imageUrl ?? null, // 👈 ADD THIS LINE
+      business: parsed.business,
     };
 
     await processAndSaveEntry(result, setHistory);

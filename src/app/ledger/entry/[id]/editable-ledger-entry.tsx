@@ -51,7 +51,7 @@ interface EditablePostingsProps {
   disabled?: boolean;
 }
 
-// Add the EditablePostings component
+// Enhanced EditablePostings component with reordering
 function EditablePostings({
   postings,
   currency,
@@ -83,6 +83,35 @@ function EditablePostings({
     } else {
       newPostings[index] = { ...newPostings[index], [field]: value };
     }
+
+    // Update sort_order to match array position
+    newPostings.forEach((posting, idx) => {
+      posting.sort_order = idx;
+    });
+
+    setEditPostings(newPostings);
+    onUpdate(newPostings);
+  };
+
+  // 👈 ADD REORDERING FUNCTIONS
+  const movePosting = (fromIndex: number, direction: "up" | "down") => {
+    const newPostings = [...editPostings];
+    const toIndex = direction === "up" ? fromIndex - 1 : fromIndex + 1;
+
+    // Check bounds
+    if (toIndex < 0 || toIndex >= newPostings.length) return;
+
+    // Swap the postings
+    [newPostings[fromIndex], newPostings[toIndex]] = [
+      newPostings[toIndex],
+      newPostings[fromIndex],
+    ];
+
+    // Update sort_order to match new positions
+    newPostings.forEach((posting, idx) => {
+      posting.sort_order = idx;
+    });
+
     setEditPostings(newPostings);
     onUpdate(newPostings);
   };
@@ -106,6 +135,12 @@ function EditablePostings({
       return;
     }
     const newPostings = editPostings.filter((_, i) => i !== index);
+
+    // Update sort_order after removal
+    newPostings.forEach((posting, idx) => {
+      posting.sort_order = idx;
+    });
+
     setEditPostings(newPostings);
     onUpdate(newPostings);
   };
@@ -165,13 +200,42 @@ function EditablePostings({
         </Alert>
       )}
 
-      {/* Postings List */}
+      {/* Postings List with Reordering */}
       <div className="space-y-3">
         {editPostings.map((posting, index) => (
           <div
             key={posting.id || `new-${index}`}
             className="flex items-center space-x-2 p-3 border rounded-lg"
           >
+            {/* 👈 ADD REORDER BUTTONS */}
+            <div className="flex flex-col space-y-1">
+              <Button
+                onClick={() => movePosting(index, "up")}
+                variant="outline"
+                size="sm"
+                disabled={disabled || index === 0}
+                className="h-6 w-6 p-0 text-xs"
+                title="Move up"
+              >
+                ↑
+              </Button>
+              <Button
+                onClick={() => movePosting(index, "down")}
+                variant="outline"
+                size="sm"
+                disabled={disabled || index === editPostings.length - 1}
+                className="h-6 w-6 p-0 text-xs"
+                title="Move down"
+              >
+                ↓
+              </Button>
+            </div>
+
+            {/* Order indicator */}
+            <div className="w-8 text-center text-xs text-neutral-500 font-mono">
+              #{index + 1}
+            </div>
+
             <div className="flex-1">
               <Input
                 placeholder="Account (e.g., Expenses:Personal:Food:Coffee)"
@@ -203,6 +267,7 @@ function EditablePostings({
                 variant="destructive"
                 size="sm"
                 disabled={disabled}
+                title="Remove posting"
               >
                 ×
               </Button>
@@ -258,7 +323,6 @@ interface EditableLedgerEntryProps {
 }
 
 // Main component
-// Fix 2: Create a wrapper function to handle the type conversion
 export default function EditableLedgerEntry({
   entry,
   postings,
@@ -285,9 +349,6 @@ export default function EditableLedgerEntry({
   const businessName =
     businessMatch && businessMatch[1] !== "Taxes" ? businessMatch[1] : null;
 
-  // Fix 3: Properly type the handleSave function payload
-  // Fix your handleSave function in the React component:
-
   const handleSave = () => {
     startTransition(async () => {
       try {
@@ -297,13 +358,8 @@ export default function EditableLedgerEntry({
           memo: editData.memo || undefined,
           entry_date: editData.entry_date,
           is_cleared: editData.is_cleared,
-          image_url: editData.image_url, // ALWAYS include this, even if null
+          image_url: editData.image_url,
         };
-
-        // DEBUG: Log what we're sending
-        console.log("=== CLIENT DEBUG ===");
-        console.log("editData.image_url:", editData.image_url);
-        console.log("payload before sending:", payload);
 
         // Include postings if in advanced mode
         if (editMode === "advanced") {
@@ -312,17 +368,17 @@ export default function EditableLedgerEntry({
             account: p.account,
             amount: p.amount,
             currency: p.currency,
-            sort_order: index,
+            sort_order: index, // Use array index for final sort order
           }));
         }
 
         const result = await updateLedgerEntry(payload);
 
-        console.log("Server response:", result);
-
         if (result.success) {
           setIsEditing(false);
           setEditMode("basic");
+          // 👈 REFRESH PAGE TO SHOW UPDATED DATA
+          window.location.reload();
         } else {
           alert(`Failed to save: ${result.error}`);
         }
@@ -356,7 +412,6 @@ export default function EditableLedgerEntry({
     setEditData((prev) => ({ ...prev, image_url: null }));
   };
 
-  // Fix 4: Create a wrapper function for the EditablePostings onUpdate
   const handlePostingsUpdate = (newPostings: EditablePosting[]) => {
     setEditPostings(newPostings);
   };

@@ -333,6 +333,12 @@ export async function segmentReceiptOcr(
   const metaVendor = pickLikelyVendor(preLines, guessStart);
   const metaDate = extractDate(preLines);
 
+  // // 👈 LOG EXTRACTED METADATA
+  // console.log("EXTRACTED METADATA:");
+  // console.log("- Vendor:", metaVendor);
+  // console.log("- Date:", metaDate);
+  // console.log("- First item candidate line:", guessStart);
+
   if (llm) {
     try {
       const system = buildSystemPrompt();

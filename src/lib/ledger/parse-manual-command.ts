@@ -196,11 +196,14 @@ function extractBusinessFromInput(input: string): {
   return { cleanInput: input };
 }
 
+// Updated extractFlags function in /lib/ledger/parse-manual-command.ts
+
 function extractFlags(tokens: string[]): {
   business?: string;
   payment?: string;
   memo?: string;
   date?: string;
+  imageUrl?: string; // 👈 ADD THIS
   tokens: string[];
 } {
   const updatedTokens: string[] = [];
@@ -208,6 +211,7 @@ function extractFlags(tokens: string[]): {
   let payment: string | undefined;
   let memo: string | undefined;
   let date: string | undefined;
+  let imageUrl: string | undefined; // 👈 ADD THIS
 
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
@@ -246,11 +250,21 @@ function extractFlags(tokens: string[]): {
       continue;
     }
 
+    // 👈 ADD THIS SECTION
+    // --image flag
+    if (token === "--image" && i + 1 < tokens.length) {
+      const imageValue = tokens[i + 1];
+      // Remove quotes if present
+      imageUrl = imageValue.replace(/^"(.*)"$/, "$1");
+      i++; // Skip the value token
+      continue;
+    }
+
     // Keep non-flag tokens
     updatedTokens.push(token);
   }
 
-  return { business, payment, memo, date, tokens: updatedTokens };
+  return { business, payment, memo, date, imageUrl, tokens: updatedTokens }; // 👈 ADD imageUrl TO RETURN
 }
 
 function parseItemsAndVendor(tokens: string[]): {
@@ -319,6 +333,8 @@ function mapPaymentMethod(method: string): string {
 // new coffee $6, pastry $4 @ Starbucks
 // new MyBrick: supplies $50 @ HomeDepot --payment cash
 // new coffee $6 @ Starbucks --business Personal --memo "meeting"
+// Updated parseManualNewCommand function in /lib/ledger/parse-manual-command.ts
+
 export function parseManualNewCommand(input: string): {
   date: string;
   payee: string;
@@ -327,6 +343,7 @@ export function parseManualNewCommand(input: string): {
   memo?: string;
   paymentAccount: string;
   business?: string;
+  imageUrl?: string; // 👈 ADD THIS TO RETURN TYPE
 } {
   // 1) Check for prefix business syntax (BusinessName:)
   const { business: prefixBusiness, cleanInput } =
@@ -335,12 +352,13 @@ export function parseManualNewCommand(input: string): {
   // 2) Tokenize the cleaned input
   const tokens = tokenize(cleanInput);
 
-  // 3) Extract flags (--business, --payment, --memo, --date)
+  // 3) Extract flags (--business, --payment, --memo, --date, --image)
   const {
     business: flagBusiness,
     payment,
     memo,
     date: flagDate,
+    imageUrl, // 👈 ADD THIS
     tokens: remainingTokens,
   } = extractFlags(tokens);
 
@@ -348,7 +366,6 @@ export function parseManualNewCommand(input: string): {
   const business = prefixBusiness || flagBusiness;
 
   // 5) Use flag date if provided, otherwise default to today
-  // const date = flagDate || formatLocalDate(new Date());
   const finalDate = flagDate || formatLocalDate(new Date());
 
   // 6) Parse items and vendor from remaining tokens
@@ -393,6 +410,7 @@ export function parseManualNewCommand(input: string): {
     receipt,
     memo: memo || undefined,
     paymentAccount,
-    business: normalizeBusiness(business), // ← Apply normalization
+    business: normalizeBusiness(business),
+    imageUrl: imageUrl || undefined, // 👈 ADD THIS TO RETURN
   };
 }

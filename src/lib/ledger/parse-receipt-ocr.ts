@@ -16,7 +16,7 @@ export type ReceiptData = {
   };
 };
 
-const MONEY_TOKEN = /\$?(?:\d{1,3}(?:,\d{3})*|\d+)\.(?:\d{2,3})/;
+const MONEY_TOKEN = /\$?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.(?:\d{2,3}))?/;
 const TRAIL_FLAG = /(?:\s+[A-Z0-9§%]{1,3})?/; // allow N, X, 0, etc.
 const MONEY_AT_END = new RegExp(`${MONEY_TOKEN.source}$`);
 const MONEY_AT_END_WITH_FLAG = new RegExp(
@@ -37,7 +37,7 @@ const ITEM_FORMAT_RE = new RegExp(
     "(?:[A-Z]\\s+)?",
     "(?:[0-9]{5,}\\s+)?",
     "(.+?)",
-    "\\s+",
+    "\\s*",
     `(${MONEY_TOKEN.source})`,
     `${TRAIL_FLAG.source}`,
     "$",

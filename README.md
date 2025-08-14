@@ -1,15 +1,13 @@
 # 📟 Ledger App — Terminal Command System
 
-updated
-
 **Technical Reference — August 2025**
 
 ---
 
 ## **1. Overview**
 
-The Ledger App is a **React-based smart terminal** for quickly creating, managing, and syncing financial ledger entries.
-It combines **structured parsing**, **AI-assisted inference**, and **Supabase-backed persistence** with optional **Ledger CLI integration** for development workflows.
+The Ledger App is a **React-based smart terminal** for quickly creating, managing, and editing financial ledger entries.
+It combines **structured parsing**, **AI-assisted inference**, **Supabase-backed persistence**, and **comprehensive entry management** with optional **Ledger CLI integration** for development workflows.
 
 ---
 
@@ -17,16 +15,24 @@ It combines **structured parsing**, **AI-assisted inference**, and **Supabase-ba
 
 - **Smart Command Parser**
 
-  - Supports structured JSON or natural “manual” commands (`new coffee $5 Starbucks, credit card`)
+  - Supports structured JSON or natural "manual" commands (`new coffee $5 Starbucks, credit card`)
   - Automatic detection of:
-
-    - Date (absolute or relative: `2025/08/10`, `yesterday`)
+    - Date (absolute or relative: `2025-08-10`, `yesterday`)
     - Items & prices (with optional category overrides)
     - Payment account mapping (`credit card` → `Liabilities:CreditCard`)
     - Memo extraction (`memo "Lunch meeting"`)
     - Currency detection (`$` → `USD`, `฿` → `THB`)
-
+    - Business context (`MyBrick: supplies $50` or `--business Personal`)
   - Extensible regex mapping for expense categories
+
+- **Entry Management System**
+
+  - **Individual entry pages** with full details and editing capabilities
+  - **In-place editing** with basic and advanced modes:
+    - Basic: Description, date, memo, cleared status, receipt images
+    - Advanced: Individual posting modification with balance validation
+  - **Image upload & management** for receipt storage
+  - **Real-time validation** ensuring double-entry balance
 
 - **AI Fallback**
 
@@ -36,12 +42,19 @@ It combines **structured parsing**, **AI-assisted inference**, and **Supabase-ba
 - **Supabase Storage**
 
   - Primary persistence layer for:
-
     - Normalized ledger entries (`ledger_entries`)
+    - Individual account postings (`ledger_postings`)
     - Business metadata (`businesses`)
-
-  - Enforces `business_id` linking for multi-business/multi-user usage
+    - Receipt images (Supabase Storage bucket)
+  - **Account-based business context** stored in expense account hierarchy
   - All numeric amounts stored without currency symbols; currency stored as ISO code
+
+- **Modern Next.js Architecture**
+
+  - **Server actions** for data mutations (create, update entries)
+  - **Optimistic updates** with `useTransition` and `revalidatePath`
+  - **Type-safe** operations with Zod validation
+  - **Image processing** with Sharp for receipt optimization
 
 - **Ledger File Sync (Dev Mode)**
 
@@ -51,7 +64,6 @@ It combines **structured parsing**, **AI-assisted inference**, and **Supabase-ba
   - **One-way sync**: Supabase → File (never the reverse)
 
 - **Ledger CLI Integration (Dev Only)**
-
   - Terminal can run `ledger register`, `ledger balance`, etc., against local file
   - Disabled in production for security and scalability
 
@@ -62,18 +74,18 @@ It combines **structured parsing**, **AI-assisted inference**, and **Supabase-ba
 User types:
 
 ```bash
-new coffee $4, pastry $5, Starbucks, credit card, memo "pumpkin latte not good", yesterday
+new coffee $4, pastry $5 @ Starbucks --payment "credit card" --memo "pumpkin latte not good" --date yesterday
 ```
 
 **Step-by-step processing:**
 
-1. **Tokenization & Parsing**
+1. **Enhanced Tokenization & Parsing**
 
    - Detects date (`yesterday`)
    - Extracts items: `coffee $4`, `pastry $5`
-   - Detects vendor (`Starbucks`)
+   - Detects vendor (`@ Starbucks`)
    - Maps payment method to `Liabilities:CreditCard`
-   - Extracts memo
+   - Extracts memo and business context
    - Detects currency (`USD`)
 
 2. **Receipt Shape Normalization**
@@ -90,63 +102,122 @@ new coffee $4, pastry $5, Starbucks, credit card, memo "pumpkin latte not good",
    }
    ```
 
-3. **Posting Generation**
+3. **Posting Generation with Business Context**
 
    ```ledger
-   2025/08/09 Starbucks
+   2025/08/13 Starbucks
        Expenses:Personal:Food:Coffee  $4.00
        Expenses:Personal:Food:Pastry  $5.00
        Liabilities:CreditCard        $-9.00
    ```
 
-4. **Supabase Save**
+4. **Supabase Save with Posting Details**
 
-   - Entry stored in `ledger_entries` with:
+   - Entry stored in `ledger_entries` with business context in account names
+   - Individual postings stored in `ledger_postings` with sort order
+   - Currency as `"USD"`, raw input in `entry_raw`, canonical text in `entry_text`
 
-     - `business_id` inferred from expense account path
-     - `currency` as `"USD"`
-     - Raw input stored in `entry_raw`
-     - Canonical ledger text in `entry_text`
-
-5. **Ledger File Sync** _(if enabled)_
-
-   - Entry appended to `src/data/ledger/general.ledger`
-   - Currency symbol auto-generated from stored `currency`
+5. **Entry Management**
+   - Accessible via `/ledger/entry/{id}` for viewing and editing
+   - Full edit capabilities including image upload and posting modification
 
 ---
 
 ## **4. Key Files & Responsibilities**
 
-| File / Path                                  | Purpose                                                                                            |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `/commands/smart/new-command-handler.ts`     | Main orchestration for `new` terminal commands — handles both structured JSON and manual commands. |
-| `/lib/ledger/parse-manual-command.ts`        | Tokenizes, parses, and validates free-form commands into structured `ReceiptShape` + metadata.     |
-| `/lib/ledger/build-postings-from-receipt.ts` | Converts parsed receipt into Ledger CLI postings with correct accounts.                            |
-| `/lib/ledger/render-ledger.ts`               | Renders date, payee, and postings into canonical `.ledger` text.                                   |
-| `/app/actions/ledger/create-ledger-entry.ts` | Persists structured entry data into Supabase.                                                      |
-| `/app/actions/ledger/sync-ledger-file.ts`    | Pulls Supabase entries and writes to local `.ledger` file in dev mode.                             |
-| `/lib/ledger/account-map.ts`                 | Maps keywords and descriptions to default expense/asset accounts.                                  |
-| `/lib/ledger/schemas.ts`                     | Zod schemas for validating structured ledger input.                                                |
+| File / Path                                        | Purpose                                                                                           |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **Command Processing**                             |
+| `/commands/smart/new-command-handler.ts`           | Main orchestration for `new` terminal commands — handles both structured JSON and manual commands |
+| `/lib/ledger/parse-manual-command.ts`              | Enhanced tokenizer supporting flags, business context, and vendor syntax                          |
+| `/lib/ledger/build-postings-from-receipt.ts`       | Converts parsed receipt into Ledger CLI postings with business-aware accounts                     |
+| `/lib/ledger/render-ledger.ts`                     | Renders date, payee, and postings into canonical `.ledger` text                                   |
+| **Entry Management**                               |
+| `/app/ledger/entry/[id]/page.tsx`                  | Individual entry detail page with view/edit capabilities                                          |
+| `/app/ledger/entry/[id]/editable-ledger-entry.tsx` | Comprehensive entry editor with basic/advanced modes                                              |
+| `/app/ledger/entry/[id]/image-upload.tsx`          | Receipt image upload and management component                                                     |
+| **Data Layer**                                     |
+| `/app/actions/ledger/create-ledger-entry.ts`       | Creates new ledger entries with posting details                                                   |
+| `/app/actions/ledger/update-ledger-entry.ts`       | Updates existing entries including postings and images                                            |
+| `/app/actions/ledger/sync-ledger-file.ts`          | Pulls Supabase entries and writes to local `.ledger` file in dev mode                             |
+| **Configuration**                                  |
+| `/lib/ledger/account-map.ts`                       | Maps keywords and descriptions to business-aware expense/asset accounts                           |
+| `/lib/ledger/schemas.ts`                           | Zod schemas for validating structured ledger input and updates                                    |
+| **Image Processing**                               |
+| `/app/api/receipt-image/route.ts`                  | Handles receipt upload, Sharp processing, and Supabase Storage                                    |
 
 ---
 
-## **5. Best Practices**
+## **5. Entry Management Features**
 
-- **Always save to Supabase first**, then sync to local file if enabled.
-- Keep business mappings (`businesses` table) up to date — parsing relies on correct account pathing.
-- Add new category regex patterns in `/lib/ledger/account-map.ts` for common items (`pastry`, `sandwich`, etc.).
-- Use development mode for testing Ledger CLI integration; production runs without file writes.
+### **Individual Entry Pages (`/ledger/entry/{id}`)**
+
+- **Full entry details** with business context, postings, and receipt images
+- **Edit button** to enter modification mode
+- **Image display** with full-size view links
+
+### **In-Place Editing System**
+
+- **Basic Mode**: Edit description, date, memo, cleared status, and images
+- **Advanced Mode**: Full posting editor with add/remove/balance capabilities
+- **Real-time validation** ensuring transactions remain balanced
+- **Auto-balance button** to automatically balance the last posting
+- **Account suggestions** with business-aware examples
+
+### **Image Management**
+
+- **Receipt upload** with automatic Sharp optimization (grayscale, resize, compress)
+- **Replace/remove** functionality with database synchronization
+- **Supabase Storage** integration with user-specific paths
+- **Preview and full-size viewing**
 
 ---
 
-## **6. Extending the System**
+## **6. Business Context Architecture**
 
-- **New Categories**: Add to `account-map.ts` patterns.
-- **New Payment Methods**: Extend `PARSER_GRAMMAR.paymentMethods.map` in `parse-manual-command.ts`.
-- **Alternate Currencies**: Adjust currency detection regex or accept explicit ISO codes in input.
-- **Custom AI Rules**: Modify AI prompt in `/commands/smart/new-command-handler.ts`.
+**Account-Based Approach:**
+
+- Business context embedded in account hierarchy: `Expenses:Personal:Food:Coffee`
+- No foreign key relationships required
+- Self-contained ledger entries compatible with standard accounting tools
+- Business filtering via account name pattern matching
+
+**Supported Business Operations:**
+
+- `new coffee $6` → Personal business (default)
+- `new MyBrick: supplies $50` → MyBrick business (prefix syntax)
+- `new coffee $6 --business Channel60` → Channel60 business (flag syntax)
 
 ---
+
+## **7. Modern Next.js Integration**
+
+- **Server Actions** for all data mutations (no API routes needed for internal operations)
+- **TypeScript throughout** with strict type checking and Zod validation
+- **Optimistic UI updates** with automatic revalidation
+- **Error handling** with user-friendly feedback
+- **Image processing** with Sharp for optimal receipt storage
+
+---
+
+## **8. Best Practices**
+
+- **Always save to Supabase first**, then sync to local file if enabled
+- **Account-based business context** eliminates need for complex foreign key relationships
+- **Real-time validation** prevents unbalanced transactions
+- **Image optimization** reduces storage costs and improves performance
+- **Server actions** provide type-safe, modern data operations
+
+---
+
+## **9. Extending the System**
+
+- **New Categories**: Add to `account-map.ts` patterns with business-aware mapping
+- **New Payment Methods**: Extend `PARSER_GRAMMAR.paymentMethods.map` in `parse-manual-command.ts`
+- **Alternate Currencies**: Adjust currency detection regex or accept explicit ISO codes
+- **Custom AI Rules**: Modify AI prompt in `/commands/smart/new-command-handler.ts`
+- **Additional Edit Features**: Extend `EditableLedgerEntry` component with new capabilities
+- **Image Processing**: Enhance Sharp pipeline in `/app/api/receipt-image/route.ts`
 
 /Users/wolf/Documents/Development/Projects/Ledger/ledger-app/src
 ├── actions
@@ -175,12 +246,14 @@ new coffee $4, pastry $5, Starbucks, credit card, memo "pumpkin latte not good",
 │   │   │   ├── delete-post.ts
 │   │   │   └── save-post.ts
 │   │   ├── ledger
+│   │   │   ├── after-save-ledger-sync.ts
 │   │   │   ├── create-ledger-entry.ts
 │   │   │   ├── create-ledger-from-structured.ts
 │   │   │   ├── get-ledger-entries.ts
 │   │   │   ├── read-ledger-file.ts
 │   │   │   ├── route-new-commands.ts
-│   │   │   └── sync-ledger-file.ts
+│   │   │   ├── sync-ledger-file.ts
+│   │   │   └── update-ledger-entry.ts
 │   │   ├── like-actions.ts
 │   │   ├── mdx
 │   │   │   └── fetch-mdx-raw.ts
@@ -209,7 +282,11 @@ new coffee $4, pastry $5, Starbucks, credit card, memo "pumpkin latte not good",
 │   │   │   └── route.ts
 │   │   ├── openai
 │   │   │   └── route.ts
-│   │   └── openai-image-analyze
+│   │   ├── openai-image-analyze
+│   │   │   └── route.ts
+│   │   ├── receipt-image
+│   │   │   └── route.ts
+│   │   └── receipt-preprocess
 │   │   └── route.ts
 │   ├── apple-icon.png
 │   ├── auth
@@ -239,6 +316,14 @@ new coffee $4, pastry $5, Starbucks, credit card, memo "pumpkin latte not good",
 │   ├── image-process
 │   │   └── page.tsx
 │   ├── layout.tsx
+│   ├── ledger
+│   │   ├── entries
+│   │   │   └── page.tsx
+│   │   └── entry
+│   │   └── [id]
+│   │   ├── editable-ledger-entry.tsx
+│   │   ├── image-upload.tsx
+│   │   └── page.tsx
 │   ├── loading-bak.tsx
 │   ├── loading.tsx
 │   ├── not-found.tsx
@@ -263,6 +348,7 @@ new coffee $4, pastry $5, Starbucks, credit card, memo "pumpkin latte not good",
 │   └── page.tsx
 ├── commands
 │   ├── smart
+│   │   ├── entries-command.ts
 │   │   ├── handle-command.ts
 │   │   ├── new-command-handler.ts
 │   │   ├── registry.ts
@@ -281,6 +367,7 @@ new coffee $4, pastry $5, Starbucks, credit card, memo "pumpkin latte not good",
 ├── components
 │   ├── alerts
 │   │   ├── custom-alert.tsx
+│   │   ├── editable-receipt-error.tsx
 │   │   └── production-mode-alert.tsx
 │   ├── auth-button.tsx
 │   ├── blog
@@ -390,6 +477,7 @@ new coffee $4, pastry $5, Starbucks, credit card, memo "pumpkin latte not good",
 │   ├── terminal
 │   │   ├── custom-mdx-components.tsx
 │   │   ├── smart-terminal.tsx
+│   │   ├── terminal-image-upload.tsx
 │   │   ├── terminal-loading.tsx
 │   │   ├── terminal-output-renderer.tsx
 │   │   ├── terminal-reset-button.tsx
@@ -444,6 +532,8 @@ new coffee $4, pastry $5, Starbucks, credit card, memo "pumpkin latte not good",
 │   │   ├── toast.tsx
 │   │   └── toaster.tsx
 │   └── update-password-form.tsx
+├── config
+│   └── vendors.json
 ├── content
 │   ├── mdx
 │   │   └── test.mdx
@@ -460,6 +550,7 @@ new coffee $4, pastry $5, Starbucks, credit card, memo "pumpkin latte not good",
 │   │   ├── protected.mdx
 │   │   └── welcome.mdx
 │   └── posts
+│   ├── documentation.mdx
 │   ├── ledger-cli-a-beginners-tutorial-part-2.mdx
 │   ├── ledger-cli-a-beginners-tutorial.mdx
 │   └── ledger-cli-practical-tutorial-for-freelance-developers-6.mdx
@@ -489,14 +580,18 @@ new coffee $4, pastry $5, Starbucks, credit card, memo "pumpkin latte not good",
 │   │   ├── account-map.ts
 │   │   ├── auto-balance-ledger-entry.ts
 │   │   ├── build-postings-from-receipt.ts
+│   │   ├── enhanced-ocr-pipeline.ts
 │   │   ├── is-local-write-enabled.ts
 │   │   ├── parse-ledger-entry.ts
 │   │   ├── parse-manual-command.ts
+│   │   ├── parse-receipt-ocr-invoice.ts
 │   │   ├── parse-receipt-ocr.ts
+│   │   ├── reconcile-receipt-summary.ts
 │   │   ├── render-ledger.ts
 │   │   ├── schemas.ts
 │   │   ├── segment-ocr-with-llm.ts
-│   │   └── validate-receipt-ocr.ts
+│   │   ├── validate-receipt-ocr.ts
+│   │   └── vendor-config.ts
 │   ├── ledger-config.ts
 │   ├── ledger-date-parse.ts
 │   ├── ledger-date.ts
@@ -535,3 +630,5 @@ new coffee $4, pastry $5, Starbucks, credit card, memo "pumpkin latte not good",
 │   ├── middleware.ts
 │   └── server.ts
 └── utils.ts
+
+117 directories, 293 files

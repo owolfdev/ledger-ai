@@ -4,6 +4,9 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { syncLedgerFile } from "./sync-ledger-file";
+import { isLocalLedgerWriteEnabled } from "@/lib/ledger/is-local-write-enabled";
+import { renderLedger } from "@/lib/ledger/render-ledger";
 
 // Posting schema
 const PostingSchema = z.object({
@@ -15,15 +18,13 @@ const PostingSchema = z.object({
 });
 
 // Entry update schema
-// Update your Zod schema to be more explicit about null handling:
-
 const UpdateEntrySchema = z.object({
   id: z.number().positive(),
   description: z.string().min(1, "Description is required").max(200),
   entry_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
   memo: z.string().max(1000).optional(),
   is_cleared: z.boolean(),
-  image_url: z.union([z.string().url(), z.null()]).optional(), // Simplified: either a valid URL or null
+  image_url: z.union([z.string().url(), z.null()]).optional(),
   postings: z
     .array(PostingSchema)
     .min(2, "Must have at least 2 postings")
@@ -38,9 +39,10 @@ type LedgerEntryUpdate = {
   entry_date: string;
   memo: string | null;
   is_cleared: boolean;
-  amount: number | string; // Supabase accepts both
+  amount: number | string;
   updated_at: string;
-  image_url?: string | null; // Optional field that can be null
+  image_url?: string | null;
+  entry_text?: string; // Add entry_text for regeneration
 };
 
 export async function updateLedgerEntry(input: UpdateEntryInput) {
@@ -83,11 +85,9 @@ export async function updateLedgerEntry(input: UpdateEntryInput) {
       .select("id, user_id, amount, image_url")
       .eq("id", validatedData.id)
       .single();
-
     if (fetchError || !existingEntry) {
       return { success: false, error: "Entry not found" };
     }
-
     if (existingEntry.user_id !== user.id) {
       return { success: false, error: "Not authorized to edit this entry" };
     }
@@ -125,16 +125,16 @@ export async function updateLedgerEntry(input: UpdateEntryInput) {
         validatedData.image_url === "" ||
         validatedData.image_url === undefined
       ) {
-        updateData.image_url = null; // Explicitly set to null for removal
+        updateData.image_url = null;
         console.log("Setting image_url to null for removal");
       } else if (
         typeof validatedData.image_url === "string" &&
         validatedData.image_url.length > 0
       ) {
-        updateData.image_url = validatedData.image_url; // Valid URL
+        updateData.image_url = validatedData.image_url;
         console.log("Setting image_url to:", validatedData.image_url);
       } else {
-        updateData.image_url = null; // Default to null for any other case
+        updateData.image_url = null;
         console.log("Default: Setting image_url to null");
       }
     }
@@ -163,7 +163,6 @@ export async function updateLedgerEntry(input: UpdateEntryInput) {
         .from("ledger_postings")
         .delete()
         .eq("entry_id", validatedData.id);
-
       if (deleteError) {
         console.error("Postings delete error:", deleteError);
         return { success: false, error: "Failed to update postings" };
@@ -181,10 +180,95 @@ export async function updateLedgerEntry(input: UpdateEntryInput) {
       const { error: insertError } = await supabase
         .from("ledger_postings")
         .insert(newPostings);
-
       if (insertError) {
         console.error("Postings insert error:", insertError);
         return { success: false, error: "Failed to create new postings" };
+      }
+
+      // Regenerate entry_text after postings update
+      const { data: updatedPostings, error: fetchPostingsError } =
+        await supabase
+          .from("ledger_postings")
+          .select("account, amount, currency")
+          .eq("entry_id", validatedData.id)
+          .order("sort_order", { ascending: true });
+
+      if (!fetchPostingsError && updatedPostings) {
+        // Regenerate the entry_text with updated data
+        const newEntryText = renderLedger(
+          validatedData.entry_date,
+          validatedData.description, // Use the updated description
+          updatedPostings.map((p) => ({
+            account: p.account,
+            amount: p.amount,
+            currency: p.currency,
+          })),
+          updatedPostings[0]?.currency || "USD"
+        );
+
+        // Update the entry with new entry_text
+        const { error: entryTextUpdateError } = await supabase
+          .from("ledger_entries")
+          .update({ entry_text: newEntryText })
+          .eq("id", validatedData.id);
+
+        if (entryTextUpdateError) {
+          console.warn("Failed to update entry_text:", entryTextUpdateError);
+          // Don't fail the operation, just log the warning
+        } else {
+          console.log("✅ Regenerated entry_text with updated postings");
+        }
+      }
+    } else {
+      // Also regenerate for basic updates (description changes)
+      // If only basic fields changed (like description), still update entry_text
+
+      // Fetch current postings
+      const { data: currentPostings, error: fetchCurrentError } = await supabase
+        .from("ledger_postings")
+        .select("account, amount, currency")
+        .eq("entry_id", validatedData.id)
+        .order("sort_order", { ascending: true });
+
+      if (!fetchCurrentError && currentPostings) {
+        // Regenerate entry_text with updated description
+        const newEntryText = renderLedger(
+          validatedData.entry_date,
+          validatedData.description, // Updated description
+          currentPostings.map((p) => ({
+            account: p.account,
+            amount: p.amount,
+            currency: p.currency,
+          })),
+          currentPostings[0]?.currency || "USD"
+        );
+
+        // Update the entry with new entry_text
+        const { error: entryTextUpdateError } = await supabase
+          .from("ledger_entries")
+          .update({ entry_text: newEntryText })
+          .eq("id", validatedData.id);
+
+        if (entryTextUpdateError) {
+          console.warn("Failed to update entry_text:", entryTextUpdateError);
+        } else {
+          console.log("✅ Regenerated entry_text with updated description");
+        }
+      }
+    }
+
+    // Auto-sync after successful database update
+    if (isLocalLedgerWriteEnabled()) {
+      try {
+        const syncResult = await syncLedgerFile();
+        if (syncResult.success) {
+          console.log("✅ Auto-synced ledger file after entry update");
+        } else {
+          console.warn("⚠️ Sync skipped:", syncResult.reason);
+        }
+      } catch (syncError) {
+        console.error("❌ Failed to auto-sync ledger file:", syncError);
+        // Don't fail the update operation if sync fails - just log it
       }
     }
 
