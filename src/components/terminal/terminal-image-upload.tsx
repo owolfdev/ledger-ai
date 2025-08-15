@@ -130,7 +130,8 @@ export default function TerminalImageUpload({
         parsed,
         seg.vendor || undefined,
         seg.date || undefined,
-        imageUrl
+        imageUrl,
+        text
       );
 
       console.log("Generated manual command:", manualCommand);

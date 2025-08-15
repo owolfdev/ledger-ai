@@ -19,7 +19,7 @@ export type InvoiceReceiptData = {
 };
 
 // IMPORTANT: matchAll requires /g
-const MONEY_RE = /\$?\s*(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{2,3})?/;
+const MONEY_RE = /[\$฿€£]?\s*(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{2,3})?[\$฿€£]?/;
 const MONEY_G = new RegExp(MONEY_RE.source, "g");
 
 const TRAIL_TOKEN = /(?:\s+(?:USD|THB|EUR|[A-Za-z0-9%§]{1,4})){0,2}/;
@@ -57,7 +57,7 @@ function priceNearEnd(line: string): boolean {
 }
 
 function parseMoney2(s: string): number {
-  return Math.round(parseFloat(s.replace(/[$,]/g, "")) * 100) / 100;
+  return Math.round(parseFloat(s.replace(/[\$฿€£,]/g, "")) * 100) / 100;
 }
 
 function lastMoney(line: string): string | null {

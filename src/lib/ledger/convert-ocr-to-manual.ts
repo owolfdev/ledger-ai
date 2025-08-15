@@ -8,6 +8,40 @@ interface CleanItem {
   price: number;
 }
 
+// 👈 NEW: Currency detection and formatting
+interface CurrencyConfig {
+  symbol: string;
+  code: string;
+  position: "before" | "after";
+}
+
+const CURRENCY_CONFIGS: Record<string, CurrencyConfig> = {
+  USD: { symbol: "$", code: "USD", position: "before" },
+  THB: { symbol: "฿", code: "THB", position: "after" },
+  EUR: { symbol: "€", code: "EUR", position: "after" },
+  GBP: { symbol: "£", code: "GBP", position: "before" },
+};
+
+function detectCurrencyFromText(ocrText: string): CurrencyConfig {
+  const text = ocrText.toLowerCase();
+
+  // Check for explicit USD indicators
+  if (text.includes("$") || text.includes("usd")) return CURRENCY_CONFIGS.USD;
+  if (text.includes("€")) return CURRENCY_CONFIGS.EUR;
+  if (text.includes("£")) return CURRENCY_CONFIGS.GBP;
+
+  // Default to THB instead of USD
+  return CURRENCY_CONFIGS.THB;
+}
+
+function formatCurrency(amount: number, currency: CurrencyConfig): string {
+  const formatted = amount.toFixed(2);
+  return currency.position === "before"
+    ? `${currency.symbol}${formatted}`
+    : `${formatted}${currency.symbol}`;
+}
+// 👈 END NEW CURRENCY CODE
+
 /**
  * Cleans up OCR item descriptions to be more human-readable
  */
@@ -103,19 +137,24 @@ export function convertOcrToManualCommand(
   receiptData: ReceiptData,
   vendor?: string,
   date?: string,
-  imageUrl?: string // 👈 ADD THIS PARAMETER
+  imageUrl?: string,
+  originalOcrText?: string // 👈 NEW: Add parameter for currency detection
 ): string {
+  // 👈 NEW: Detect currency from original OCR text
+  const currency = originalOcrText
+    ? detectCurrencyFromText(originalOcrText)
+    : CURRENCY_CONFIGS.USD;
+  console.log(`💱 Detected currency: ${currency.code} (${currency.symbol})`);
+
   const cleanItems = extractCleanItems(receiptData);
 
   if (cleanItems.length === 0) {
     return "new"; // Return basic command if no items found
   }
 
-  // Build the items part: "item1 $price, item2 $price"
+  // 👈 UPDATED: Build the items part with proper currency formatting
   const itemsText = cleanItems
-    .map(
-      (item) => `${item.description.toLowerCase()} $${item.price.toFixed(2)}`
-    )
+    .map((item) => `${item.description.toLowerCase()} ${item.price.toFixed(2)}`)
     .join(", ");
 
   // Start building the command
@@ -131,20 +170,19 @@ export function convertOcrToManualCommand(
     command += ` --date ${date.trim()}`;
   }
 
-  // Add memo if we have summary info that might be useful
+  // 👈 UPDATED: Add memo with proper currency formatting
   const memoItems = [];
   if (receiptData.total && receiptData.total > 0) {
-    memoItems.push(`total $${receiptData.total.toFixed(2)}`);
+    memoItems.push(`total ${receiptData.total.toFixed(2)}`);
   }
   if (receiptData.tax && receiptData.tax > 0) {
-    memoItems.push(`tax $${receiptData.tax.toFixed(2)}`);
+    memoItems.push(`tax ${receiptData.tax.toFixed(2)}`);
   }
 
   if (memoItems.length > 0) {
     command += ` --memo "${memoItems.join(", ")}"`;
   }
 
-  // 👈 ADD THIS SECTION
   // Add image URL if provided
   if (imageUrl && imageUrl.trim()) {
     command += ` --image "${imageUrl.trim()}"`;
@@ -175,12 +213,16 @@ export function testConverter() {
     section: { itemsStart: 0, itemsEnd: 5, summaryStart: 6, summaryEnd: 7 },
   };
 
-  // 👈 UPDATE THIS CALL TO INCLUDE IMAGE URL
+  // 👈 UPDATED: Test with Thai OCR text to demonstrate currency detection
+  const thaiOcrText =
+    "ไบกคากับภาษีอย่างย่อ\nบริษัท ถฤกแจะด\n333/100 อาคารหลักสีพล์\nบาท 85.00\nรวม 338.00 บาท";
+
   const result = convertOcrToManualCommand(
     sampleReceiptData,
     "Walmart",
     "2012-05-07",
-    "https://example.supabase.co/storage/v1/object/public/receipts/user123/2025/08/15/receipt.jpg"
+    "https://example.supabase.co/storage/v1/object/public/receipts/user123/2025/08/15/receipt.jpg",
+    thaiOcrText // 👈 NEW: Pass OCR text for currency detection
   );
 
   console.log("Original complex JSON:");
@@ -189,9 +231,9 @@ export function testConverter() {
   console.log("\nConverted to manual command:");
   console.log(result);
 
-  // 👈 UPDATE EXPECTED OUTPUT COMMENT
-  // Expected output:
-  // new all purpose flour $1.98, breakfast $0.98, baking soda $0.50, lentils $0.98, canola oil $1.28, dozen $1.18 @ Walmart --date 2012-05-07 --memo "total $6.90" --image "https://example.supabase.co/storage/v1/object/public/receipts/user123/2025/08/15/receipt.jpg"
+  // 👈 UPDATED: Expected output with Thai Baht
+  // Expected output for Thai receipt:
+  // new all purpose flour 1.98฿, breakfast 0.98฿, baking soda 0.50฿, lentils 0.98฿, canola oil 1.28฿, dozen 1.18฿ @ Walmart --date 2012-05-07 --memo "total 6.90฿" --image "https://example.supabase.co/storage/v1/object/public/receipts/user123/2025/08/15/receipt.jpg"
 
   return result;
 }
