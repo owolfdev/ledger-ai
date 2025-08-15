@@ -29,7 +29,7 @@ export default async function Home() {
         </div>
         <div className="px-4">
           <SmartTerminal
-            storageKey="terminal_key_home"
+            storageKey="ledger_ai_terminal_key_home"
             commandSet="home"
             contextKey="pages/home"
           />

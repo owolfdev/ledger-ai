@@ -362,7 +362,7 @@ export function createHandleCommand(
     // Clear all terminal histories from localStorage
     if (base === "clearall") {
       Object.keys(localStorage)
-        .filter((k) => k.startsWith("terminal_key_"))
+        .filter((k) => k.startsWith("ledger_ai_terminal_key_"))
         .forEach((k) => localStorage.removeItem(k));
       setHistory([]);
       return true;

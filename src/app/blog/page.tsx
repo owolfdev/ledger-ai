@@ -15,7 +15,7 @@ export default async function BlogPage() {
         </div>
         <div className="px-4">
           <SmartTerminal
-            storageKey="terminal_key_blog"
+            storageKey="ledger_ai_terminal_key_blog"
             commandSet="blog"
             contextKey="pages/blog"
             postType="blog" // 👈 add this

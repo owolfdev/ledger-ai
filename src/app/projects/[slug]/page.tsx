@@ -84,7 +84,7 @@ export default async function ProjectPostPage({
         <MdxContent />
       </div>
       <SmartTerminal
-        storageKey={`terminal_key_project_${slug}`}
+        storageKey={`ledger_ai_terminal_key_project_${slug}`}
         commandSet="post" // or "project" if you have a set
         contextKey={`posts/${slug}`}
         currentSlug={slug}

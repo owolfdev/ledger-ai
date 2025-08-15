@@ -27,7 +27,7 @@ export default async function About() {
         </div>
         <div className="px-4">
           <SmartTerminal
-            storageKey="terminal_key_about"
+            storageKey="ledger_ai_terminal_key_about"
             commandSet="about"
             contextKey="pages/about"
           />

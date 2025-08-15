@@ -43,7 +43,7 @@ export default async function ProtectedPage() {
         </div>
         <div className="px-4">
           <SmartTerminal
-            storageKey="terminal_key_protected"
+            storageKey="ledger_ai_terminal_key_protected"
             commandSet="about"
             contextKey="pages/protected"
           />

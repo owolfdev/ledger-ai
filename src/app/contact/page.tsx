@@ -31,7 +31,7 @@ export default async function Contact() {
         </div>
         <div className="px-4">
           <SmartTerminal
-            storageKey="terminal_key_contact"
+            storageKey="ledger_ai_terminal_key_contact"
             commandSet="contact"
             contextKey="pages/contact"
           />

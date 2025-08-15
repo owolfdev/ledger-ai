@@ -81,7 +81,10 @@ async function updateTerminalHistory(postType: string) {
       format: "markdown",
     },
   ];
-  localStorage.setItem(`terminal_key_${postType}`, JSON.stringify(history));
+  localStorage.setItem(
+    `ledger_ai_terminal_key_${postType}`,
+    JSON.stringify(history)
+  );
 }
 
 type MonacoMDXEditorProps = {

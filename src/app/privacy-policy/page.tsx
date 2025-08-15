@@ -25,7 +25,7 @@ export default async function Privacy() {
         </div>
         <div className="px-4">
           <SmartTerminal
-            storageKey="terminal_key_privacy"
+            storageKey="ledger_ai_terminal_key_privacy"
             commandSet="privacy"
             contextKey="pages/privacy"
           />

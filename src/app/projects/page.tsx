@@ -24,7 +24,7 @@ export default async function ProjectsPage() {
         </div>
         <div className="px-4 pb-4">
           <SmartTerminal
-            storageKey="terminal_key_projects"
+            storageKey="ledger_ai_terminal_key_projects"
             commandSet="projects"
             contextKey="pages/projects"
             postType="project" // 👈 add this

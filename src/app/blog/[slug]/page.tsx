@@ -92,7 +92,7 @@ export default async function BlogPostPage({
         </div>
         <div className="pt-6">
           <SmartTerminal
-            storageKey={`terminal_key_blog_${slug}`}
+            storageKey={`ledger_ai_terminal_key_blog_${slug}`}
             commandSet="post" // or "blog", depends on your sets
             contextKey={`posts/${slug}`} // THIS is the content path
             currentSlug={slug}

@@ -34,7 +34,7 @@ export default async function PostPage() {
         </div>
         <div className="px-4">
           <SmartTerminal
-            storageKey="terminal_key_post"
+            storageKey="ledger_ai_terminal_key_post"
             commandSet="post"
             contextKey="pages/post"
           />
