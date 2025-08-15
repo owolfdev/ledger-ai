@@ -1,6 +1,6 @@
 // ================================================
 // FILE: src/commands/smart/entries-command.ts
-// PURPOSE: List ledger entries with business filtering
+// PURPOSE: List ledger entries with business filtering + day/year support
 // ================================================
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@/types/user";
@@ -17,6 +17,8 @@ export interface EntriesArgs {
   count: boolean;
   vendor?: string;
   month?: string;
+  day?: string; // NEW: Single day filtering
+  year?: string; // NEW: Year filtering
   business?: string;
 }
 
@@ -28,6 +30,8 @@ function parseArgs(raw?: string): EntriesArgs {
   let count = false;
   let vendor: string | undefined;
   let month: string | undefined;
+  let day: string | undefined; // NEW
+  let year: string | undefined; // NEW
   let business: string | undefined;
 
   if (!raw) return { sort, dir, limit, sum, count };
@@ -67,6 +71,18 @@ function parseArgs(raw?: string): EntriesArgs {
       i++;
       continue;
     }
+    // NEW: Day filtering
+    if (t === "--day" && i + 1 < parts.length) {
+      day = parts[i + 1];
+      i++;
+      continue;
+    }
+    // NEW: Year filtering
+    if (t === "--year" && i + 1 < parts.length) {
+      year = parts[i + 1];
+      i++;
+      continue;
+    }
     if (t === "--business" && i + 1 < parts.length) {
       business = parts[i + 1];
       i++;
@@ -78,7 +94,66 @@ function parseArgs(raw?: string): EntriesArgs {
     }
   }
 
-  return { sort, dir, limit, sum, count, vendor, month, business };
+  return { sort, dir, limit, sum, count, vendor, month, day, year, business };
+}
+
+// NEW: Helper function to build date filters
+function buildDateFilter(args: EntriesArgs): {
+  startDate?: string;
+  endDate?: string;
+  description: string;
+} {
+  // Priority: day > month > year (most specific wins)
+
+  if (args.day) {
+    // Single day: YYYY-MM-DD
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(args.day)) {
+      throw new Error("Day format must be YYYY-MM-DD (e.g., 2025-08-01)");
+    }
+    return {
+      startDate: args.day,
+      endDate: args.day,
+      description: `on ${args.day}`,
+    };
+  }
+
+  if (args.month) {
+    // Month range: YYYY-MM
+    if (!/^\d{4}-\d{2}$/.test(args.month)) {
+      throw new Error("Month format must be YYYY-MM (e.g., 2025-08)");
+    }
+    const [yearStr, monthStr] = args.month.split("-");
+    const year = parseInt(yearStr);
+    const month = parseInt(monthStr);
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    const startDate = firstDay.toISOString().split("T")[0];
+    const endDate = lastDay.toISOString().split("T")[0];
+
+    return {
+      startDate,
+      endDate,
+      description: `in ${args.month}`,
+    };
+  }
+
+  if (args.year) {
+    // Year range: YYYY
+    if (!/^\d{4}$/.test(args.year)) {
+      throw new Error("Year format must be YYYY (e.g., 2025)");
+    }
+    const year = parseInt(args.year);
+    const startDate = `${year}-01-01`;
+    const endDate = `${year}-12-31`;
+
+    return {
+      startDate,
+      endDate,
+      description: `in ${args.year}`,
+    };
+  }
+
+  return { description: "" };
 }
 
 function currencySymbol(currency?: string | null) {
@@ -95,11 +170,20 @@ export async function entriesListCommand(
   _set?: Record<string, CommandMeta>,
   user?: User | null
 ): Promise<string> {
-  const args = parseArgs(arg);
+  let args: EntriesArgs;
+
+  try {
+    args = parseArgs(arg);
+  } catch (error) {
+    return `<my-alert message="Invalid arguments: ${
+      error instanceof Error ? error.message : error
+    }" />`;
+  }
+
   const supabase = createClient();
 
   try {
-    // Step 1: Start with basic query (no business_id lookup needed)
+    // Step 1: Start with basic query
     console.log("Building base query...");
     let query = supabase
       .from("ledger_entries")
@@ -116,30 +200,35 @@ export async function entriesListCommand(
     // Step 3: Add business filter using account name pattern
     if (args.business) {
       console.log("Adding business filter via account pattern:", args.business);
-      // Filter by entries that contain "Expenses:{BusinessName}:" in entry_text
       query = query.like("entry_text", `%Expenses:${args.business}:%`);
     }
 
-    // Step 4: Add other filters
+    // Step 4: Add vendor filter
     if (args.vendor) {
       console.log("Adding vendor filter:", args.vendor);
       query = query.ilike("description", `%${args.vendor}%`);
     }
 
-    if (args.month) {
-      console.log("Adding month filter:", args.month);
-      const [yearStr, monthStr] = args.month.split("-");
-      const year = parseInt(yearStr);
-      const month = parseInt(monthStr);
-      const firstDay = new Date(year, month - 1, 1);
-      const lastDay = new Date(year, month, 0);
-      const startDate = firstDay.toISOString().split("T")[0];
-      const endDate = lastDay.toISOString().split("T")[0];
-      console.log(`Month filter: ${startDate} to ${endDate}`);
-      query = query.gte("entry_date", startDate).lte("entry_date", endDate);
+    // Step 5: Add date filters (NEW: unified date handling)
+    let dateDescription = "";
+    try {
+      const dateFilter = buildDateFilter(args);
+      if (dateFilter.startDate && dateFilter.endDate) {
+        console.log(
+          `Adding date filter: ${dateFilter.startDate} to ${dateFilter.endDate}`
+        );
+        query = query
+          .gte("entry_date", dateFilter.startDate)
+          .lte("entry_date", dateFilter.endDate);
+        dateDescription = dateFilter.description;
+      }
+    } catch (error) {
+      return `<my-alert message="${
+        error instanceof Error ? error.message : error
+      }" />`;
     }
 
-    // Step 5: Count mode
+    // Step 6: Count mode (with optional sum)
     if (args.count) {
       console.log("Executing count query...");
       let countQuery = supabase
@@ -158,17 +247,19 @@ export async function entriesListCommand(
       if (args.vendor) {
         countQuery = countQuery.ilike("description", `%${args.vendor}%`);
       }
-      if (args.month) {
-        const [yearStr, monthStr] = args.month.split("-");
-        const year = parseInt(yearStr);
-        const month = parseInt(monthStr);
-        const firstDay = new Date(year, month - 1, 1);
-        const lastDay = new Date(year, month, 0);
-        const startDate = firstDay.toISOString().split("T")[0];
-        const endDate = lastDay.toISOString().split("T")[0];
-        countQuery = countQuery
-          .gte("entry_date", startDate)
-          .lte("entry_date", endDate);
+
+      // Apply same date filter to count query
+      try {
+        const dateFilter = buildDateFilter(args);
+        if (dateFilter.startDate && dateFilter.endDate) {
+          countQuery = countQuery
+            .gte("entry_date", dateFilter.startDate)
+            .lte("entry_date", dateFilter.endDate);
+        }
+      } catch (error) {
+        return `<my-alert message="${
+          error instanceof Error ? error.message : error
+        }" />`;
       }
 
       const { count, error } = await countQuery;
@@ -178,15 +269,63 @@ export async function entriesListCommand(
         return `<my-alert message="Failed to count entries: ${error.message}" />`;
       }
 
-      return (
+      let result =
         `**${count || 0}** entries` +
         (args.vendor ? ` matching "${args.vendor}"` : "") +
         (args.business ? ` for business "${args.business}"` : "") +
-        (args.month ? ` in ${args.month}` : "")
-      );
+        (dateDescription ? ` ${dateDescription}` : "");
+
+      // NEW: Add sum to count mode if requested
+      if (args.sum && count && count > 0) {
+        console.log("Executing sum query for count mode...");
+        let sumQuery = supabase.from("ledger_entries").select("amount");
+
+        // Apply same filters as count query
+        if (user?.id) {
+          sumQuery = sumQuery.eq("user_id", user.id);
+        }
+        if (args.business) {
+          sumQuery = sumQuery.like(
+            "entry_text",
+            `%Expenses:${args.business}:%`
+          );
+        }
+        if (args.vendor) {
+          sumQuery = sumQuery.ilike("description", `%${args.vendor}%`);
+        }
+
+        try {
+          const dateFilter = buildDateFilter(args);
+          if (dateFilter.startDate && dateFilter.endDate) {
+            sumQuery = sumQuery
+              .gte("entry_date", dateFilter.startDate)
+              .lte("entry_date", dateFilter.endDate);
+          }
+        } catch (error) {
+          return `<my-alert message="${
+            error instanceof Error ? error.message : error
+          }" />`;
+        }
+
+        const { data: sumData, error: sumError } = await sumQuery;
+
+        if (sumError) {
+          console.error("Sum query error:", sumError);
+          result += ` (sum calculation failed: ${sumError.message})`;
+        } else if (sumData) {
+          const total = sumData.reduce(
+            (sum: number, r: { amount?: number | null }) =>
+              sum + Number(r.amount || 0),
+            0
+          );
+          result += `\n\n**Total:** ฿${total.toFixed(2)}`;
+        }
+      }
+
+      return result;
     }
 
-    // Step 6: Add ordering and limits for data query
+    // Step 7: Add ordering and limits for data query
     const orderCol = args.sort === "created" ? "created_at" : "entry_date";
     console.log("Adding order and limit...");
 
@@ -195,7 +334,7 @@ export async function entriesListCommand(
       .order("id", { ascending: args.dir === "asc" })
       .limit(args.limit);
 
-    // Step 7: Execute query
+    // Step 8: Execute query
     console.log("Executing data query...");
     const { data, error } = await query;
 
@@ -208,7 +347,7 @@ export async function entriesListCommand(
       return "No entries found.";
     }
 
-    // Step 8: Format results with business extracted from entry_text
+    // Step 9: Format results with business extracted from entry_text
     const lines = data.map((e) => {
       const amt = Number(e.amount);
       const sym = currencySymbol(e.currency);
@@ -228,7 +367,7 @@ export async function entriesListCommand(
       }](/ledger/entry/${e.id})`;
     });
 
-    // Step 9: Optional totals
+    // Step 10: Optional totals
     let totalsBlock = "";
     if (args.sum) {
       const total = data.reduce(
@@ -242,7 +381,7 @@ export async function entriesListCommand(
     const filterDesc =
       (args.business ? ` for ${args.business}` : "") +
       (args.vendor ? ` matching "${args.vendor}"` : "") +
-      (args.month ? ` in ${args.month}` : "");
+      (dateDescription ? ` ${dateDescription}` : "");
 
     return (
       [

@@ -181,43 +181,43 @@ export default function TerminalImageUpload({
         );
       }
 
-      // Detailed OCR quality analysis
-      console.log("=== OCR ANALYSIS ===");
-      console.log("Raw text length:", text.length);
-      console.log("Number of lines:", text.split(/\r?\n/).length);
-      console.log("Number of words:", text.split(/\s+/).filter(Boolean).length);
-      console.log("Contains numbers:", /\d/.test(text));
-      console.log("Contains currency symbols:", /[$฿€£]/.test(text));
-      console.log("Contains Thai characters:", /[\u0E00-\u0E7F]/.test(text));
-      console.log("Confidence indicators:", {
-        hasTotal: /total/i.test(text),
-        hasPrices: /\d+\.\d{2}/.test(text),
-        hasDate: /\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}/.test(text),
-        hasVendor: text
-          .split(/\r?\n/)
-          .slice(0, 5)
-          .some(
-            (line) =>
-              line.trim().length > 3 &&
-              line.trim().length < 40 &&
-              /[A-Za-z]/.test(line)
-          ),
-      });
+      // // Detailed OCR quality analysis
+      // console.log("=== OCR ANALYSIS ===");
+      // console.log("Raw text length:", text.length);
+      // console.log("Number of lines:", text.split(/\r?\n/).length);
+      // console.log("Number of words:", text.split(/\s+/).filter(Boolean).length);
+      // console.log("Contains numbers:", /\d/.test(text));
+      // console.log("Contains currency symbols:", /[$฿€£]/.test(text));
+      // console.log("Contains Thai characters:", /[\u0E00-\u0E7F]/.test(text));
+      // console.log("Confidence indicators:", {
+      //   hasTotal: /total/i.test(text),
+      //   hasPrices: /\d+\.\d{2}/.test(text),
+      //   hasDate: /\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}/.test(text),
+      //   hasVendor: text
+      //     .split(/\r?\n/)
+      //     .slice(0, 5)
+      //     .some(
+      //       (line) =>
+      //         line.trim().length > 3 &&
+      //         line.trim().length < 40 &&
+      //         /[A-Za-z]/.test(line)
+      //     ),
+      // });
 
-      console.log("\n=== RAW OCR TEXT ===");
-      console.log(text);
-      console.log("=== END RAW OCR ===");
+      // console.log("\n=== RAW OCR TEXT ===");
+      // console.log(text);
+      // console.log("=== END RAW OCR ===");
 
       // Line-by-line analysis for debugging
-      console.log("\n=== LINE ANALYSIS ===");
-      text.split(/\r?\n/).forEach((line, index) => {
-        if (line.trim()) {
-          console.log(
-            `Line ${index + 1}: "${line.trim()}" (${line.trim().length} chars)`
-          );
-        }
-      });
-      console.log("=== END LINE ANALYSIS ===\n");
+      // console.log("\n=== LINE ANALYSIS ===");
+      // text.split(/\r?\n/).forEach((line, index) => {
+      //   if (line.trim()) {
+      //     console.log(
+      //       `Line ${index + 1}: "${line.trim()}" (${line.trim().length} chars)`
+      //     );
+      //   }
+      // });
+      // console.log("=== END LINE ANALYSIS ===\n");
 
       setStatus("Generating command with AI...");
       setProgress(75);

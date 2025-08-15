@@ -162,17 +162,28 @@ function updateHistoryWithLedger(
   ]);
 }
 
-function updateHistoryWithSuccess(setHistory: SetHistory): void {
+function updateHistoryWithSuccess(
+  setHistory: SetHistory,
+  entryId?: string
+): void {
+  let successMessage: string;
+
+  if (entryId) {
+    // Try HTML link instead of markdown
+    successMessage = `✅ Entry saved to your ledger - <a href="/ledger/entry/${entryId}">View Entry #${entryId}</a>`;
+  } else {
+    successMessage = "_✅ Entry saved to your ledger (Supabase)_";
+  }
+
   setHistory((h) => [
     ...h,
     {
       type: "output",
-      content: "_✅ Entry saved to your ledger (Supabase)_",
+      content: successMessage,
       format: "markdown",
     },
   ]);
 }
-
 function updateHistoryWithError(setHistory: SetHistory, message: string): void {
   const formattedMessage = formatZodErrorForAlert(message);
 
@@ -242,7 +253,16 @@ async function processAndSaveEntry(
   updateHistoryWithLedger(setHistory, ledgerPreview);
 
   try {
-    await serverHandleNewCommand(payload);
+    const result = await serverHandleNewCommand(payload);
+
+    console.log("Server response:", result);
+
+    if (result.ok) {
+      console.log("Entry ID:", result.entry_id);
+      updateHistoryWithSuccess(setHistory, result.entry_id?.toString());
+    } else {
+      updateHistoryWithError(setHistory, result.error);
+    }
   } catch (e) {
     updateHistoryWithError(
       setHistory,
@@ -250,8 +270,6 @@ async function processAndSaveEntry(
     );
     return;
   }
-
-  updateHistoryWithSuccess(setHistory);
 }
 
 // Updated section in /commands/smart/new-command-handler.ts

@@ -1,59 +1,59 @@
 2002/01/11 Nara Erawan
-    Expenses:Personal:Food:Tea     ฿80.00
-    Expenses:Personal:Food:Fruit   ฿80.00
-    Expenses:Personal:Misc         ฿90.00
-    Expenses:Personal:Misc         ฿130.00
-    Expenses:Personal:Misc         ฿85.00
-    Expenses:Personal:Misc         ฿140.00
-    Expenses:Personal:Food:Dairy   ฿180.00
+    Expenses:Personal:Food:Tea    ฿80.00
+    Expenses:Personal:Food:Fruit    ฿80.00
+    Expenses:Personal:Misc    ฿90.00
+    Expenses:Personal:Misc    ฿130.00
+    Expenses:Personal:Misc    ฿85.00
+    Expenses:Personal:Misc    ฿140.00
+    Expenses:Personal:Food:Dairy    ฿180.00
     Expenses:Personal:Food:Meat    ฿160.00
     Expenses:Personal:Food:Meat    ฿230.00
-    Expenses:Personal:Food:Grains  ฿60.00
-    Expenses:Personal:Misc         ฿265.00
+    Expenses:Personal:Food:Grains    ฿60.00
+    Expenses:Personal:Misc    ฿265.00
     Expenses:Personal:Food:Meat    ฿110.00
-    Expenses:Personal:Food:Dairy   ฿105.00
-    Expenses:Personal:Food:Pantry  ฿80.00
-    Expenses:Personal:Misc         ฿143.64
-    Expenses:Taxes:Sales           ฿100.55
-    Assets:Cash                   ฿-2039.19
+    Expenses:Personal:Food:Dairy    ฿105.00
+    Expenses:Personal:Food:Pantry    ฿80.00
+    Expenses:Personal:Misc    ฿143.64
+    Expenses:Taxes:Sales    ฿100.55
+    Assets:Cash    ฿-2039.19
 
 2002/01/11 Nara Erawan
-    Expenses:Personal:Food:Tea     ฿80.00
-    Expenses:Personal:Food:Fruit   ฿80.00
-    Expenses:Personal:Misc         ฿90.00
-    Expenses:Personal:Misc         ฿130.00
-    Expenses:Personal:Misc         ฿85.00
-    Expenses:Personal:Misc         ฿140.00
-    Expenses:Personal:Food:Dairy   ฿180.00
+    Expenses:Personal:Food:Tea    ฿80.00
+    Expenses:Personal:Food:Fruit    ฿80.00
+    Expenses:Personal:Misc    ฿90.00
+    Expenses:Personal:Misc    ฿130.00
+    Expenses:Personal:Misc    ฿85.00
+    Expenses:Personal:Misc    ฿140.00
+    Expenses:Personal:Food:Dairy    ฿180.00
     Expenses:Personal:Food:Meat    ฿160.00
     Expenses:Personal:Food:Meat    ฿230.00
-    Expenses:Personal:Food:Grains  ฿60.00
-    Expenses:Personal:Misc         ฿265.00
+    Expenses:Personal:Food:Grains    ฿60.00
+    Expenses:Personal:Misc    ฿265.00
     Expenses:Personal:Food:Meat    ฿110.00
-    Expenses:Personal:Food:Dairy   ฿105.00
-    Expenses:Personal:Food:Pantry  ฿80.00
-    Expenses:Personal:Misc         ฿143.64
-    Expenses:Taxes:Sales           ฿100.55
-    Assets:Cash                   ฿-2039.19
+    Expenses:Personal:Food:Dairy    ฿105.00
+    Expenses:Personal:Food:Pantry    ฿80.00
+    Expenses:Personal:Misc    ฿143.64
+    Expenses:Taxes:Sales    ฿100.55
+    Assets:Cash    ฿-2039.19
 
 2002/01/11 Nara Erawan
-    Expenses:Personal:Food:Tea     ฿80.00
-    Expenses:Personal:Food:Fruit   ฿80.00
-    Expenses:Personal:Misc         ฿90.00
-    Expenses:Personal:Misc         ฿130.00
-    Expenses:Personal:Misc         ฿85.00
-    Expenses:Personal:Misc         ฿140.00
-    Expenses:Personal:Misc         ฿180.00
-    Expenses:Personal:Misc         ฿160.00
-    Expenses:Personal:Misc         ฿230.00
-    Expenses:Personal:Food:Grains  ฿60.00
-    Expenses:Personal:Misc         ฿265.00
+    Expenses:Personal:Food:Tea    ฿80.00
+    Expenses:Personal:Food:Fruit    ฿80.00
+    Expenses:Personal:Misc    ฿90.00
+    Expenses:Personal:Misc    ฿130.00
+    Expenses:Personal:Misc    ฿85.00
+    Expenses:Personal:Misc    ฿140.00
+    Expenses:Personal:Misc    ฿180.00
+    Expenses:Personal:Misc    ฿160.00
+    Expenses:Personal:Misc    ฿230.00
+    Expenses:Personal:Food:Grains    ฿60.00
+    Expenses:Personal:Misc    ฿265.00
     Expenses:Personal:Food:Meat    ฿110.00
-    Expenses:Personal:Food:Dairy   ฿105.00
-    Expenses:Personal:Misc         ฿100.00
-    Expenses:Personal:Misc         ฿143.64
-    Expenses:Taxes:Sales           ฿100.55
-    Assets:Cash                   ฿-2059.19
+    Expenses:Personal:Food:Dairy    ฿105.00
+    Expenses:Personal:Misc    ฿100.00
+    Expenses:Personal:Misc    ฿143.64
+    Expenses:Taxes:Sales    ฿100.55
+    Assets:Cash    ฿-2059.19
 
 2011/11/06 Walmart
     Expenses:Personal:Groceries    ฿2.88
@@ -70,7 +70,7 @@
     Expenses:Personal:Groceries    ฿0.84
     Expenses:Personal:Groceries    ฿1.88
     Expenses:Personal:Groceries    ฿0.26
-    Assets:Cash                   ฿-46.30
+    Assets:Cash    ฿-46.30
 
 2012/07/05 Walmart
     Expenses:Personal:Groceries    ฿1.98
@@ -79,114 +79,180 @@
     Expenses:Personal:Groceries    ฿0.98
     Expenses:Personal:Groceries    ฿1.28
     Expenses:Personal:Groceries    ฿1.18
-    Assets:Cash                   ฿-6.90
+    Assets:Cash    ฿-6.90
+
+2014/09/23 Farmer's Table
+    Expenses:Personal:Food:Meat    $4.50
+    Expenses:Personal:Food:Grains    $3.79
+    Expenses:Personal:Food:Condiments    $3.99
+    Expenses:Personal:Food:Vegetables    $1.62
+    Expenses:Personal:Food:Vegetables    $1.39
+    Expenses:Personal:Food:Fruit    $0.84
+    Expenses:Personal:Food:Dairy    $4.88
+    Assets:Cash    $-21.01
+
+2014/09/23 Farmer's Table
+    Expenses:Personal:Food:Meat    $4.50
+    Expenses:Personal:Food:Grains    $3.79
+    Expenses:Personal:Food:Condiments    $3.99
+    Expenses:Personal:Food:Vegetables    $1.62
+    Expenses:Personal:Food:Vegetables    $1.39
+    Expenses:Personal:Food:Fruit    $0.84
+    Expenses:Personal:Food:Dairy    $4.88
+    Assets:Cash    $-21.01
+
+2014/09/23 Farmer's Table
+    Expenses:Personal:Food:Meat    $4.50
+    Expenses:Personal:Food:Grains    $3.79
+    Expenses:Personal:Food:Condiments    $3.99
+    Expenses:Personal:Food:Vegetables    $1.62
+    Expenses:Personal:Food:Vegetables    $1.39
+    Expenses:Personal:Food:Fruit    $0.84
+    Expenses:Personal:Food:Dairy    $4.88
+    Assets:Cash    $-21.01
+
+2014/09/23 Farmer's Table
+    Expenses:Personal:Food:Meat    $4.50
+    Expenses:Personal:Food:Grains    $3.79
+    Expenses:Personal:Food:Condiments    $3.99
+    Expenses:Personal:Food:Vegetables    $1.62
+    Expenses:Personal:Food:Vegetables    $1.39
+    Expenses:Personal:Food:Fruit    $0.84
+    Expenses:Personal:Food:Dairy    $4.88
+    Assets:Cash    $-21.01
 
 2016/04/28 Gourmet Market
-    Expenses:Personal:Misc         $55.00
-    Expenses:Personal:Misc         $55.00
-    Expenses:Personal:Misc         $55.00
-    Expenses:Personal:Misc         $85.00
-    Expenses:Personal:Misc         $95.00
-    Expenses:Personal:Misc         $95.00
-    Expenses:Personal:Misc         $85.00
-    Expenses:Personal:Misc         $50.00
-    Expenses:Personal:Misc         $50.00
-    Expenses:Personal:Misc         $50.00
-    Assets:Cash                   $-675.00
+    Expenses:Personal:Misc    $55.00
+    Expenses:Personal:Misc    $55.00
+    Expenses:Personal:Misc    $55.00
+    Expenses:Personal:Misc    $85.00
+    Expenses:Personal:Misc    $95.00
+    Expenses:Personal:Misc    $95.00
+    Expenses:Personal:Misc    $85.00
+    Expenses:Personal:Misc    $50.00
+    Expenses:Personal:Misc    $50.00
+    Expenses:Personal:Misc    $50.00
+    Assets:Cash    $-675.00
 
 2016/04/28 Gourmet Market
-    Expenses:Personal:Misc         $55.00
-    Expenses:Personal:Misc         $55.00
-    Expenses:Personal:Misc         $55.00
-    Expenses:Personal:Misc         $85.00
-    Expenses:Personal:Misc         $95.00
-    Expenses:Personal:Misc         $95.00
-    Expenses:Personal:Misc         $85.00
-    Expenses:Personal:Misc         $50.00
-    Expenses:Personal:Misc         $50.00
-    Expenses:Personal:Misc         $50.00
-    Assets:Cash                   $-675.00
+    Expenses:Personal:Misc    $55.00
+    Expenses:Personal:Misc    $55.00
+    Expenses:Personal:Misc    $55.00
+    Expenses:Personal:Misc    $85.00
+    Expenses:Personal:Misc    $95.00
+    Expenses:Personal:Misc    $95.00
+    Expenses:Personal:Misc    $85.00
+    Expenses:Personal:Misc    $50.00
+    Expenses:Personal:Misc    $50.00
+    Expenses:Personal:Misc    $50.00
+    Assets:Cash    $-675.00
 
 2016/04/28 Gourmet Market
-    Expenses:Personal:Misc         $55.00
-    Expenses:Personal:Misc         $55.00
-    Expenses:Personal:Misc         $55.00
-    Expenses:Personal:Misc         $85.00
-    Expenses:Personal:Misc         $95.00
-    Expenses:Personal:Misc         $95.00
-    Expenses:Personal:Misc         $85.00
-    Expenses:Personal:Misc         $50.00
-    Expenses:Personal:Misc         $50.00
-    Expenses:Personal:Misc         $50.00
-    Assets:Cash                   $-675.00
-
-2016/08/08 Foodland Ratchada
-    Expenses:Personal:Food:Meat    ฿66.25
-    Expenses:Personal:Food:Meat    ฿60.00
-    Expenses:Personal:Food:Tea     ฿59.00
-    Expenses:Personal:Food:Tea     ฿65.25
-    Expenses:Personal:Misc         ฿62.00
-    Expenses:Personal:Misc         ฿25.00
-    Expenses:Personal:Food:Dairy   ฿167.00
-    Assets:Cash                   ฿-504.50
-
-2016/08/08 Foodland
-    Expenses:Personal:Food:Meat    ฿60.00
-    Expenses:Personal:Food:Tea     ฿69.00
-    Expenses:Personal:Food:Tea     ฿66.25
-    Expenses:Personal:Misc         ฿52.00
-    Expenses:Personal:Misc         ฿25.00
-    Expenses:Personal:Food:Vegetables ฿110.00
-    Expenses:Personal:Food:Dairy   ฿167.00
-    Assets:Cash                   ฿-549.25
-
-2016/08/08 Foodland
-    Expenses:Personal:Food:Meat    ฿60.00
-    Expenses:Personal:Food:Tea     ฿69.00
-    Expenses:Personal:Food:Tea     ฿66.25
-    Expenses:Personal:Misc         ฿52.00
-    Expenses:Personal:Clothing     ฿25.00
-    Expenses:Personal:Clothing     ฿110.00
-    Expenses:Personal:Food:Dairy   ฿167.00
-    Assets:Cash                   ฿-549.25
+    Expenses:Personal:Misc    $55.00
+    Expenses:Personal:Misc    $55.00
+    Expenses:Personal:Misc    $55.00
+    Expenses:Personal:Misc    $85.00
+    Expenses:Personal:Misc    $95.00
+    Expenses:Personal:Misc    $95.00
+    Expenses:Personal:Misc    $85.00
+    Expenses:Personal:Misc    $50.00
+    Expenses:Personal:Misc    $50.00
+    Expenses:Personal:Misc    $50.00
+    Assets:Cash    $-675.00
 
 2016/09/27 WL Co.
-    Expenses:Personal:Food:Grains  ฿85.00
+    Expenses:Personal:Food:Grains    ฿85.00
     Expenses:Personal:Food:Meat    ฿75.00
-    Expenses:Personal:Misc         ฿92.00
+    Expenses:Personal:Misc    ฿92.00
     Expenses:Personal:Food:Meat    ฿86.00
-    Expenses:Taxes:Sales           ฿38.00
-    Assets:Cash                   ฿-376.00
+    Expenses:Taxes:Sales    ฿38.00
+    Assets:Cash    ฿-376.00
+
+2016/09/27 WL Co.
+    Expenses:Personal:Food:Grains    ฿85.00
+    Expenses:Personal:Food:Meat    ฿75.00
+    Expenses:Personal:Misc    ฿92.00
+    Expenses:Personal:Food:Meat    ฿86.00
+    Assets:Cash    ฿-338.00
 
 2019/11/21 Trader Joe's
-    Expenses:Personal:Food:Dairy   $3.89
-    Expenses:Personal:Food:Dairy   $4.19
-    Expenses:Personal:Food:Coffee  $8.99
-    Assets:Cash                   $-17.07
+    Expenses:Personal:Food:Dairy    $3.89
+    Expenses:Personal:Food:Dairy    $4.19
+    Expenses:Personal:Food:Coffee    $8.99
+    Assets:Cash    $-17.07
+
+2019/11/21 Trader Joe's
+    Expenses:Personal:Food:Dairy    $3.89
+    Expenses:Personal:Food:Dairy    $4.19
+    Expenses:Personal:Food:Coffee    $8.99
+    Assets:Cash    $-17.07
+
+2019/11/21 RMARKET
+    Expenses:Personal:Food:Dairy    $3.89
+    Expenses:Personal:Food:Dairy    $4.19
+    Expenses:Personal:Food:Coffee    $8.99
+    Assets:Cash    $-17.07
 
 2021/08/19 Green Town Wholesale
-    Expenses:Personal:Food:Fruit   ฿1.67
-    Expenses:Personal:Electronics:Audio ฿122.34
-    Expenses:Personal:Misc         ฿422.99
-    Expenses:Personal:Misc         ฿9.99
-    Expenses:Personal:Misc         ฿19.90
-    Assets:Cash                   ฿-576.89
+    Expenses:Personal:Food:Fruit    ฿1.67
+    Expenses:Personal:Electronics:Audio    ฿122.34
+    Expenses:Personal:Misc    ฿422.99
+    Expenses:Personal:Misc    ฿9.99
+    Expenses:Personal:Misc    ฿19.90
+    Assets:Cash    ฿-576.89
 
 2021/08/19 Green Town Wholesale
-    Expenses:Personal:Food:Fruit   ฿1.67
-    Expenses:Personal:Electronics:Audio ฿122.34
-    Expenses:Personal:Misc         ฿422.99
-    Expenses:Personal:Misc         ฿9.99
-    Expenses:Personal:Misc         ฿19.90
-    Expenses:Taxes:Sales           ฿102.67
-    Assets:Cash                   ฿-679.56
+    Expenses:Personal:Food:Fruit    ฿1.67
+    Expenses:Personal:Electronics:Audio    ฿122.34
+    Expenses:Personal:Misc    ฿422.99
+    Expenses:Personal:Misc    ฿9.99
+    Expenses:Personal:Misc    ฿19.90
+    Expenses:Taxes:Sales    ฿102.67
+    Assets:Cash    ฿-679.56
 
 2021/08/19 Wholesale Green Town
-    Expenses:Personal:Food:Fruit   ฿1.67
-    Expenses:Personal:Electronics:Audio ฿122.34
-    Expenses:Personal:Misc         ฿422.99
-    Expenses:Personal:Misc         ฿9.99
-    Expenses:Personal:Misc         ฿19.90
-    Expenses:Taxes:Sales           ฿102.67
-    Assets:Cash                   ฿-679.56
+    Expenses:Personal:Food:Fruit    ฿1.67
+    Expenses:Personal:Electronics:Audio    ฿122.34
+    Expenses:Personal:Misc    ฿422.99
+    Expenses:Personal:Misc    ฿9.99
+    Expenses:Personal:Misc    ฿19.90
+    Expenses:Taxes:Sales    ฿102.67
+    Assets:Cash    ฿-679.56
 
+2025/07/08 Foodland
+    Expenses:Personal:Food:Meat    ฿60.00
+    Expenses:Personal:Food:Tea    ฿69.00
+    Expenses:Personal:Food:Tea    ฿66.25
+    Expenses:Personal:Misc    ฿52.00
+    Expenses:Personal:Clothing    ฿25.00
+    Expenses:Personal:Clothing    ฿110.00
+    Expenses:Personal:Food:Dairy    ฿167.00
+    Assets:Cash    ฿-549.25
+
+2025/08/08 Foodland
+    Expenses:Personal:Food:Meat    ฿60.00
+    Expenses:Personal:Food:Tea    ฿69.00
+    Expenses:Personal:Food:Tea    ฿66.25
+    Expenses:Personal:Misc    ฿52.00
+    Expenses:Personal:Misc    ฿25.00
+    Expenses:Personal:Food:Vegetables    ฿110.00
+    Expenses:Personal:Food:Dairy    ฿167.00
+    Assets:Cash    ฿-549.25
+
+2025/08/08 Foodland Ratchada
+    Expenses:Personal:Food:Meat    ฿66.25
+    Expenses:Personal:Food:Meat    ฿60.00
+    Expenses:Personal:Food:Tea    ฿59.00
+    Expenses:Personal:Food:Tea    ฿65.25
+    Expenses:Personal:Misc    ฿62.00
+    Expenses:Personal:Misc    ฿25.00
+    Expenses:Personal:Food:Dairy    ฿167.00
+    Assets:Cash    ฿-504.50
+
+2030/02/11 Thynk Unlimited
+    Expenses:Personal:Misc    ฿100.00
+    Expenses:Personal:Misc    ฿100.00
+    Expenses:Personal:Misc    ฿100.00
+    Expenses:Personal:Misc    ฿100.00
+    Expenses:Taxes:Sales    ฿40.00
+    Assets:Cash    ฿-440.00
