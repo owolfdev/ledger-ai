@@ -20,6 +20,7 @@ export interface EntriesArgs {
   day?: string; // NEW: Single day filtering
   year?: string; // NEW: Year filtering
   business?: string;
+  go?: string; // NEW: Navigate to specific entry by ID
 }
 
 function parseArgs(raw?: string): EntriesArgs {
@@ -32,6 +33,7 @@ function parseArgs(raw?: string): EntriesArgs {
   let month: string | undefined;
   let day: string | undefined; // NEW
   let year: string | undefined; // NEW
+  let go: string | undefined; // NEW
   let business: string | undefined;
 
   if (!raw) return { sort, dir, limit, sum, count };
@@ -83,6 +85,12 @@ function parseArgs(raw?: string): EntriesArgs {
       i++;
       continue;
     }
+    // NEW: Go to specific entry
+    if (t === "go" && i + 1 < parts.length) {
+      go = parts[i + 1];
+      i++;
+      continue;
+    }
     if (t === "--business" && i + 1 < parts.length) {
       business = parts[i + 1];
       i++;
@@ -94,7 +102,19 @@ function parseArgs(raw?: string): EntriesArgs {
     }
   }
 
-  return { sort, dir, limit, sum, count, vendor, month, day, year, business };
+  return {
+    sort,
+    dir,
+    limit,
+    sum,
+    count,
+    vendor,
+    month,
+    day,
+    year,
+    business,
+    go,
+  };
 }
 
 // NEW: Helper function to build date filters
@@ -168,7 +188,8 @@ export async function entriesListCommand(
   arg?: string,
   _pageCtx?: string,
   _set?: Record<string, CommandMeta>,
-  user?: User | null
+  user?: User | null,
+  router?: { push: (route: string) => void } // NEW: Add router parameter
 ): Promise<string> {
   let args: EntriesArgs;
 
@@ -181,6 +202,24 @@ export async function entriesListCommand(
   }
 
   const supabase = createClient();
+
+  // NEW: Handle 'go' mode - redirect to specific entry
+  if (args.go) {
+    const entryId = args.go;
+    // Validate that it's a reasonable ID format (just numbers)
+    if (!/^\d+$/.test(entryId)) {
+      return `<my-alert message="Invalid entry ID: ${entryId}. ID must be numeric." />`;
+    }
+
+    // If router is available, perform actual navigation
+    if (router) {
+      router.push(`/ledger/entry/${entryId}`);
+      return ""; // Return empty string since we're navigating away
+    }
+
+    // Fallback: return a link if no router available
+    return `**Entry ${entryId}**: [/ledger/entry/${entryId}](/ledger/entry/${entryId})`;
+  }
 
   try {
     // Step 1: Start with basic query

@@ -17,6 +17,7 @@ import { LEDGER_TIMEZONE } from "@/lib/ledger-config";
 //   LedgerLine,
 // } from "@/lib/ledger/auto-balance-ledger-entry";
 import { handleNew } from "@/commands/smart/new-command-handler";
+import { entriesListCommand } from "@/commands/smart/entries-command";
 
 type CommandMap = Record<string, CommandMeta>;
 type PageEntry = { title: string; slug: string; route: string };
@@ -858,6 +859,26 @@ export function createHandleCommand(
       await handleNew(setHistory, cmd, arg);
       return true;
     }
+
+    // ----------- NEW: ENT GO INTERCEPTOR ----------- //
+    // Handle "ent go <id>" before it gets to the entries command
+    if (base === "ent" && arg.startsWith("go ")) {
+      const entryId = arg.split(" ")[1];
+      if (!/^\d+$/.test(entryId)) {
+        setHistory([
+          ...(history ?? []),
+          { type: "input", content: cmd },
+          {
+            type: "error",
+            content: `Invalid entry ID: ${entryId}. ID must be numeric.`,
+          },
+        ]);
+        return true;
+      }
+      router.push(`/ledger/entry/${entryId}`);
+      return true; // Don't add to history, just navigate
+    }
+
     // ----------- DATA-DRIVEN COMMANDS (must be in allowed set) ----------- //
 
     // Blog/project commands (logic only enabled if in allowed set)

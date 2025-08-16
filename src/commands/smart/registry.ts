@@ -6,6 +6,7 @@ import { adminCommandKeys } from "./sets/admin";
 // import { getContactMessages } from "@/app/actions/contact/get-contact-messages";
 import { User } from "@/types/user";
 import { entriesListCommand } from "@/commands/smart/entries-command";
+import { editEntryCommand } from "@/commands/smart/edit-entry-command";
 
 export const commandRegistry: Record<string, CommandMeta> = {
   // --- Basic/Navigation ---
@@ -95,7 +96,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
 
   entries: {
     description:
-      "List and filter ledger entries with powerful search options. Supports business filtering, vendor search, date ranges, and counting.",
+      "List and filter ledger entries with powerful search options. Supports business filtering, vendor search, date ranges, counting, and navigation to specific entries.",
     content: (
       arg?: string,
       pageCtx?: string,
@@ -109,22 +110,33 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`entries 50\` — List 50 most recent entries  
   • \`entries created asc\` — Sort by creation date, oldest first
   
+  **Navigation:**
+  • \`entries go <id>\` — Navigate directly to entry by ID (e.g., \`entries go 330\`)
+  
   **Filtering Options:**
-  • \`--business <name>\` — Filter by business (Personal, MyOnlineBusiness, etc.)
-  • \`--vendor <name>\` — Filter by vendor/description (case-insensitive)
-  • \`--month YYYY-MM\` — Filter by specific month
+  • \`--business <n>\` — Filter by business (Personal, MyOnlineBusiness, etc.)
+  • \`--vendor <n>\` — Filter by vendor/description (case-insensitive)
+  • \`--month YYYY-MM\` — Filter by specific month (e.g., 2025-08)
+  • \`--day YYYY-MM-DD\` — Filter by specific day (e.g., 2025-08-17)
+  • \`--year YYYY\` — Filter by specific year (e.g., 2025)
   • \`--count\` — Show count only, no entries listed
   • \`--sum\` — Show total amount at bottom
   
+  **Date Filter Priority:** Day > Month > Year (most specific wins)
+  
   **Examples:**
+  • \`entries go 330\` — Navigate to entry #330
   • \`entries --business MyOnlineBusiness\` — All entries for specific business
   • \`entries --vendor Starbucks --month 2025-08\` — Starbucks purchases in August
-  • \`entries --business Personal --count\` — Count personal entries
+  • \`entries --day 2025-08-17\` — All entries on specific day
+  • \`entries --year 2025 --count\` — Count all 2025 entries
+  • \`entries --business Personal --count --sum\` — Count and total for personal entries
   • \`entries --month 2025-08 --sum\` — August entries with total
   • \`entries created desc 10 --business Channel60\` — Latest 10 Channel60 entries`,
   },
   ent: {
-    description: "Alias for entries command with same functionality",
+    description:
+      "Alias for entries command with same functionality including navigation, filtering, and date ranges",
     content: (
       arg?: string,
       pageCtx?: string,
@@ -134,13 +146,84 @@ export const commandRegistry: Record<string, CommandMeta> = {
     usage: `ent [limit] [date|created] [asc|desc] [options]
   
   **Quick Examples:**
-  • \`ent\` — Recent entries
+  • \`ent\` — Recent entries (20 most recent)
+  • \`ent go 330\` — Navigate to entry #330
   • \`ent count\` — Total entry count
   • \`ent --business Personal\` — Personal business entries
   • \`ent --vendor coffee\` — Find coffee purchases
   • \`ent --month 2025-08 --sum\` — August total
+  • \`ent --day 2025-08-17\` — Today's entries
+  • \`ent --year 2025 --count\` — Count this year's entries
+  
+  **All Features:**
+  • Navigation: \`go <id>\` to jump to specific entry
+  • Date filters: \`--day\`, \`--month\`, \`--year\`
+  • Business/vendor filtering: \`--business\`, \`--vendor\`
+  • Counting and totals: \`--count\`, \`--sum\`
+  • Sorting: \`date\`/\`created\` + \`asc\`/\`desc\`
   
   See \`help entries\` for full documentation.`,
+  },
+
+  "edit-entry": {
+    description:
+      "Edit a single ledger entry - change business, vendor, date, or memo. Requires login and entry ownership.",
+    content: (
+      arg?: string,
+      pageCtx?: string,
+      cmds?: Record<string, CommandMeta>,
+      user?: User | null
+    ) => editEntryCommand(arg || "", pageCtx || "", cmds || {}, user || null),
+    usage: `edit-entry <id> [options]
+  
+  **Basic Usage:**
+  • \`edit-entry 323 --business MyBrick\` — Change business context
+  • \`edit-entry 323 --vendor "Starbucks Coffee"\` — Update vendor name
+  • \`edit-entry 323 --date 2025-08-15\` — Change transaction date
+  • \`edit-entry 323 --memo "client meeting"\` — Add or update memo
+  
+  **Options:**
+  • \`--business <n>\` — Change business (updates all account names)
+  • \`--vendor <n>\` — Update vendor/description
+  • \`--description <n>\` — Alias for --vendor
+  • \`--date YYYY-MM-DD\` — Change transaction date
+  • \`--memo <text>\` — Add or update memo field
+  
+  **Multiple Changes:**
+  • \`edit-entry 323 --business Personal --vendor "Updated Vendor" --memo "notes"\`
+  
+  **Business Changes:**
+  When changing business, all account names are updated:
+  • \`Expenses:OldBusiness:Food:Coffee\` → \`Expenses:NewBusiness:Food:Coffee\`
+  • Updates both main entry and individual postings
+  
+  **Examples:**
+  • \`edit-entry 330 --business Channel60\` — Move to Channel60 business
+  • \`edit-entry 330 --vendor "Corrected Name"\` — Fix vendor name
+  • \`edit-entry 330 --date 2025-08-16 --memo "corrected date"\` — Fix date with note`,
+  },
+
+  editent: {
+    description:
+      "Alias for edit-entry - edit a single ledger entry (business, vendor, date, memo)",
+    content: (
+      arg?: string,
+      pageCtx?: string,
+      cmds?: Record<string, CommandMeta>,
+      user?: User | null
+    ) => editEntryCommand(arg || "", pageCtx || "", cmds || {}, user || null),
+    usage: `editent <id> [options]
+  
+  **Quick Examples:**
+  • \`editent 323 --business MyBrick\` — Change business
+  • \`editent 323 --vendor "Starbucks"\` — Update vendor
+  • \`editent 323 --date 2025-08-15\` — Change date
+  • \`editent 323 --memo "note"\` — Add memo
+  
+  **Multiple changes:**
+  • \`editent 323 --business Personal --vendor "Coffee Shop" --memo "team meeting"\`
+  
+  See \`help edit-entry\` for full documentation.`,
   },
 
   //
@@ -205,7 +288,8 @@ export const commandRegistry: Record<string, CommandMeta> = {
   },
   edit: {
     content: "__EDIT_POST__",
-    description: "Edit an existing post at /post/edit/<slug>. Requires login.",
+    description:
+      "Edit an existing blog post at /post/edit/<slug>. Requires login.",
     usage: "edit <slug>",
   },
 

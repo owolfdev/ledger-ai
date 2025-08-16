@@ -4,6 +4,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import EditableLedgerEntry from "./editable-ledger-entry"; // Import the component
+import SmartTerminal from "@/components/terminal/smart-terminal";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -43,7 +44,22 @@ export default async function LedgerEntryPage({ params }: PageProps) {
     .eq("entry_id", id)
     .order("sort_order", { ascending: true });
 
-  return <EditableLedgerEntry entry={entry} postings={postings || []} />;
+  return (
+    <div>
+      <div className="flex flex-col h-full">
+        <div className="flex-1 min-h-0 flex flex-col">
+          <EditableLedgerEntry entry={entry} postings={postings || []} />
+        </div>
+      </div>
+      <div className="mx-auto max-w-4xl p-4 space-y-6 w-full">
+        <SmartTerminal
+          commandSet="ledger"
+          contextKey="entry"
+          currentSlug={entry.description}
+        />
+      </div>
+    </div>
+  );
 }
 
 // Optional: metadata for better titles

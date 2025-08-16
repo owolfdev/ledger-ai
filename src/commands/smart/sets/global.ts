@@ -1,5 +1,4 @@
-// src/commands/smart/sets/global.ts
-
+//src/commands/smart/sets/global.ts
 export const globalCommandKeys = [
   "help",
   "clear",
@@ -19,13 +18,13 @@ export const globalCommandKeys = [
   "list",
   "info",
   "team",
-  // "skills",
   "aiusage",
   "quota",
-  // "count",
   "back",
   "forward",
   "update",
   "entries",
   "ent",
+  "edit-entry", // NEW
+  "editent", // NEW
 ];

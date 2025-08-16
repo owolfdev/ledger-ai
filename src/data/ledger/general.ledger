@@ -227,16 +227,17 @@
     Expenses:Personal:Clothing    ฿25.00
     Expenses:Personal:Clothing    ฿110.00
     Expenses:Personal:Food:Dairy    ฿167.00
-    Assets:Cash    ฿-549.25
+    Expenses:Personal:Food    ฿66.00
+    Assets:Cash    ฿-615.25
 
 2025/08/08 Foodland
-    Expenses:Personal:Food:Meat    ฿60.00
-    Expenses:Personal:Food:Tea    ฿69.00
-    Expenses:Personal:Food:Tea    ฿66.25
-    Expenses:Personal:Misc    ฿52.00
-    Expenses:Personal:Misc    ฿25.00
-    Expenses:Personal:Food:Vegetables    ฿110.00
-    Expenses:Personal:Food:Dairy    ฿167.00
+    Expenses:Channel60:Food:Meat    ฿60.00
+    Expenses:Channel60:Food:Tea    ฿69.00
+    Expenses:Channel60:Food:Tea    ฿66.25
+    Expenses:Channel60:Misc    ฿52.00
+    Expenses:Channel60:Misc    ฿25.00
+    Expenses:Channel60:Food:Vegetables    ฿110.00
+    Expenses:Channel60:Food:Dairy    ฿167.00
     Assets:Cash    ฿-549.25
 
 2025/08/08 Foodland Ratchada
@@ -250,9 +251,9 @@
     Assets:Cash    ฿-504.50
 
 2030/02/11 Thynk Unlimited
-    Expenses:Personal:Misc    ฿100.00
-    Expenses:Personal:Misc    ฿100.00
-    Expenses:Personal:Misc    ฿100.00
-    Expenses:Personal:Misc    ฿100.00
-    Expenses:Taxes:Sales    ฿40.00
+    Expenses:MyOnlineBiz:Misc    ฿100.00
+    Expenses:MyOnlineBiz:Misc    ฿100.00
+    Expenses:MyOnlineBiz:Misc    ฿100.00
+    Expenses:MyOnlineBiz:Misc    ฿100.00
+    Expenses:MyOnlineBiz:Sales    ฿40.00
     Assets:Cash    ฿-440.00
