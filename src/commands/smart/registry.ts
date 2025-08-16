@@ -7,6 +7,7 @@ import { adminCommandKeys } from "./sets/admin";
 import { User } from "@/types/user";
 import { entriesListCommand } from "@/commands/smart/entries-command";
 import { editEntryCommand } from "@/commands/smart/edit-entry-command";
+import { ledgerCliCommand } from "@/commands/smart/ledger-cli-command";
 
 export const commandRegistry: Record<string, CommandMeta> = {
   // --- Basic/Navigation ---
@@ -224,6 +225,96 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`editent 323 --business Personal --vendor "Coffee Shop" --memo "team meeting"\`
   
   See \`help edit-entry\` for full documentation.`,
+  },
+
+  // Ledger CLI Commands
+
+  ledger: {
+    description:
+      "Execute actual Ledger CLI commands against the synced .ledger file. Available in development mode only. Automatically syncs database to file before execution.",
+    content: (
+      arg?: string,
+      pageCtx?: string,
+      cmds?: Record<string, CommandMeta>,
+      user?: User | null
+    ) => ledgerCliCommand(arg || "", pageCtx || "", cmds || {}, user || null),
+    usage: `ledger <command> [args...]
+  
+  **Common Commands:**
+  • \`ledger balance\` — Show account balances
+  • \`ledger register\` — Show all transactions in register format
+  • \`ledger bal Expenses\` — Balance for Expenses accounts only
+  • \`ledger reg coffee\` — Register entries containing "coffee"
+  • \`ledger accounts\` — List all account names
+  • \`ledger payees\` — List all payees/vendors
+  • \`ledger stats\` — Show ledger statistics
+  
+  **Advanced Examples:**
+  • \`ledger bal --monthly\` — Monthly balance report
+  • \`ledger reg --period "last 30 days"\` — Recent transactions
+  • \`ledger bal Expenses:Personal\` — Personal expenses only
+  • \`ledger reg --begin 2025-08-01\` — Transactions since August 1st
+  • \`ledger bal --depth 2\` — Balance to depth 2 accounts
+  
+  **Business Filtering:**
+  • \`ledger bal Expenses:MyBrick\` — MyBrick business expenses
+  • \`ledger reg Expenses:Personal:Food\` — Personal food expenses
+  • \`ledger bal Liabilities\` — All liabilities (credit cards, etc.)
+  
+  **Features:**
+  • Auto-syncs database to \`.ledger\` file before execution
+  • Full Ledger CLI power with your data
+  • Development mode only for security
+  • Formatted output with syntax highlighting
+  
+  **Note:** Requires Ledger CLI installed and available in PATH`,
+  },
+
+  // You might also want shorter aliases:
+  bal: {
+    description: "Alias for 'ledger balance' - show account balances",
+    content: (
+      arg?: string,
+      pageCtx?: string,
+      cmds?: Record<string, CommandMeta>,
+      user?: User | null
+    ) =>
+      ledgerCliCommand(
+        `balance ${arg || ""}`,
+        pageCtx || "",
+        cmds || {},
+        user || null
+      ),
+    usage: `bal [account-pattern]
+    
+  **Examples:**
+  • \`bal\` — All account balances
+  • \`bal Expenses\` — Expense account balances only
+  • \`bal Expenses:Personal\` — Personal expense balances
+  • \`bal --monthly\` — Monthly balance report`,
+  },
+
+  reg: {
+    description: "Alias for 'ledger register' - show transaction register",
+    content: (
+      arg?: string,
+      pageCtx?: string,
+      cmds?: Record<string, CommandMeta>,
+      user?: User | null
+    ) =>
+      ledgerCliCommand(
+        `register ${arg || ""}`,
+        pageCtx || "",
+        cmds || {},
+        user || null
+      ),
+    usage: `reg [search-term]
+    
+  **Examples:**
+  • \`reg\` — All transactions
+  • \`reg coffee\` — Transactions containing "coffee"  
+  • \`reg Starbucks\` — All Starbucks transactions
+  • \`reg --monthly\` — Monthly register report`,
   },
 
   //
