@@ -1,6 +1,6 @@
 // src/components/terminal/terminal.tsx
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import TerminalOutputRenderer from "./terminal-output-renderer";
 import { TerminalOutputRendererProps } from "@/types/terminal";
@@ -22,6 +22,7 @@ export type TerminalProps = {
     >,
     history: TerminalOutputRendererProps[]
   ) => boolean | void | Promise<boolean | void>;
+  onPopulateInput?: (cmd: string) => void; // ✅ ADD THIS LINE
 };
 
 function useScrollShortcuts(inputRef: React.RefObject<HTMLTextAreaElement>) {
@@ -146,6 +147,7 @@ export default function Terminal({
   commands,
   welcome,
   onCommand,
+  onPopulateInput, // ✅ ADD THIS PARAMETER
 }: TerminalProps) {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -165,6 +167,18 @@ export default function Terminal({
 
   // --- NEW: For suppressing scroll when clicking links:
   const suppressNextScrollRef = useRef(false);
+
+  const populateInput = useCallback((cmd: string) => {
+    setInput(cmd);
+    // Focus and scroll to input after a brief delay
+    setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 100);
+  }, []);
 
   function handleOutputClick(e: React.MouseEvent) {
     // Only suppress if an <a> tag is clicked
@@ -343,10 +357,11 @@ export default function Terminal({
               placeholder="Type a command..."
             />
           </div>
+
+          {/* ⬅️ our new button */}
           <div className="pt-2">
-            {/* ⬅️ our new button */}
             <TerminalImageUpload
-              onRunCommand={(cmd) => onCommand?.(cmd, setHistory, history)}
+              onPopulateInput={onPopulateInput || populateInput} // ✅ CHANGE THIS LINE
             />
           </div>
         </form>

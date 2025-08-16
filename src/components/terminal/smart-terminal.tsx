@@ -59,6 +59,7 @@ type SmartTerminalProps = Omit<
   contextKey: string;
   currentSlug?: string;
   postType?: "blog" | "project";
+  onPopulateInput?: (cmd: string) => void; // ✅ ADD THIS LINE
 };
 
 export default function SmartTerminal({
@@ -66,6 +67,7 @@ export default function SmartTerminal({
   contextKey,
   currentSlug,
   postType,
+  onPopulateInput, // ✅ ADD THIS PARAMETER
   ...rest
 }: SmartTerminalProps) {
   const [commands, setCommands] = useState<Record<string, CommandMeta> | null>(
@@ -167,6 +169,7 @@ export default function SmartTerminal({
       onCommand={(cmd, setHistory, history) =>
         handleCommand!(cmd, setHistory, router, user, history)
       }
+      onPopulateInput={onPopulateInput} // ✅ ADD THIS LINE
     />
   );
 }

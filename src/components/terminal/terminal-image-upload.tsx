@@ -39,11 +39,10 @@ async function preprocessAndUpload(file: File) {
 }
 
 interface TerminalImageUploadProps {
-  onRunCommand: (cmd: string) => void;
+  onPopulateInput: (cmd: string) => void; // ✅ CHANGE FROM onRunCommand
 }
-
 export default function TerminalImageUpload({
-  onRunCommand,
+  onPopulateInput, // ✅ CHANGE FROM onRunCommand
 }: TerminalImageUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
@@ -247,7 +246,7 @@ export default function TerminalImageUpload({
       console.log("Generated command:", command);
 
       // 6. Send command to terminal
-      onRunCommand(command);
+      onPopulateInput(command);
     } catch (error: unknown) {
       console.error("Image processing failed:", error);
       const errorMessage =
