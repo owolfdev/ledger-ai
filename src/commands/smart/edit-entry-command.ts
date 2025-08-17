@@ -1,6 +1,6 @@
 // ================================================
 // FILE: src/commands/smart/edit-entry-command.ts
-// PURPOSE: Edit a single ledger entry - business, vendor, date, memo
+// PURPOSE: Edit or delete a single ledger entry - business, vendor, date, memo, or delete
 // ================================================
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@/types/user";
@@ -14,6 +14,7 @@ export interface EditEntryArgs {
   description?: string;
   date?: string;
   memo?: string;
+  delete?: boolean; // ✅ NEW: Delete flag
 }
 
 function parseArgs(raw?: string): EditEntryArgs | null {
@@ -34,6 +35,7 @@ function parseArgs(raw?: string): EditEntryArgs | null {
   let description: string | undefined;
   let date: string | undefined;
   let memo: string | undefined;
+  let deleteFlag = false; // ✅ NEW: Delete flag
 
   // Parse flags
   for (let i = 1; i < parts.length; i++) {
@@ -63,12 +65,18 @@ function parseArgs(raw?: string): EditEntryArgs | null {
       i++;
       continue;
     }
+    // ✅ NEW: Delete flag parsing
+    if (flag === "--delete") {
+      deleteFlag = true;
+      i++;
+      continue;
+    }
   }
 
-  // Must have at least one field to edit
-  if (!business && !vendor && !description && !date && !memo) {
+  // ✅ UPDATED: Delete flag is valid on its own
+  if (!deleteFlag && !business && !vendor && !description && !date && !memo) {
     throw new Error(
-      "At least one field must be specified to edit (--business, --vendor, --date, --memo)"
+      "At least one field must be specified to edit (--business, --vendor, --date, --memo) or use --delete to remove entry"
     );
   }
 
@@ -79,6 +87,7 @@ function parseArgs(raw?: string): EditEntryArgs | null {
     description: vendor || description,
     date,
     memo,
+    delete: deleteFlag, // ✅ NEW: Return delete flag
   };
 }
 
@@ -100,6 +109,94 @@ function updateAccountsForBusiness(
   // Pattern: Expenses:OldBusiness: -> Expenses:NewBusiness:
   // Also handle: Income:OldBusiness: -> Income:NewBusiness:
   return entryText.replace(/(Expenses|Income):([^:]+):/g, `$1:${newBusiness}:`);
+}
+
+// ✅ NEW: Delete entry function with image cleanup
+async function deleteEntry(entryId: string, userId: string): Promise<void> {
+  const supabase = createClient();
+
+  // First, get the entry to check for associated images
+  const { data: entry, error: fetchError } = await supabase
+    .from("ledger_entries")
+    .select("image_url")
+    .eq("id", entryId)
+    .eq("user_id", userId)
+    .single();
+
+  if (fetchError) {
+    throw new Error(
+      `Failed to fetch entry for deletion: ${fetchError.message}`
+    );
+  }
+
+  // Delete associated image from storage if it exists
+  if (entry?.image_url) {
+    try {
+      // Extract the file path from the full URL
+      // URL format: https://[project].supabase.co/storage/v1/object/public/receipts/[file-path]
+      const url = new URL(entry.image_url);
+      const pathParts = url.pathname.split("/");
+
+      // Find the index after "receipts" in the path
+      const receiptsIndex = pathParts.findIndex((part) => part === "receipts");
+
+      if (receiptsIndex > -1 && receiptsIndex < pathParts.length - 1) {
+        // Get everything after "/receipts/" as the file path
+        const filePath = pathParts.slice(receiptsIndex + 1).join("/");
+
+        console.log(`Deleting image from receipts bucket: ${filePath}`);
+
+        const { error: storageError } = await supabase.storage
+          .from("receipts")
+          .remove([filePath]);
+
+        if (storageError) {
+          console.error("Failed to delete image from storage:", storageError);
+          // Don't fail the whole operation, just log the error
+        } else {
+          console.log("Successfully deleted image from receipts bucket");
+        }
+      } else {
+        console.error(
+          "Could not parse file path from image URL:",
+          entry.image_url
+        );
+      }
+    } catch (imageError) {
+      console.error("Error processing image deletion:", imageError);
+      // Don't fail the whole operation, just log the error
+    }
+  }
+
+  // Delete in correct order due to foreign key constraints
+  // 1. Delete postings first
+  const { error: postingsError } = await supabase
+    .from("ledger_postings")
+    .delete()
+    .eq("entry_id", entryId);
+
+  if (postingsError) {
+    throw new Error(`Failed to delete postings: ${postingsError.message}`);
+  }
+
+  // 2. Delete main entry
+  const { error: entryError } = await supabase
+    .from("ledger_entries")
+    .delete()
+    .eq("id", entryId)
+    .eq("user_id", userId);
+
+  if (entryError) {
+    throw new Error(`Failed to delete entry: ${entryError.message}`);
+  }
+
+  // 3. Sync ledger file
+  try {
+    await syncLedgerFile();
+  } catch (syncError) {
+    console.error("Failed to sync ledger file after deletion:", syncError);
+    // Don't fail the operation, just log the error
+  }
 }
 
 export async function editEntryCommand(
@@ -151,7 +248,23 @@ export async function editEntryCommand(
     if (!entry) {
       return `<my-alert message="Entry ${args.entryId} not found or access denied" />`;
     }
-    // Step 2: Build the update object
+
+    // ✅ NEW: Handle delete operation
+    if (args.delete) {
+      try {
+        await deleteEntry(args.entryId, user.id);
+        return `✅ **Entry ${args.entryId} deleted successfully**
+
+The entry, all its postings, and any associated receipt images have been removed from your ledger.`;
+      } catch (error) {
+        console.error("Delete error:", error);
+        return `<my-alert message="Failed to delete entry: ${
+          error instanceof Error ? error.message : error
+        }" />`;
+      }
+    }
+
+    // Step 2: Build the update object (existing edit logic)
     const updates: Record<string, unknown> = {};
     const changes: string[] = [];
 
