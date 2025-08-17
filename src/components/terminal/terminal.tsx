@@ -322,7 +322,7 @@ export default function Terminal({
           className="flex flex-col gap-2 mt-2 mb-8"
         >
           <div className="flex items-center gap-2">
-            <span className="text-primary select-none">$</span>
+            <span className="text-primary select-none hidden sm:block">$</span>
             <Textarea
               ref={inputRef}
               value={input}
@@ -348,7 +348,7 @@ export default function Terminal({
                   inputRef.current?.focus();
                 }
               }}
-              className="flex-1 bg-transparent px-0 py-2 outline-none focus:ring-0 font-mono !text-lg md:!text-base autofill:bg-transparent pl-2 min-h-28 border-none resize-none"
+              className="flex-1 bg-transparent px-0 py-2 outline-none focus:ring-0 font-mono !text-lg md:!text-base autofill:bg-transparent pl-2 h-auto sm:min-h-28 resize-none border-none"
               style={{
                 minHeight: 32,
                 boxShadow: "none",
