@@ -12,6 +12,7 @@ import {
   type UpdateEntryInput,
 } from "@/app/actions/ledger/update-ledger-entry";
 import { ImageUpload } from "./image-upload";
+import { useRouter } from "next/navigation";
 
 type LedgerEntry = {
   id: number;
@@ -327,6 +328,7 @@ export default function EditableLedgerEntry({
   entry,
   postings,
 }: EditableLedgerEntryProps) {
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [editMode, setEditMode] = useState<"basic" | "advanced">("basic");
   const [isPending, startTransition] = useTransition();
@@ -348,6 +350,44 @@ export default function EditableLedgerEntry({
   const businessMatch = entry.entry_text?.match(/Expenses:([^:]+):/);
   const businessName =
     businessMatch && businessMatch[1] !== "Taxes" ? businessMatch[1] : null;
+
+  // Delete function
+  const handleDelete = () => {
+    const confirmed = confirm(
+      `Are you sure you want to delete Entry #${entry.id}?\n\n` +
+        `This will permanently remove:\n` +
+        `• The ledger entry and all postings\n` +
+        `• Any associated receipt images\n` +
+        `• The entry from your .ledger file\n\n` +
+        `This action cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    startTransition(async () => {
+      try {
+        const response = await fetch("/api/ledger-entry/delete", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ entryId: entry.id }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Redirect to entries list after successful deletion
+          router.push("/ledger/entries");
+        } else {
+          alert(`Failed to delete entry: ${result.error}`);
+        }
+      } catch (error) {
+        console.error("Failed to delete entry:", error);
+        alert("Failed to delete entry. Please try again.");
+      }
+    });
+  };
 
   const handleSave = () => {
     startTransition(async () => {
@@ -607,10 +647,10 @@ export default function EditableLedgerEntry({
     );
   }
 
-  // View Mode (unchanged)
+  // View Mode
   return (
     <div className="mx-auto max-w-3xl p-4 space-y-6 w-full">
-      {/* Header with Edit Button */}
+      {/* Header with Edit and Delete Buttons */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-semibold">Ledger Entry #{entry.id}</h1>
@@ -619,9 +659,23 @@ export default function EditableLedgerEntry({
             {businessName && ` • ${businessName}`}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-          Edit Entry
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsEditing(true)}
+          >
+            Edit Entry
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDelete}
+            disabled={isPending}
+          >
+            {isPending ? "Deleting..." : "Delete"}
+          </Button>
+        </div>
       </div>
 
       {/* Main Entry Details */}

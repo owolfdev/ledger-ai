@@ -175,13 +175,14 @@ export const commandRegistry: Record<string, CommandMeta> = {
       cmds?: Record<string, CommandMeta>,
       user?: User | null
     ) => editEntryCommand(arg || "", pageCtx || "", cmds || {}, user || null),
-    usage: `edit-entry <id> [options]
+    usage: `edit-entry id --[options]
   
   **Basic Usage:**
   • \`edit-entry 323 --business MyBrick\` — Change business context
   • \`edit-entry 323 --vendor "Starbucks Coffee"\` — Update vendor name
   • \`edit-entry 323 --date 2025-08-15\` — Change transaction date
   • \`edit-entry 323 --memo "client meeting"\` — Add or update memo
+  • \`edit-entry 323 --delete\` — Delete the entry
   
   **Options:**
   • \`--business <n>\` — Change business (updates all account names)
@@ -189,6 +190,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`--description <n>\` — Alias for --vendor
   • \`--date YYYY-MM-DD\` — Change transaction date
   • \`--memo <text>\` — Add or update memo field
+  • \`--delete\` — Delete the entry
   
   **Multiple Changes:**
   • \`edit-entry 323 --business Personal --vendor "Updated Vendor" --memo "notes"\`
@@ -213,13 +215,14 @@ export const commandRegistry: Record<string, CommandMeta> = {
       cmds?: Record<string, CommandMeta>,
       user?: User | null
     ) => editEntryCommand(arg || "", pageCtx || "", cmds || {}, user || null),
-    usage: `editent <id> [options]
+    usage: `editent id --[options]
   
   **Quick Examples:**
   • \`editent 323 --business MyBrick\` — Change business
   • \`editent 323 --vendor "Starbucks"\` — Update vendor
   • \`editent 323 --date 2025-08-15\` — Change date
   • \`editent 323 --memo "note"\` — Add memo
+  • \`editent 323 --delete\` — Delete the entry
   
   **Multiple changes:**
   • \`editent 323 --business Personal --vendor "Coffee Shop" --memo "team meeting"\`

@@ -348,7 +348,7 @@ export default function Terminal({
                   inputRef.current?.focus();
                 }
               }}
-              className="flex-1 bg-transparent px-0 py-2 outline-none focus:ring-0 font-mono !text-lg md:!text-base autofill:bg-transparent pl-2 h-auto sm:min-h-28 resize-none border-none"
+              className="flex-1 bg-transparent px-0 py-2 outline-none focus:ring-0 font-mono !text-lg md:!text-base autofill:bg-transparent sm:pl-2 h-auto sm:min-h-28 resize-none border-none"
               style={{
                 minHeight: 32,
                 boxShadow: "none",
