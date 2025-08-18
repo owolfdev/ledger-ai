@@ -1,8 +1,8 @@
 // src/components/terminal/terminal-image-upload.tsx
-// SIMPLIFIED: Image → OCR → AI → Command
+// COMPLETELY REWRITTEN: Mobile-safe file upload without input.click()
 
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import Tesseract from "tesseract.js";
 import {
   createOpenAiReceiptParser,
@@ -39,20 +39,30 @@ async function preprocessAndUpload(file: File) {
 }
 
 interface TerminalImageUploadProps {
-  onPopulateInput: (cmd: string) => void; // ✅ CHANGE FROM onRunCommand
+  onPopulateInput: (cmd: string) => void;
 }
+
 export default function TerminalImageUpload({
-  onPopulateInput, // ✅ CHANGE FROM onRunCommand
+  onPopulateInput,
 }: TerminalImageUploadProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<string>("");
+
+  // Processing guard
+  const isProcessingRef = useRef(false);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Prevent duplicate processing
+    if (isProcessingRef.current) {
+      console.log("Already processing file, ignoring duplicate");
+      return;
+    }
+
+    isProcessingRef.current = true;
     setLoading(true);
     setProgress(0);
     setStatus("Uploading...");
@@ -180,44 +190,6 @@ export default function TerminalImageUpload({
         );
       }
 
-      // // Detailed OCR quality analysis
-      // console.log("=== OCR ANALYSIS ===");
-      // console.log("Raw text length:", text.length);
-      // console.log("Number of lines:", text.split(/\r?\n/).length);
-      // console.log("Number of words:", text.split(/\s+/).filter(Boolean).length);
-      // console.log("Contains numbers:", /\d/.test(text));
-      // console.log("Contains currency symbols:", /[$฿€£]/.test(text));
-      // console.log("Contains Thai characters:", /[\u0E00-\u0E7F]/.test(text));
-      // console.log("Confidence indicators:", {
-      //   hasTotal: /total/i.test(text),
-      //   hasPrices: /\d+\.\d{2}/.test(text),
-      //   hasDate: /\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}/.test(text),
-      //   hasVendor: text
-      //     .split(/\r?\n/)
-      //     .slice(0, 5)
-      //     .some(
-      //       (line) =>
-      //         line.trim().length > 3 &&
-      //         line.trim().length < 40 &&
-      //         /[A-Za-z]/.test(line)
-      //     ),
-      // });
-
-      // console.log("\n=== RAW OCR TEXT ===");
-      // console.log(text);
-      // console.log("=== END RAW OCR ===");
-
-      // Line-by-line analysis for debugging
-      // console.log("\n=== LINE ANALYSIS ===");
-      // text.split(/\r?\n/).forEach((line, index) => {
-      //   if (line.trim()) {
-      //     console.log(
-      //       `Line ${index + 1}: "${line.trim()}" (${line.trim().length} chars)`
-      //     );
-      //   }
-      // });
-      // console.log("=== END LINE ANALYSIS ===\n");
-
       setStatus("Generating command with AI...");
       setProgress(75);
 
@@ -256,37 +228,61 @@ export default function TerminalImageUpload({
       setLoading(false);
       setProgress(0);
       setStatus("");
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+      isProcessingRef.current = false;
+
+      // Reset the input value to allow re-selecting the same file
+      const input = document.getElementById(
+        "receipt-file-input"
+      ) as HTMLInputElement;
+      if (input) {
+        input.value = "";
       }
     }
   };
 
   return (
     <div className="flex items-center gap-2">
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileChange}
-        className="hidden"
-      />
-      <button
-        type="button"
-        onClick={() => fileInputRef.current?.click()}
-        className="px-3 py-2 border rounded-md bg-background hover:bg-accent transition-colors disabled:opacity-50"
-        disabled={loading}
+      {/* 🔧 MOBILE SAFE: Direct label approach - no click() calls */}
+      <label
+        htmlFor="receipt-file-input"
+        className={`
+          inline-flex items-center gap-2 px-3 py-2 border rounded-md 
+          bg-background hover:bg-accent transition-colors cursor-pointer select-none
+          ${
+            loading || isProcessingRef.current
+              ? "opacity-50 pointer-events-none"
+              : ""
+          }
+        `}
+        style={{
+          touchAction: "manipulation",
+          WebkitTouchCallout: "none",
+          WebkitUserSelect: "none",
+          userSelect: "none",
+        }}
       >
+        <input
+          id="receipt-file-input"
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          disabled={loading || isProcessingRef.current}
+          className="sr-only" // Screen reader only - completely hidden but accessible
+        />
         {loading ? (
-          <span className="flex items-center gap-2">
+          <>
             <span className="animate-spin">⏳</span>
-            {status} {progress > 0 && `${progress}%`}
-          </span>
+            <span>
+              {status} {progress > 0 && `${progress}%`}
+            </span>
+          </>
         ) : (
-          <span className="flex items-center gap-2">📷 Add Receipt</span>
+          <>
+            <span>📷</span>
+            <span>Add Receipt</span>
+          </>
         )}
-      </button>
+      </label>
     </div>
   );
 }
