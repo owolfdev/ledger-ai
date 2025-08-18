@@ -35,6 +35,11 @@
     Expenses:Personal:Food:Fruit    ฿45.00
     Assets:Cash    ฿-105.00
 
+2025/08/18 Vista Cafe
+    Expenses:Personal:Food:Coffee    ฿300.00
+    Expenses:Personal:Misc    ฿45.00
+    Assets:Cash    ฿-345.00
+
 2025/08/18 Ichiba Dining
     Expenses:Personal:Misc    ฿180.00
     Expenses:Personal:Misc    ฿150.00
@@ -44,12 +49,3 @@
     Expenses:Personal:Misc    ฿230.00
     Expenses:Personal:Misc    ฿150.00
     Assets:Cash    ฿-1290.00
-
-2025/08/18 Vista Cafe
-    Expenses:Personal:Food:Coffee    ฿300.00
-    Expenses:Personal:Misc    ฿45.00
-    Assets:Cash    ฿-345.00
-
-2025/08/19 Starbucks
-    Expenses:Personal:Food:Coffee    ฿6.00
-    Assets:Cash    ฿-6.00

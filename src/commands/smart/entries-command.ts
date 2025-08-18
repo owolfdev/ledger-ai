@@ -52,15 +52,30 @@ const MONTH_NAMES: Record<string, string> = {
   december: "12",
 };
 
-// Date utility functions
+// Date utility functions - timezone aware
 function getTodayString(): string {
-  return new Date().toISOString().split("T")[0];
+  const now = new Date();
+  // Use user's local timezone instead of UTC
+  const localDate = new Intl.DateTimeFormat("en-CA", {
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+  return localDate;
 }
 
 function getYesterdayString(): string {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  return yesterday.toISOString().split("T")[0];
+  // Use user's local timezone instead of UTC
+  const localDate = new Intl.DateTimeFormat("en-CA", {
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(yesterday);
+  return localDate;
 }
 
 function getCurrentYear(): string {
