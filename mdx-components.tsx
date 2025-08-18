@@ -11,6 +11,11 @@ import PopularPosts from "@/components/posts/popular-posts";
 import { Button } from "@/components/ui/button";
 import { IFrame } from "@/components/mdx/iframe";
 import { CustomAlert } from "@/components/alerts/custom-alert";
+import {
+  EntryCard,
+  EntryListItem,
+  ResponsiveEntryItem,
+} from "@/components/terminal/ledger-entry-components";
 
 function MDXImage(props: React.ComponentProps<typeof Image>) {
   return (
@@ -169,6 +174,10 @@ export function getMDXComponents(overrides: MDXComponents = {}): MDXComponents {
       </div>
     ),
     "custom-alert": ({ message }) => <CustomAlert message={message} />,
+    // NEW: Ledger entry components (lowercase for MDX)
+    "entry-card": EntryCard,
+    "entry-list-item": EntryListItem,
+    "responsive-entry-item": ResponsiveEntryItem,
     ...overrides,
   };
 }

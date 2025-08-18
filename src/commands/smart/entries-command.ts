@@ -1,6 +1,6 @@
 // ================================================
 // FILE: src/commands/smart/entries-command.ts
-// PURPOSE: List ledger entries with business filtering + enhanced date support
+// PURPOSE: List ledger entries with responsive formatting
 // ================================================
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@/types/user";
@@ -21,10 +21,10 @@ export interface EntriesArgs {
   year?: string;
   business?: string;
   go?: string;
-  range?: { start: string; end: string }; // NEW: Range support
+  range?: { start: string; end: string };
 }
 
-// NEW: Month name mapping
+// Month name mapping
 const MONTH_NAMES: Record<string, string> = {
   jan: "01",
   january: "01",
@@ -52,7 +52,7 @@ const MONTH_NAMES: Record<string, string> = {
   december: "12",
 };
 
-// NEW: Date utility functions
+// Date utility functions
 function getTodayString(): string {
   return new Date().toISOString().split("T")[0];
 }
@@ -83,7 +83,6 @@ function parseDateAlias(alias: string): {
 } {
   const lower = alias.toLowerCase();
 
-  // Handle relative dates
   if (lower === "today") {
     return { day: getTodayString() };
   }
@@ -91,19 +90,16 @@ function parseDateAlias(alias: string): {
     return { day: getYesterdayString() };
   }
 
-  // Handle year (4 digits) - this is the key fix
   if (/^\d{4}$/.test(alias)) {
     console.log(`Parsed year alias: ${alias}`);
     return { year: alias };
   }
 
-  // Handle month names
   if (MONTH_NAMES[lower]) {
     console.log(`Parsed month alias: ${alias} -> ${parseMonthAlias(alias)}`);
     return { month: parseMonthAlias(alias) };
   }
 
-  // Handle explicit formats (fallback to existing logic)
   if (/^\d{4}-\d{2}-\d{2}$/.test(alias)) {
     return { day: alias };
   }
@@ -122,7 +118,6 @@ function parseRangeArguments(args: string[]): { start: string; end: string } {
 
   const [startArg, endArg] = args;
 
-  // Parse start date
   let startDate: string;
   if (startArg.toLowerCase() === "today") {
     startDate = getTodayString();
@@ -131,13 +126,11 @@ function parseRangeArguments(args: string[]): { start: string; end: string } {
   } else if (/^\d{4}-\d{2}-\d{2}$/.test(startArg)) {
     startDate = startArg;
   } else if (/^\d{4}-\d{2}$/.test(startArg)) {
-    // For month ranges, use first day of month
     startDate = `${startArg}-01`;
   } else {
     throw new Error(`Invalid start date format: ${startArg}`);
   }
 
-  // Parse end date
   let endDate: string;
   if (endArg.toLowerCase() === "today") {
     endDate = getTodayString();
@@ -146,7 +139,6 @@ function parseRangeArguments(args: string[]): { start: string; end: string } {
   } else if (/^\d{4}-\d{2}-\d{2}$/.test(endArg)) {
     endDate = endArg;
   } else if (/^\d{4}-\d{2}$/.test(endArg)) {
-    // For month ranges, use last day of month
     const [yearStr, monthStr] = endArg.split("-");
     const year = parseInt(yearStr);
     const month = parseInt(monthStr);
@@ -221,7 +213,6 @@ function parseArgs(raw?: string): EntriesArgs {
       i++;
       continue;
     }
-    // NEW: Range support
     if (t === "--range" && i + 2 < parts.length) {
       try {
         range = parseRangeArguments([parts[i + 1], parts[i + 2]]);
@@ -251,8 +242,6 @@ function parseArgs(raw?: string): EntriesArgs {
       continue;
     }
 
-    // NEW: Check for date aliases (single arguments without flags)
-    // Only process if no explicit date flags have been set
     if (!day && !month && !year && !range) {
       try {
         const dateAlias = parseDateAlias(parts[i]);
@@ -265,12 +254,10 @@ function parseArgs(raw?: string): EntriesArgs {
         }
       } catch (error) {
         console.log(`Date alias parsing failed for "${parts[i]}":`, error);
-        // Not a valid date alias, continue with other parsing
       }
     }
   }
 
-  // Smart limit defaults: if no explicit limit and we're querying a year, use higher limit
   if (!hasExplicitLimit && year) {
     limit = 200;
   }
@@ -296,8 +283,6 @@ function buildDateFilter(args: EntriesArgs): {
   endDate?: string;
   description: string;
 } {
-  // Priority: range > day > month > year (most specific wins)
-
   if (args.range) {
     return {
       startDate: args.range.start,
@@ -307,12 +292,10 @@ function buildDateFilter(args: EntriesArgs): {
   }
 
   if (args.day) {
-    // Single day: YYYY-MM-DD
     if (!/^\d{4}-\d{2}-\d{2}$/.test(args.day)) {
       throw new Error("Day format must be YYYY-MM-DD (e.g., 2025-08-01)");
     }
 
-    // Special descriptions for relative dates
     const today = getTodayString();
     const yesterday = getYesterdayString();
     let description = `on ${args.day}`;
@@ -330,7 +313,6 @@ function buildDateFilter(args: EntriesArgs): {
   }
 
   if (args.month) {
-    // Month range: YYYY-MM
     if (!/^\d{4}-\d{2}$/.test(args.month)) {
       throw new Error("Month format must be YYYY-MM (e.g., 2025-08)");
     }
@@ -342,7 +324,6 @@ function buildDateFilter(args: EntriesArgs): {
     const startDate = firstDay.toISOString().split("T")[0];
     const endDate = lastDay.toISOString().split("T")[0];
 
-    // Find month name for description
     const monthName =
       Object.keys(MONTH_NAMES).find(
         (key) => MONTH_NAMES[key] === monthStr && key.length > 3
@@ -356,7 +337,6 @@ function buildDateFilter(args: EntriesArgs): {
   }
 
   if (args.year) {
-    // Year range: YYYY
     if (!/^\d{4}$/.test(args.year)) {
       throw new Error("Year format must be YYYY (e.g., 2025)");
     }
@@ -379,6 +359,70 @@ function currencySymbol(currency?: string | null) {
   if (currency === "USD") return "$";
   if (currency === "EUR") return "€";
   return currency;
+}
+
+// Type for ledger entry from database
+interface LedgerEntryData {
+  id: number;
+  entry_date: string;
+  description: string;
+  amount: string | number;
+  currency: string;
+  is_cleared: boolean;
+  entry_text?: string | null;
+}
+
+// HTML for mobile, pure markdown for desktop
+function formatEntryLine(entry: LedgerEntryData): string {
+  const amt = Number(entry.amount) || 0;
+  const entryId = Number(entry.id) || 0;
+  const sym = currencySymbol(entry.currency);
+  const status = entry.is_cleared ? " ✅" : " ⏳";
+
+  // Extract business from entry_text pattern "Expenses:BusinessName:"
+  let businessName = "";
+  const businessMatch = entry.entry_text?.match(/Expenses:([^:]+):/);
+  if (businessMatch && businessMatch[1] !== "Taxes") {
+    businessName = businessMatch[1];
+  }
+
+  // Mobile card (enhanced for better readability)
+  const mobileCard = `<div class="block sm:hidden bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl p-5 mb-4 shadow-sm hover:shadow-md transition-shadow">
+    <div class="flex items-center justify-between mb-3">
+      <div class="font-semibold text-lg text-neutral-900 dark:text-neutral-100 flex-1 pr-3 leading-tight">${
+        entry.description
+      }</div>
+      <div class="text-xl flex-shrink-0">${status.trim()}</div>
+    </div>
+    <div class="flex items-center justify-between mb-3">
+      <div class="text-sm font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">${
+        entry.entry_date
+      }</div>
+      <div class="text-2xl font-bold font-mono text-neutral-900 dark:text-neutral-100">${sym}${amt.toFixed(
+    2
+  )}</div>
+    </div>
+    ${
+      businessName
+        ? `<div class="mb-4"><span class="inline-flex items-center text-xs font-medium bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800">${businessName}</span></div>`
+        : ""
+    }
+    <div class="pt-2 border-t border-neutral-100 dark:border-neutral-800"><a href="/ledger/entry/${entryId}" class="inline-flex items-center text-blue-600 dark:text-blue-400 text-sm font-medium hover:text-blue-700 dark:hover:text-blue-300 transition-colors">View Entry #${entryId} <span class="ml-1">→</span></a></div>
+  </div>`;
+
+  // Desktop list item (pure markdown in a hidden div)
+  const businessTag = businessName ? ` \`${businessName}\`` : "";
+  const desktopItem = `<div class="hidden sm:block markdown-content">
+
+${entry.entry_date} • **${
+    entry.description
+  }**${businessTag} — **${sym}${amt.toFixed(
+    2
+  )}**${status} → [#${entryId}](/ledger/entry/${entryId})
+
+</div>`;
+
+  return mobileCard + "\n" + desktopItem;
 }
 
 export async function entriesListCommand(
@@ -416,7 +460,7 @@ export async function entriesListCommand(
   }
 
   try {
-    // Step 1: Start with basic query
+    // Build query with all existing logic...
     console.log("Building base query...");
     let query = supabase
       .from("ledger_entries")
@@ -424,25 +468,21 @@ export async function entriesListCommand(
         "id, entry_date, description, amount, currency, is_cleared, entry_text"
       );
 
-    // Step 2: Add user filter if exists
     if (user?.id) {
       console.log("Adding user filter:", user.id);
       query = query.eq("user_id", user.id);
     }
 
-    // Step 3: Add business filter using account name pattern
     if (args.business) {
       console.log("Adding business filter via account pattern:", args.business);
       query = query.like("entry_text", `%Expenses:${args.business}:%`);
     }
 
-    // Step 4: Add vendor filter
     if (args.vendor) {
       console.log("Adding vendor filter:", args.vendor);
       query = query.ilike("description", `%${args.vendor}%`);
     }
 
-    // Step 5: Add date filters (enhanced with range support)
     let dateDescription = "";
     try {
       const dateFilter = buildDateFilter(args);
@@ -462,7 +502,7 @@ export async function entriesListCommand(
       }" />`;
     }
 
-    // Step 6: Count mode (with optional sum)
+    // Count mode (existing logic)
     if (args.count) {
       console.log("Executing count query...");
       let countQuery = supabase
@@ -482,7 +522,6 @@ export async function entriesListCommand(
         countQuery = countQuery.ilike("description", `%${args.vendor}%`);
       }
 
-      // Apply same date filter to count query
       try {
         const dateFilter = buildDateFilter(args);
         if (dateFilter.startDate && dateFilter.endDate) {
@@ -509,12 +548,10 @@ export async function entriesListCommand(
         (args.business ? ` for business "${args.business}"` : "") +
         (dateDescription ? ` ${dateDescription}` : "");
 
-      // Add sum to count mode if requested
       if (args.sum && count && count > 0) {
         console.log("Executing sum query for count mode...");
         let sumQuery = supabase.from("ledger_entries").select("amount");
 
-        // Apply same filters as count query
         if (user?.id) {
           sumQuery = sumQuery.eq("user_id", user.id);
         }
@@ -559,7 +596,7 @@ export async function entriesListCommand(
       return result;
     }
 
-    // Step 7: Add ordering and limits for data query
+    // Add ordering and limits for data query
     const orderCol = args.sort === "created" ? "created_at" : "entry_date";
     console.log("Adding order and limit...");
 
@@ -568,7 +605,7 @@ export async function entriesListCommand(
       .order("id", { ascending: args.dir === "asc" })
       .limit(args.limit);
 
-    // Step 8: Execute query
+    // Execute query
     console.log("Executing data query...");
     const { data, error } = await query;
 
@@ -581,27 +618,10 @@ export async function entriesListCommand(
       return "No entries found.";
     }
 
-    // Step 9: Format results with business extracted from entry_text
-    const lines = data.map((e) => {
-      const amt = Number(e.amount);
-      const sym = currencySymbol(e.currency);
-      const cleared = e.is_cleared ? " ✅" : "";
+    // NEW: Responsive formatting with Tailwind
+    const lines = data.map((entry) => formatEntryLine(entry));
 
-      // Extract business from entry_text pattern "Expenses:BusinessName:"
-      let businessName = "";
-      const businessMatch = e.entry_text?.match(/Expenses:([^:]+):/);
-      if (businessMatch && businessMatch[1] !== "Taxes") {
-        businessName = ` [${businessMatch[1]}]`;
-      }
-
-      return `- ${e.entry_date} • ${
-        e.description
-      }${businessName} — ${sym}${amt.toFixed(2)}${cleared} → [/ledger/entry/${
-        e.id
-      }](/ledger/entry/${e.id})`;
-    });
-
-    // Step 10: Optional totals
+    // Optional totals
     let totalsBlock = "";
     if (args.sum) {
       const total = data.reduce(
@@ -617,9 +637,11 @@ export async function entriesListCommand(
       (args.vendor ? ` matching "${args.vendor}"` : "") +
       (dateDescription ? ` ${dateDescription}` : "");
 
+    const formatInfo = ""; // Remove format indicator since both are present
+
     return (
       [
-        `Showing **${data.length}** entries (sort: ${args.sort} ${args.dir}, limit: ${args.limit}${filterDesc})`,
+        `Showing **${data.length}** entries (sort: ${args.sort} ${args.dir}, limit: ${args.limit}${filterDesc})${formatInfo}`,
         "",
         ...lines,
       ].join("\n") + totalsBlock
