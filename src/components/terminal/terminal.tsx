@@ -144,7 +144,6 @@ const silentCommands = new Set(["top"]);
 export default function Terminal({
   storageKey = "my_terminal_history",
   maxHistory = 200,
-  commands,
   welcome,
   onCommand,
   onPopulateInput, // ✅ ADD THIS PARAMETER

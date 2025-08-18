@@ -1,3 +1,4 @@
+// standard file input working normally in our app.
 import React from "react";
 
 function TestPage() {

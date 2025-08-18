@@ -2,7 +2,7 @@
 // SIMPLE APPROACH: Minimal React, maximum native behavior
 
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Tesseract from "tesseract.js";
 import {
   createOpenAiReceiptParser,
@@ -48,11 +48,30 @@ export default function TerminalImageUpload({
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Simple file change handler - no refs, no complex state
+  // Handle button click - direct file input trigger
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (loading) return;
+
+    // Reset the input value to allow re-selecting the same file
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+      // Direct click on the actual input element for better mobile compatibility
+      fileInputRef.current.click();
+    }
+  };
+
+  // Handle file selection
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || loading) return;
+
+    // Prevent any event propagation that might interfere
+    e.stopPropagation();
 
     setLoading(true);
     setProgress(0);
@@ -197,22 +216,33 @@ export default function TerminalImageUpload({
       setLoading(false);
       setProgress(0);
       setStatus("");
-      // Clear the input to allow re-selecting the same file
-      e.target.value = "";
     }
   };
 
   return (
     <div className="flex items-center gap-2">
-      {/* Native file input - just like your working example */}
-      <label className="inline-flex items-center gap-2 px-3 py-2 border rounded-md bg-background hover:bg-accent transition-colors cursor-pointer select-none">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          disabled={loading}
-          className="hidden"
-        />
+      {/* Hidden file input - no label wrapper */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        disabled={loading}
+        className="hidden"
+        // Prevent any event bubbling that might interfere with terminal
+        onClick={(e) => e.stopPropagation()}
+      />
+
+      {/* Button that triggers file input directly */}
+      <button
+        type="button"
+        onClick={handleButtonClick}
+        disabled={loading}
+        className="inline-flex items-center gap-2 px-3 py-2 border rounded-md bg-background hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        // Prevent terminal from interfering
+        onMouseDown={(e) => e.stopPropagation()}
+        onMouseUp={(e) => e.stopPropagation()}
+      >
         {loading ? (
           <>
             <span className="animate-spin">⏳</span>
@@ -226,7 +256,7 @@ export default function TerminalImageUpload({
             <span>Add Receipt</span>
           </>
         )}
-      </label>
+      </button>
     </div>
   );
 }
