@@ -1,6 +1,6 @@
 // ================================================
 // FILE: src/commands/smart/entries-command.ts
-// PURPOSE: List ledger entries with business filtering + day/year support
+// PURPOSE: List ledger entries with business filtering + enhanced date support
 // ================================================
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@/types/user";
@@ -17,10 +17,146 @@ export interface EntriesArgs {
   count: boolean;
   vendor?: string;
   month?: string;
-  day?: string; // NEW: Single day filtering
-  year?: string; // NEW: Year filtering
+  day?: string;
+  year?: string;
   business?: string;
-  go?: string; // NEW: Navigate to specific entry by ID
+  go?: string;
+  range?: { start: string; end: string }; // NEW: Range support
+}
+
+// NEW: Month name mapping
+const MONTH_NAMES: Record<string, string> = {
+  jan: "01",
+  january: "01",
+  feb: "02",
+  february: "02",
+  mar: "03",
+  march: "03",
+  apr: "04",
+  april: "04",
+  may: "05",
+  jun: "06",
+  june: "06",
+  jul: "07",
+  july: "07",
+  aug: "08",
+  august: "08",
+  sep: "09",
+  sept: "09",
+  september: "09",
+  oct: "10",
+  october: "10",
+  nov: "11",
+  november: "11",
+  dec: "12",
+  december: "12",
+};
+
+// NEW: Date utility functions
+function getTodayString(): string {
+  return new Date().toISOString().split("T")[0];
+}
+
+function getYesterdayString(): string {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return yesterday.toISOString().split("T")[0];
+}
+
+function getCurrentYear(): string {
+  return new Date().getFullYear().toString();
+}
+
+function parseMonthAlias(monthName: string): string {
+  const currentYear = getCurrentYear();
+  const monthNum = MONTH_NAMES[monthName.toLowerCase()];
+  if (!monthNum) {
+    throw new Error(`Invalid month name: ${monthName}`);
+  }
+  return `${currentYear}-${monthNum}`;
+}
+
+function parseDateAlias(alias: string): {
+  day?: string;
+  month?: string;
+  year?: string;
+} {
+  const lower = alias.toLowerCase();
+
+  // Handle relative dates
+  if (lower === "today") {
+    return { day: getTodayString() };
+  }
+  if (lower === "yesterday") {
+    return { day: getYesterdayString() };
+  }
+
+  // Handle year (4 digits) - this is the key fix
+  if (/^\d{4}$/.test(alias)) {
+    console.log(`Parsed year alias: ${alias}`);
+    return { year: alias };
+  }
+
+  // Handle month names
+  if (MONTH_NAMES[lower]) {
+    console.log(`Parsed month alias: ${alias} -> ${parseMonthAlias(alias)}`);
+    return { month: parseMonthAlias(alias) };
+  }
+
+  // Handle explicit formats (fallback to existing logic)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(alias)) {
+    return { day: alias };
+  }
+  if (/^\d{4}-\d{2}$/.test(alias)) {
+    return { month: alias };
+  }
+
+  console.log(`No date alias match for: ${alias}`);
+  return {};
+}
+
+function parseRangeArguments(args: string[]): { start: string; end: string } {
+  if (args.length !== 2) {
+    throw new Error("Range requires exactly 2 arguments: start and end");
+  }
+
+  const [startArg, endArg] = args;
+
+  // Parse start date
+  let startDate: string;
+  if (startArg.toLowerCase() === "today") {
+    startDate = getTodayString();
+  } else if (startArg.toLowerCase() === "yesterday") {
+    startDate = getYesterdayString();
+  } else if (/^\d{4}-\d{2}-\d{2}$/.test(startArg)) {
+    startDate = startArg;
+  } else if (/^\d{4}-\d{2}$/.test(startArg)) {
+    // For month ranges, use first day of month
+    startDate = `${startArg}-01`;
+  } else {
+    throw new Error(`Invalid start date format: ${startArg}`);
+  }
+
+  // Parse end date
+  let endDate: string;
+  if (endArg.toLowerCase() === "today") {
+    endDate = getTodayString();
+  } else if (endArg.toLowerCase() === "yesterday") {
+    endDate = getYesterdayString();
+  } else if (/^\d{4}-\d{2}-\d{2}$/.test(endArg)) {
+    endDate = endArg;
+  } else if (/^\d{4}-\d{2}$/.test(endArg)) {
+    // For month ranges, use last day of month
+    const [yearStr, monthStr] = endArg.split("-");
+    const year = parseInt(yearStr);
+    const month = parseInt(monthStr);
+    const lastDay = new Date(year, month, 0);
+    endDate = lastDay.toISOString().split("T")[0];
+  } else {
+    throw new Error(`Invalid end date format: ${endArg}`);
+  }
+
+  return { start: startDate, end: endDate };
 }
 
 function parseArgs(raw?: string): EntriesArgs {
@@ -31,14 +167,16 @@ function parseArgs(raw?: string): EntriesArgs {
   let count = false;
   let vendor: string | undefined;
   let month: string | undefined;
-  let day: string | undefined; // NEW
-  let year: string | undefined; // NEW
-  let go: string | undefined; // NEW
+  let day: string | undefined;
+  let year: string | undefined;
+  let go: string | undefined;
   let business: string | undefined;
+  let range: { start: string; end: string } | undefined;
 
   if (!raw) return { sort, dir, limit, sum, count };
 
   const parts = raw.trim().split(/\s+/).filter(Boolean);
+  let hasExplicitLimit = false;
 
   for (let i = 0; i < parts.length; i++) {
     const t = parts[i].toLowerCase();
@@ -73,19 +211,30 @@ function parseArgs(raw?: string): EntriesArgs {
       i++;
       continue;
     }
-    // NEW: Day filtering
     if (t === "--day" && i + 1 < parts.length) {
       day = parts[i + 1];
       i++;
       continue;
     }
-    // NEW: Year filtering
     if (t === "--year" && i + 1 < parts.length) {
       year = parts[i + 1];
       i++;
       continue;
     }
-    // NEW: Go to specific entry
+    // NEW: Range support
+    if (t === "--range" && i + 2 < parts.length) {
+      try {
+        range = parseRangeArguments([parts[i + 1], parts[i + 2]]);
+        i += 2;
+        continue;
+      } catch (error) {
+        throw new Error(
+          `Range parsing error: ${
+            error instanceof Error ? error.message : error
+          }`
+        );
+      }
+    }
     if (t === "go" && i + 1 < parts.length) {
       go = parts[i + 1];
       i++;
@@ -98,8 +247,32 @@ function parseArgs(raw?: string): EntriesArgs {
     }
     if (/^\d+$/.test(t)) {
       limit = Math.max(1, Math.min(200, parseInt(t, 10)));
+      hasExplicitLimit = true;
       continue;
     }
+
+    // NEW: Check for date aliases (single arguments without flags)
+    // Only process if no explicit date flags have been set
+    if (!day && !month && !year && !range) {
+      try {
+        const dateAlias = parseDateAlias(parts[i]);
+        if (dateAlias.day || dateAlias.month || dateAlias.year) {
+          console.log(`Applying date alias for "${parts[i]}":`, dateAlias);
+          day = dateAlias.day;
+          month = dateAlias.month;
+          year = dateAlias.year;
+          continue;
+        }
+      } catch (error) {
+        console.log(`Date alias parsing failed for "${parts[i]}":`, error);
+        // Not a valid date alias, continue with other parsing
+      }
+    }
+  }
+
+  // Smart limit defaults: if no explicit limit and we're querying a year, use higher limit
+  if (!hasExplicitLimit && year) {
+    limit = 200;
   }
 
   return {
@@ -114,26 +287,45 @@ function parseArgs(raw?: string): EntriesArgs {
     year,
     business,
     go,
+    range,
   };
 }
 
-// NEW: Helper function to build date filters
 function buildDateFilter(args: EntriesArgs): {
   startDate?: string;
   endDate?: string;
   description: string;
 } {
-  // Priority: day > month > year (most specific wins)
+  // Priority: range > day > month > year (most specific wins)
+
+  if (args.range) {
+    return {
+      startDate: args.range.start,
+      endDate: args.range.end,
+      description: `from ${args.range.start} to ${args.range.end}`,
+    };
+  }
 
   if (args.day) {
     // Single day: YYYY-MM-DD
     if (!/^\d{4}-\d{2}-\d{2}$/.test(args.day)) {
       throw new Error("Day format must be YYYY-MM-DD (e.g., 2025-08-01)");
     }
+
+    // Special descriptions for relative dates
+    const today = getTodayString();
+    const yesterday = getYesterdayString();
+    let description = `on ${args.day}`;
+    if (args.day === today) {
+      description = "today";
+    } else if (args.day === yesterday) {
+      description = "yesterday";
+    }
+
     return {
       startDate: args.day,
       endDate: args.day,
-      description: `on ${args.day}`,
+      description,
     };
   }
 
@@ -150,10 +342,16 @@ function buildDateFilter(args: EntriesArgs): {
     const startDate = firstDay.toISOString().split("T")[0];
     const endDate = lastDay.toISOString().split("T")[0];
 
+    // Find month name for description
+    const monthName =
+      Object.keys(MONTH_NAMES).find(
+        (key) => MONTH_NAMES[key] === monthStr && key.length > 3
+      ) || monthStr;
+
     return {
       startDate,
       endDate,
-      description: `in ${args.month}`,
+      description: `in ${monthName} ${year}`,
     };
   }
 
@@ -162,9 +360,8 @@ function buildDateFilter(args: EntriesArgs): {
     if (!/^\d{4}$/.test(args.year)) {
       throw new Error("Year format must be YYYY (e.g., 2025)");
     }
-    const year = parseInt(args.year);
-    const startDate = `${year}-01-01`;
-    const endDate = `${year}-12-31`;
+    const startDate = `${args.year}-01-01`;
+    const endDate = `${args.year}-12-31`;
 
     return {
       startDate,
@@ -189,7 +386,7 @@ export async function entriesListCommand(
   _pageCtx?: string,
   _set?: Record<string, CommandMeta>,
   user?: User | null,
-  router?: { push: (route: string) => void } // NEW: Add router parameter
+  router?: { push: (route: string) => void }
 ): Promise<string> {
   let args: EntriesArgs;
 
@@ -203,21 +400,18 @@ export async function entriesListCommand(
 
   const supabase = createClient();
 
-  // NEW: Handle 'go' mode - redirect to specific entry
+  // Handle 'go' mode - redirect to specific entry
   if (args.go) {
     const entryId = args.go;
-    // Validate that it's a reasonable ID format (just numbers)
     if (!/^\d+$/.test(entryId)) {
       return `<my-alert message="Invalid entry ID: ${entryId}. ID must be numeric." />`;
     }
 
-    // If router is available, perform actual navigation
     if (router) {
       router.push(`/ledger/entry/${entryId}`);
-      return ""; // Return empty string since we're navigating away
+      return "";
     }
 
-    // Fallback: return a link if no router available
     return `**Entry ${entryId}**: [/ledger/entry/${entryId}](/ledger/entry/${entryId})`;
   }
 
@@ -248,7 +442,7 @@ export async function entriesListCommand(
       query = query.ilike("description", `%${args.vendor}%`);
     }
 
-    // Step 5: Add date filters (NEW: unified date handling)
+    // Step 5: Add date filters (enhanced with range support)
     let dateDescription = "";
     try {
       const dateFilter = buildDateFilter(args);
@@ -256,6 +450,7 @@ export async function entriesListCommand(
         console.log(
           `Adding date filter: ${dateFilter.startDate} to ${dateFilter.endDate}`
         );
+        console.log(`Date description: ${dateFilter.description}`);
         query = query
           .gte("entry_date", dateFilter.startDate)
           .lte("entry_date", dateFilter.endDate);
@@ -314,7 +509,7 @@ export async function entriesListCommand(
         (args.business ? ` for business "${args.business}"` : "") +
         (dateDescription ? ` ${dateDescription}` : "");
 
-      // NEW: Add sum to count mode if requested
+      // Add sum to count mode if requested
       if (args.sum && count && count > 0) {
         console.log("Executing sum query for count mode...");
         let sumQuery = supabase.from("ledger_entries").select("amount");

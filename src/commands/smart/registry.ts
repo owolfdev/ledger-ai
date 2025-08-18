@@ -97,7 +97,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
 
   entries: {
     description:
-      "List and filter ledger entries with powerful search options. Supports business filtering, vendor search, date ranges, counting, and navigation to specific entries.",
+      "List and filter ledger entries with powerful search options. Supports business filtering, vendor search, date ranges with smart aliases, counting, and navigation to specific entries.",
     content: (
       arg?: string,
       pageCtx?: string,
@@ -114,30 +114,48 @@ export const commandRegistry: Record<string, CommandMeta> = {
   **Navigation:**
   • \`entries go <id>\` — Navigate directly to entry by ID (e.g., \`entries go 330\`)
   
-  **Filtering Options:**
-  • \`--business <n>\` — Filter by business (Personal, MyOnlineBusiness, etc.)
-  • \`--vendor <n>\` — Filter by vendor/description (case-insensitive)
+  **Smart Date Aliases:**
+  • \`entries today\` — Today's entries
+  • \`entries yesterday\` — Yesterday's entries
+  • \`entries 2025\` — All entries for year 2025
+  • \`entries 2024\` — All entries for year 2024
+  • \`entries jan\` or \`entries january\` — January entries (current year)
+  • \`entries aug\` or \`entries august\` — August entries (current year)
+  • \`entries may\`, \`entries sep\`, etc. — Any month name
+  
+  **Date Ranges:**
+  • \`entries --range 2025-01 2025-06\` — January through June 2025
+  • \`entries --range today yesterday\` — Yesterday and today
+  • \`entries --range 2024-12 2025-02\` — Cross-year range
+  • \`entries --range 2025-01-01 2025-01-31\` — Specific date range
+  
+  **Traditional Date Filtering:**
   • \`--month YYYY-MM\` — Filter by specific month (e.g., 2025-08)
   • \`--day YYYY-MM-DD\` — Filter by specific day (e.g., 2025-08-17)
   • \`--year YYYY\` — Filter by specific year (e.g., 2025)
+  
+  **Other Filtering Options:**
+  • \`--business <name>\` — Filter by business (Personal, MyOnlineBusiness, etc.)
+  • \`--vendor <name>\` — Filter by vendor/description (case-insensitive)
   • \`--count\` — Show count only, no entries listed
   • \`--sum\` — Show total amount at bottom
   
-  **Date Filter Priority:** Day > Month > Year (most specific wins)
+  **Filter Priority:** Range > Day > Month > Year (most specific wins)
   
   **Examples:**
   • \`entries go 330\` — Navigate to entry #330
-  • \`entries --business MyOnlineBusiness\` — All entries for specific business
-  • \`entries --vendor Starbucks --month 2025-08\` — Starbucks purchases in August
-  • \`entries --day 2025-08-17\` — All entries on specific day
-  • \`entries --year 2025 --count\` — Count all 2025 entries
+  • \`entries today sum\` — Today's entries with total
+  • \`entries aug --business Personal\` — Personal business entries in August
+  • \`entries yesterday --vendor Starbucks\` — Yesterday's Starbucks purchases
+  • \`entries 2025 count\` — Count all 2025 entries
   • \`entries --business Personal --count --sum\` — Count and total for personal entries
-  • \`entries --month 2025-08 --sum\` — August entries with total
+  • \`entries --range jan mar sum\` — January-March total
+  • \`entries 2024 --vendor coffee\` — All 2024 coffee purchases
   • \`entries created desc 10 --business Channel60\` — Latest 10 Channel60 entries`,
   },
   ent: {
     description:
-      "Alias for entries command with same functionality including navigation, filtering, and date ranges",
+      "Alias for entries command with same functionality including smart date aliases, navigation, filtering, and ranges",
     content: (
       arg?: string,
       pageCtx?: string,
@@ -146,22 +164,44 @@ export const commandRegistry: Record<string, CommandMeta> = {
     ) => entriesListCommand(arg || "", pageCtx || "", cmds || {}, user || null),
     usage: `ent [limit] [date|created] [asc|desc] [options]
   
-  **Quick Examples:**
+  **Quick Date Access:**
   • \`ent\` — Recent entries (20 most recent)
+  • \`ent today\` — Today's entries
+  • \`ent yesterday\` — Yesterday's entries
+  • \`ent 2025\` — All 2025 entries
+  • \`ent aug\` — August entries (current year)
+  • \`ent jan\`, \`ent feb\`, etc. — Any month name
+  
+  **Navigation & Search:**
   • \`ent go 330\` — Navigate to entry #330
   • \`ent count\` — Total entry count
   • \`ent --business Personal\` — Personal business entries
   • \`ent --vendor coffee\` — Find coffee purchases
-  • \`ent --month 2025-08 --sum\` — August total
-  • \`ent --day 2025-08-17\` — Today's entries
-  • \`ent --year 2025 --count\` — Count this year's entries
+  
+  **Date Ranges:**
+  • \`ent --range 2025-01 2025-06\` — January through June
+  • \`ent --range today yesterday\` — Yesterday and today
+  • \`ent --range jan mar\` — January through March
+  
+  **Totals & Counting:**
+  • \`ent today sum\` — Today's total
+  • \`ent aug --sum\` — August total  
+  • \`ent 2025 --count\` — Count this year's entries
+  • \`ent --business Personal --count --sum\` — Personal count and total
+  
+  **Smart Examples:**
+  • \`ent yesterday --vendor Starbucks\` — Yesterday's Starbucks purchases
+  • \`ent aug --business Channel60 sum\` — August Channel60 total
+  • \`ent 2024 --vendor coffee count\` — Count 2024 coffee purchases
+  • \`ent --range jan today --business Personal\` — Personal entries this year
   
   **All Features:**
-  • Navigation: \`go <id>\` to jump to specific entry
-  • Date filters: \`--day\`, \`--month\`, \`--year\`
-  • Business/vendor filtering: \`--business\`, \`--vendor\`
-  • Counting and totals: \`--count\`, \`--sum\`
-  • Sorting: \`date\`/\`created\` + \`asc\`/\`desc\`
+  • **Date aliases:** today, yesterday, year (2025), month names (jan, feb, etc.)
+  • **Ranges:** \`--range start end\` with dates, months, or aliases
+  • **Navigation:** \`go <id>\` to jump to specific entry
+  • **Filtering:** \`--business\`, \`--vendor\` with flexible matching
+  • **Counting:** \`--count\`, \`--sum\` for totals and statistics
+  • **Sorting:** \`date\`/\`created\` + \`asc\`/\`desc\`
   
   See \`help entries\` for full documentation.`,
   },
