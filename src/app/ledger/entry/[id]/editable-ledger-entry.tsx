@@ -52,7 +52,7 @@ interface EditablePostingsProps {
   disabled?: boolean;
 }
 
-// Enhanced EditablePostings component with reordering
+// Mobile-optimized EditablePostings component
 function EditablePostings({
   postings,
   currency,
@@ -94,21 +94,18 @@ function EditablePostings({
     onUpdate(newPostings);
   };
 
-  // 👈 ADD REORDERING FUNCTIONS
+  // Mobile-friendly reordering
   const movePosting = (fromIndex: number, direction: "up" | "down") => {
     const newPostings = [...editPostings];
     const toIndex = direction === "up" ? fromIndex - 1 : fromIndex + 1;
 
-    // Check bounds
     if (toIndex < 0 || toIndex >= newPostings.length) return;
 
-    // Swap the postings
     [newPostings[fromIndex], newPostings[toIndex]] = [
       newPostings[toIndex],
       newPostings[fromIndex],
     ];
 
-    // Update sort_order to match new positions
     newPostings.forEach((posting, idx) => {
       posting.sort_order = idx;
     });
@@ -137,7 +134,6 @@ function EditablePostings({
     }
     const newPostings = editPostings.filter((_, i) => i !== index);
 
-    // Update sort_order after removal
     newPostings.forEach((posting, idx) => {
       posting.sort_order = idx;
     });
@@ -155,7 +151,6 @@ function EditablePostings({
       .slice(0, -1)
       .reduce((sum, p) => sum + p.amount, 0);
 
-    // Set the last posting to balance the transaction
     newPostings[lastIndex] = {
       ...newPostings[lastIndex],
       amount: -sumExceptLast,
@@ -167,14 +162,18 @@ function EditablePostings({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      {/* Header - Mobile Optimized */}
+      <div className="space-y-3">
         <h3 className="font-semibold">Account Postings</h3>
-        <div className="flex space-x-2">
+
+        {/* Mobile: Stack buttons vertically */}
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Button
             onClick={addPosting}
             variant="outline"
             size="sm"
             disabled={disabled}
+            className="w-full sm:w-auto"
           >
             + Add Posting
           </Button>
@@ -184,6 +183,7 @@ function EditablePostings({
               variant="outline"
               size="sm"
               disabled={disabled}
+              className="w-full sm:w-auto"
             >
               Auto Balance
             </Button>
@@ -201,112 +201,139 @@ function EditablePostings({
         </Alert>
       )}
 
-      {/* Postings List with Reordering */}
-      <div className="space-y-3">
+      {/* Mobile-Optimized Postings List */}
+      <div className="space-y-4">
         {editPostings.map((posting, index) => (
           <div
             key={posting.id || `new-${index}`}
-            className="flex items-center space-x-2 p-3 border rounded-lg"
+            className="border rounded-lg p-4 space-y-3 bg-white dark:bg-neutral-950"
           >
-            {/* 👈 ADD REORDER BUTTONS */}
-            <div className="flex flex-col space-y-1">
-              <Button
-                onClick={() => movePosting(index, "up")}
-                variant="outline"
-                size="sm"
-                disabled={disabled || index === 0}
-                className="h-6 w-6 p-0 text-xs"
-                title="Move up"
-              >
-                ↑
-              </Button>
-              <Button
-                onClick={() => movePosting(index, "down")}
-                variant="outline"
-                size="sm"
-                disabled={disabled || index === editPostings.length - 1}
-                className="h-6 w-6 p-0 text-xs"
-                title="Move down"
-              >
-                ↓
-              </Button>
+            {/* Mobile: Header row with order and actions */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-mono text-neutral-500 bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded">
+                  #{index + 1}
+                </span>
+
+                {/* Mobile-friendly reorder buttons */}
+                <div className="flex gap-1">
+                  <Button
+                    onClick={() => movePosting(index, "up")}
+                    variant="outline"
+                    size="sm"
+                    disabled={disabled || index === 0}
+                    className="h-8 w-8 p-0"
+                    title="Move up"
+                  >
+                    ↑
+                  </Button>
+                  <Button
+                    onClick={() => movePosting(index, "down")}
+                    variant="outline"
+                    size="sm"
+                    disabled={disabled || index === editPostings.length - 1}
+                    className="h-8 w-8 p-0"
+                    title="Move down"
+                  >
+                    ↓
+                  </Button>
+                </div>
+              </div>
+
+              {/* Delete button - larger for mobile */}
+              {editPostings.length > 2 && (
+                <Button
+                  onClick={() => removePosting(index)}
+                  variant="destructive"
+                  size="sm"
+                  disabled={disabled}
+                  className="h-8 w-8 p-0"
+                  title="Remove posting"
+                >
+                  ×
+                </Button>
+              )}
             </div>
 
-            {/* Order indicator */}
-            <div className="w-8 text-center text-xs text-neutral-500 font-mono">
-              #{index + 1}
-            </div>
+            {/* Mobile: Stack account and amount vertically */}
+            <div className="space-y-3">
+              {/* Account input - full width on mobile */}
+              <div>
+                <label className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
+                  Account
+                </label>
+                <Input
+                  placeholder="e.g., Expenses:Personal:Food:Coffee"
+                  value={posting.account}
+                  onChange={(e) =>
+                    updatePosting(index, "account", e.target.value)
+                  }
+                  disabled={disabled}
+                  className="font-mono text-sm"
+                />
+              </div>
 
-            <div className="flex-1">
-              <Input
-                placeholder="Account (e.g., Expenses:Personal:Food:Coffee)"
-                value={posting.account}
-                onChange={(e) =>
-                  updatePosting(index, "account", e.target.value)
-                }
-                disabled={disabled}
-                className="font-mono text-sm"
-              />
+              {/* Amount and currency row */}
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <label className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
+                    Amount
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={posting.amount || ""}
+                    onChange={(e) =>
+                      updatePosting(index, "amount", e.target.value)
+                    }
+                    disabled={disabled}
+                    className="font-mono text-right"
+                  />
+                </div>
+                <div className="w-16 pb-2">
+                  <div className="text-sm text-neutral-500 text-center">
+                    {posting.currency}
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="w-32">
-              <Input
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                value={posting.amount || ""}
-                onChange={(e) => updatePosting(index, "amount", e.target.value)}
-                disabled={disabled}
-                className="font-mono text-right"
-              />
-            </div>
-            <div className="w-16 text-sm text-neutral-500">
-              {posting.currency}
-            </div>
-            {editPostings.length > 2 && (
-              <Button
-                onClick={() => removePosting(index)}
-                variant="destructive"
-                size="sm"
-                disabled={disabled}
-                title="Remove posting"
-              >
-                ×
-              </Button>
-            )}
           </div>
         ))}
       </div>
 
-      {/* Balance Summary */}
-      <div className="flex justify-between items-center p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
-        <span className="text-sm font-medium">Total Balance:</span>
-        <span
-          className={`font-mono ${
-            isBalanced ? "text-emerald-600" : "text-red-600"
-          }`}
-        >
-          {totalAmount.toFixed(2)} {currency}
-          {isBalanced && " ✅"}
-        </span>
+      {/* Balance Summary - Mobile Optimized */}
+      <div className="p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+          <span className="text-sm font-medium">Total Balance:</span>
+          <span
+            className={`font-mono text-lg ${
+              isBalanced ? "text-emerald-600" : "text-red-600"
+            }`}
+          >
+            {totalAmount.toFixed(2)} {currency}
+            {isBalanced && " ✅"}
+          </span>
+        </div>
       </div>
 
-      {/* Common Account Suggestions */}
+      {/* Common Account Suggestions - Collapsible on mobile */}
       <details className="text-sm">
-        <summary className="cursor-pointer text-neutral-500 hover:text-neutral-700">
+        <summary className="cursor-pointer text-neutral-500 hover:text-neutral-700 p-2 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
           💡 Common Account Examples
         </summary>
-        <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-neutral-600">
+        <div className="mt-3 space-y-3 text-xs text-neutral-600 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
           <div>
-            <strong>Expenses:</strong>
-            <ul className="ml-2">
+            <strong className="block mb-2">Expenses:</strong>
+            <ul className="space-y-1 ml-2">
               <li>• Expenses:Personal:Food:Coffee</li>
               <li>• Expenses:Business:Supplies:Office</li>
               <li>• Expenses:Personal:Transportation:Gas</li>
             </ul>
           </div>
           <div>
-            <strong>Assets/Liabilities:</strong>
-            <ul className="ml-2">
+            <strong className="block mb-2">Assets/Liabilities:</strong>
+            <ul className="space-y-1 ml-2">
               <li>• Assets:Cash</li>
               <li>• Assets:Bank:Checking</li>
               <li>• Liabilities:CreditCard</li>
@@ -323,7 +350,7 @@ interface EditableLedgerEntryProps {
   postings: LedgerPosting[];
 }
 
-// Main component
+// Main component - Mobile Optimized
 export default function EditableLedgerEntry({
   entry,
   postings,
@@ -377,7 +404,6 @@ export default function EditableLedgerEntry({
         const result = await response.json();
 
         if (result.success) {
-          // Redirect to entries list after successful deletion
           router.push("/ledger/entries");
         } else {
           alert(`Failed to delete entry: ${result.error}`);
@@ -401,14 +427,13 @@ export default function EditableLedgerEntry({
           image_url: editData.image_url,
         };
 
-        // Include postings if in advanced mode
         if (editMode === "advanced") {
           payload.postings = editPostings.map((p, index) => ({
             id: p.id,
             account: p.account,
             amount: p.amount,
             currency: p.currency,
-            sort_order: index, // Use array index for final sort order
+            sort_order: index,
           }));
         }
 
@@ -417,7 +442,6 @@ export default function EditableLedgerEntry({
         if (result.success) {
           setIsEditing(false);
           setEditMode("basic");
-          // 👈 REFRESH PAGE TO SHOW UPDATED DATA
           window.location.reload();
         } else {
           alert(`Failed to save: ${result.error}`);
@@ -437,13 +461,11 @@ export default function EditableLedgerEntry({
       is_cleared: entry.is_cleared,
       image_url: entry.image_url,
     });
-    // Reset editPostings to original postings
     setEditPostings(postings.map((p, index) => ({ ...p, sort_order: index })));
     setIsEditing(false);
     setEditMode("basic");
   };
 
-  // Image upload handlers
   const handleImageUploaded = (url: string) => {
     setEditData((prev) => ({ ...prev, image_url: url }));
   };
@@ -456,7 +478,6 @@ export default function EditableLedgerEntry({
     setEditPostings(newPostings);
   };
 
-  // Calculate if postings are balanced (for advanced mode)
   const postingsTotal = editPostings.reduce((sum, p) => sum + p.amount, 0);
   const postingsBalanced = Math.abs(postingsTotal) < 0.01;
   const canSave =
@@ -464,22 +485,27 @@ export default function EditableLedgerEntry({
 
   if (isEditing) {
     return (
-      <div className="mx-auto max-w-4xl p-4 space-y-6 w-full">
-        {/* Edit Header */}
-        <div className="flex items-center justify-between">
+      <div className="mx-auto max-w-4xl p-3 sm:p-4 space-y-4 sm:space-y-6 w-full">
+        {/* Mobile-Optimized Edit Header */}
+        <div className="space-y-3">
           <div>
-            <h1 className="text-xl font-semibold">Edit Entry #{entry.id}</h1>
+            <h1 className="text-lg sm:text-xl font-semibold">
+              Edit Entry #{entry.id}
+            </h1>
             <p className="text-sm text-neutral-500">
               {editData.entry_date} • {entry.currency}
               {businessName && ` • ${businessName}`}
             </p>
           </div>
-          <div className="flex items-center space-x-2">
-            {/* Edit Mode Toggle */}
-            <div className="flex bg-neutral-100 dark:bg-neutral-800 rounded-lg p-1">
+
+          {/* Mobile: Stack controls vertically */}
+          <div className="space-y-3">
+            {/* Edit Mode Toggle - Full width on mobile */}
+
+            <div className="flex bg-neutral-100 dark:bg-neutral-800 rounded-lg p-1 w-full sm:w-fit">
               <button
                 onClick={() => setEditMode("basic")}
-                className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                className={`flex-1 sm:flex-none sm:px-4 py-2 text-sm rounded-md transition-colors ${
                   editMode === "basic"
                     ? "bg-white dark:bg-neutral-700 shadow-sm"
                     : "text-neutral-600 hover:text-neutral-900"
@@ -490,7 +516,7 @@ export default function EditableLedgerEntry({
               </button>
               <button
                 onClick={() => setEditMode("advanced")}
-                className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                className={`flex-1 sm:flex-none sm:px-4 py-2 text-sm rounded-md transition-colors ${
                   editMode === "advanced"
                     ? "bg-white dark:bg-neutral-700 shadow-sm"
                     : "text-neutral-600 hover:text-neutral-900"
@@ -501,30 +527,35 @@ export default function EditableLedgerEntry({
               </button>
             </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCancel}
-              disabled={isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleSave}
-              disabled={isPending || !canSave}
-            >
-              {isPending ? "Saving..." : "Save Changes"}
-            </Button>
+            {/* Action buttons - Full width on mobile */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCancel}
+                disabled={isPending}
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={isPending || !canSave}
+                className="w-full sm:w-auto"
+              >
+                {isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Basic Edit Form */}
-        <section className="rounded-2xl border p-4 space-y-4">
+        {/* Mobile-Optimized Entry Details */}
+        <section className="rounded-2xl border p-3 sm:p-4 space-y-4">
           <h3 className="font-semibold">Entry Details</h3>
 
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-medium mb-2">
               Description / Payee
             </label>
             <Input
@@ -537,9 +568,10 @@ export default function EditableLedgerEntry({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Mobile: Stack date and cleared vertically */}
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Date</label>
+              <label className="block text-sm font-medium mb-2">Date</label>
               <Input
                 type="date"
                 value={editData.entry_date}
@@ -550,7 +582,7 @@ export default function EditableLedgerEntry({
               />
             </div>
 
-            <div className="flex items-center space-x-2 pt-6">
+            <div className="flex items-center space-x-3">
               <input
                 id="cleared-checkbox"
                 type="checkbox"
@@ -558,7 +590,7 @@ export default function EditableLedgerEntry({
                 onChange={(e) =>
                   setEditData({ ...editData, is_cleared: e.target.checked })
                 }
-                className="w-4 h-4"
+                className="w-5 h-5"
                 disabled={isPending}
               />
               <label htmlFor="cleared-checkbox" className="text-sm font-medium">
@@ -568,7 +600,7 @@ export default function EditableLedgerEntry({
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Memo</label>
+            <label className="block text-sm font-medium mb-2">Memo</label>
             <Textarea
               value={editData.memo}
               onChange={(e) =>
@@ -582,7 +614,7 @@ export default function EditableLedgerEntry({
         </section>
 
         {/* Image Upload Section */}
-        <section className="rounded-2xl border p-4">
+        <section className="rounded-2xl border p-3 sm:p-4">
           <ImageUpload
             currentImageUrl={editData.image_url}
             onImageUploaded={handleImageUploaded}
@@ -591,9 +623,9 @@ export default function EditableLedgerEntry({
           />
         </section>
 
-        {/* Advanced Mode: Editable Postings */}
+        {/* Advanced Mode: Mobile-Optimized Editable Postings */}
         {editMode === "advanced" ? (
-          <section className="rounded-2xl border p-4">
+          <section className="rounded-2xl border p-3 sm:p-4">
             <EditablePostings
               postings={postings}
               currency={entry.currency}
@@ -602,29 +634,29 @@ export default function EditableLedgerEntry({
             />
           </section>
         ) : (
-          /* Basic Mode: Read-only Postings */
-          <section className="rounded-2xl border p-4 bg-neutral-50 dark:bg-neutral-900">
+          /* Basic Mode: Mobile-Optimized Read-only Postings */
+          <section className="rounded-2xl border p-3 sm:p-4 bg-neutral-50 dark:bg-neutral-900">
             <h3 className="font-semibold mb-3 text-neutral-700 dark:text-neutral-300">
               Account Postings (read-only)
             </h3>
-            <p className="text-xs text-neutral-500 mb-3">
+            <p className="text-xs text-neutral-500 mb-4">
               Switch to Advanced mode to edit individual postings
             </p>
-            <ul className="space-y-2">
+            <div className="space-y-3">
               {postings.map((p) => (
-                <li
+                <div
                   key={p.id}
-                  className="flex items-center justify-between text-sm"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 p-3 bg-white dark:bg-neutral-800 rounded-lg"
                 >
-                  <div className="truncate pr-4 font-mono text-neutral-600 dark:text-neutral-400">
+                  <div className="font-mono text-sm text-neutral-600 dark:text-neutral-400 break-all">
                     {p.account}
                   </div>
-                  <div className="font-mono tabular-nums text-neutral-600 dark:text-neutral-400">
+                  <div className="font-mono tabular-nums text-neutral-600 dark:text-neutral-400 text-right">
                     {p.amount.toFixed(2)} {p.currency}
                   </div>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           </section>
         )}
 
@@ -647,23 +679,28 @@ export default function EditableLedgerEntry({
     );
   }
 
-  // View Mode
+  // Mobile-Optimized View Mode
   return (
-    <div className="mx-auto max-w-3xl p-4 space-y-6 w-full">
-      {/* Header with Edit and Delete Buttons */}
-      <div className="flex items-start justify-between">
+    <div className="mx-auto max-w-3xl p-3 sm:p-4 space-y-4 sm:space-y-6 w-full">
+      {/* Mobile-Optimized Header */}
+      <div className="space-y-3">
         <div>
-          <h1 className="text-xl font-semibold">Ledger Entry #{entry.id}</h1>
+          <h1 className="text-lg sm:text-xl font-semibold">
+            Ledger Entry #{entry.id}
+          </h1>
           <p className="text-sm text-neutral-500">
             {entry.entry_date} • {entry.currency}
             {businessName && ` • ${businessName}`}
           </p>
         </div>
-        <div className="flex items-center space-x-2">
+
+        {/* Mobile: Stack buttons vertically */}
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setIsEditing(true)}
+            className="w-full sm:w-auto"
           >
             Edit Entry
           </Button>
@@ -672,15 +709,16 @@ export default function EditableLedgerEntry({
             size="sm"
             onClick={handleDelete}
             disabled={isPending}
+            className="w-full sm:w-auto"
           >
             {isPending ? "Deleting..." : "Delete"}
           </Button>
         </div>
       </div>
 
-      {/* Main Entry Details */}
-      <section className="rounded-2xl border p-4">
-        <div className="flex items-start justify-between gap-4">
+      {/* Mobile-Optimized Entry Details */}
+      <section className="rounded-2xl border p-3 sm:p-4">
+        <div className="space-y-3">
           <div>
             <div className="text-base font-medium">{entry.description}</div>
             {businessName && (
@@ -694,58 +732,59 @@ export default function EditableLedgerEntry({
               </div>
             )}
           </div>
-          <div className="text-right">
-            <div className="font-mono text-lg">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2">
+            <div className="font-mono text-xl">
               {Number(entry.amount).toFixed(2)} {entry.currency}
             </div>
             {entry.is_cleared ? (
-              <span className="text-xs text-emerald-600">✅ cleared</span>
+              <span className="text-sm text-emerald-600">✅ cleared</span>
             ) : (
-              <span className="text-xs text-amber-600">⏳ pending</span>
+              <span className="text-sm text-amber-600">⏳ pending</span>
             )}
           </div>
         </div>
       </section>
 
-      {/* Postings */}
+      {/* Mobile-Optimized Postings */}
       {postings && postings.length > 0 && (
-        <section className="rounded-2xl border p-4">
+        <section className="rounded-2xl border p-3 sm:p-4">
           <h2 className="font-semibold mb-3">Account Postings</h2>
-          <ul className="space-y-2">
+          <div className="space-y-3">
             {postings.map((p) => (
-              <li key={p.id} className="flex items-center justify-between">
-                <div className="truncate pr-4 font-mono text-sm">
-                  {p.account}
-                </div>
-                <div className="font-mono tabular-nums">
+              <div
+                key={p.id}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg"
+              >
+                <div className="font-mono text-sm break-all">{p.account}</div>
+                <div className="font-mono tabular-nums text-right">
                   {p.amount.toFixed(2)} {p.currency}
                 </div>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         </section>
       )}
 
       {/* Ledger Text */}
       {entry.entry_text && (
-        <section className="rounded-2xl border p-4">
+        <section className="rounded-2xl border p-3 sm:p-4">
           <h2 className="font-semibold mb-3">Ledger Text</h2>
-          <pre className="whitespace-pre-wrap text-sm font-mono bg-neutral-50 dark:bg-neutral-900 p-3 rounded-lg">
+          <pre className="whitespace-pre-wrap text-xs sm:text-sm font-mono bg-neutral-50 dark:bg-neutral-900 p-3 rounded-lg overflow-x-auto">
             {entry.entry_text}
           </pre>
         </section>
       )}
 
-      {/* Receipt Image */}
+      {/* Mobile-Optimized Receipt Image */}
       {entry.image_url && (
-        <section className="rounded-2xl border p-4">
+        <section className="rounded-2xl border p-3 sm:p-4">
           <h2 className="font-semibold mb-3">Receipt Image</h2>
           <figure>
             <div className="relative w-full overflow-hidden rounded-xl border bg-black/5">
               <img
                 src={entry.image_url}
                 alt={`Receipt image for ${entry.description} on ${entry.entry_date}`}
-                className="block max-h-[520px] w-full object-contain bg-white"
+                className="block max-h-[400px] sm:max-h-[520px] w-full object-contain bg-white"
                 loading="lazy"
               />
             </div>
