@@ -1,8 +1,8 @@
 // src/components/terminal/terminal-image-upload.tsx
-// COMPLETELY REWRITTEN: Mobile-safe file upload without input.click()
+// SIMPLE APPROACH: Minimal React, maximum native behavior
 
 "use client";
-import React, { useRef, useState, useCallback } from "react";
+import React, { useState } from "react";
 import Tesseract from "tesseract.js";
 import {
   createOpenAiReceiptParser,
@@ -49,20 +49,11 @@ export default function TerminalImageUpload({
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<string>("");
 
-  // Processing guard
-  const isProcessingRef = useRef(false);
-
+  // Simple file change handler - no refs, no complex state
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || loading) return;
 
-    // Prevent duplicate processing
-    if (isProcessingRef.current) {
-      console.log("Already processing file, ignoring duplicate");
-      return;
-    }
-
-    isProcessingRef.current = true;
     setLoading(true);
     setProgress(0);
     setStatus("Uploading...");
@@ -87,14 +78,13 @@ export default function TerminalImageUpload({
       // 3. Extract text with optimized Tesseract settings
       console.log("Starting OCR with optimized Tesseract settings...");
 
-      // Try multiple OCR configurations and pick the best result
       const ocrConfigs = [
         {
           name: "Receipt-optimized",
-          lang: "eng", // English-only for better number recognition
+          lang: "eng",
           options: {
-            tessedit_pageseg_mode: 6, // Single uniform block of text
-            tessedit_ocr_engine_mode: 1, // LSTM only (more accurate)
+            tessedit_pageseg_mode: 6,
+            tessedit_ocr_engine_mode: 1,
             tessedit_char_whitelist:
               "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz฿$€£.,/-:()% ",
             preserve_interword_spaces: 1,
@@ -102,19 +92,19 @@ export default function TerminalImageUpload({
         },
         {
           name: "Thai+English hybrid",
-          lang: "tha+eng", // Original bilingual
+          lang: "tha+eng",
           options: {
-            tessedit_pageseg_mode: 4, // Single column of text
-            tessedit_ocr_engine_mode: 1, // LSTM only
+            tessedit_pageseg_mode: 4,
+            tessedit_ocr_engine_mode: 1,
             preserve_interword_spaces: 1,
           },
         },
         {
           name: "Auto-detect fallback",
-          lang: "eng", // English fallback
+          lang: "eng",
           options: {
-            tessedit_pageseg_mode: 3, // Fully automatic (default)
-            tessedit_ocr_engine_mode: 2, // Hybrid (LSTM + Legacy)
+            tessedit_pageseg_mode: 3,
+            tessedit_ocr_engine_mode: 2,
           },
         },
       ];
@@ -131,7 +121,7 @@ export default function TerminalImageUpload({
                 info.status === "recognizing text" &&
                 typeof info.progress === "number"
               ) {
-                const adjustedProgress = Math.round(info.progress * 70); // OCR is 70% of total
+                const adjustedProgress = Math.round(info.progress * 70);
                 if (adjustedProgress > progress) {
                   setProgress(adjustedProgress);
                 }
@@ -143,26 +133,11 @@ export default function TerminalImageUpload({
           const text = result.data.text;
           const confidence = result.data.confidence || 0;
 
-          console.log(`${config.name} results:`, {
-            textLength: text.length,
-            confidence: confidence.toFixed(1),
-            hasNumbers: /\d/.test(text),
-            hasPrices: /\d+\.\d{2}/.test(text),
-            hasTotal: /total/i.test(text),
-          });
-
-          // Score this result (confidence + content quality)
           let qualityScore = confidence;
-
-          // Bonus points for finding expected receipt content
-          if (/\d+\.\d{2}/.test(text)) qualityScore += 10; // Has price format
-          if (/total/i.test(text)) qualityScore += 10; // Has total
-          if (text.length > 100) qualityScore += 5; // Reasonable length
-          if (/\d{1,2}\/\d{1,2}\/\d{2,4}/.test(text)) qualityScore += 5; // Has date
-
-          console.log(
-            `${config.name} quality score: ${qualityScore.toFixed(1)}`
-          );
+          if (/\d+\.\d{2}/.test(text)) qualityScore += 10;
+          if (/total/i.test(text)) qualityScore += 10;
+          if (text.length > 100) qualityScore += 5;
+          if (/\d{1,2}\/\d{1,2}\/\d{2,4}/.test(text)) qualityScore += 5;
 
           if (qualityScore > bestResult.confidence) {
             bestResult = {
@@ -177,13 +152,7 @@ export default function TerminalImageUpload({
       }
 
       const text = bestResult.text;
-      console.log(
-        `\nBest OCR result: ${
-          bestResult.configName
-        } (score: ${bestResult.confidence.toFixed(1)})`
-      );
 
-      // Basic quality check
       if (text.length < 20) {
         throw new Error(
           "All OCR attempts produced very little text - image may be unclear"
@@ -228,46 +197,21 @@ export default function TerminalImageUpload({
       setLoading(false);
       setProgress(0);
       setStatus("");
-      isProcessingRef.current = false;
-
-      // Reset the input value to allow re-selecting the same file
-      const input = document.getElementById(
-        "receipt-file-input"
-      ) as HTMLInputElement;
-      if (input) {
-        input.value = "";
-      }
+      // Clear the input to allow re-selecting the same file
+      e.target.value = "";
     }
   };
 
   return (
     <div className="flex items-center gap-2">
-      {/* 🔧 MOBILE SAFE: Direct label approach - no click() calls */}
-      <label
-        htmlFor="receipt-file-input"
-        className={`
-          inline-flex items-center gap-2 px-3 py-2 border rounded-md 
-          bg-background hover:bg-accent transition-colors cursor-pointer select-none
-          ${
-            loading || isProcessingRef.current
-              ? "opacity-50 pointer-events-none"
-              : ""
-          }
-        `}
-        style={{
-          touchAction: "manipulation",
-          WebkitTouchCallout: "none",
-          WebkitUserSelect: "none",
-          userSelect: "none",
-        }}
-      >
+      {/* Native file input - just like your working example */}
+      <label className="inline-flex items-center gap-2 px-3 py-2 border rounded-md bg-background hover:bg-accent transition-colors cursor-pointer select-none">
         <input
-          id="receipt-file-input"
           type="file"
           accept="image/*"
           onChange={handleFileChange}
-          disabled={loading || isProcessingRef.current}
-          className="sr-only" // Screen reader only - completely hidden but accessible
+          disabled={loading}
+          className="hidden"
         />
         {loading ? (
           <>
