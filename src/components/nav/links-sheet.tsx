@@ -29,31 +29,31 @@ export default function LinksSheet() {
                 Home
               </Link>
             </SheetClose>
-            <SheetClose asChild>
+            {/* <SheetClose asChild>
               <Link className="" href="/about">
                 About
               </Link>
-            </SheetClose>
+            </SheetClose> */}
             <SheetClose asChild>
               <Link className="" href="/blog">
                 Blog
               </Link>
             </SheetClose>
-            <SheetClose asChild>
+            {/* <SheetClose asChild>
               <Link className="" href="/projects">
                 Projects
               </Link>
-            </SheetClose>
-            <SheetClose asChild>
+            </SheetClose> */}
+            {/* <SheetClose asChild>
               <Link className="" href="/contact">
                 Contact
               </Link>
-            </SheetClose>
-            <SheetClose asChild>
+            </SheetClose> */}
+            {/* <SheetClose asChild>
               <Link className="" href="/privacy-policy">
                 Privacy
               </Link>
-            </SheetClose>
+            </SheetClose> */}
             <div className="flex flex-row gap-4 items-center mt-auto pt-4">
               <Link
                 href="https://github.com/owolfdev"

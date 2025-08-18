@@ -59,19 +59,18 @@ export async function ledgerCliCommand(
 ): Promise<string> {
   // Check if user is logged in
   if (!user?.id) {
-    return `<my-alert message="You must be logged in to run Ledger CLI commands" />`;
+    return `<custom-alert message="You must be logged in to run Ledger CLI commands" />`;
   }
 
   let args: LedgerCommandArgs;
-
   try {
     const parsed = parseArgs(arg);
     if (!parsed) {
-      return `<my-alert message="Failed to parse Ledger command arguments" />`;
+      return `<custom-alert message="Failed to parse Ledger command arguments" />`;
     }
     args = parsed;
   } catch (error) {
-    return `<my-alert message="${
+    return `<custom-alert message="${
       error instanceof Error ? error.message : error
     }" />`;
   }
@@ -82,19 +81,19 @@ export async function ledgerCliCommand(
     // Execute via API route
     const result = await executeLedgerCommand(args.command, args.args);
 
-    return `✅ **Ledger CLI: \`${args.rawInput}\`**
+    // Format with HTML pre block to preserve raw formatting without syntax highlighting
+    return `✅ **Ledger CLI:** \`${args.rawInput}\`
 
-${result.output}
+<pre class="bg-neutral-50 dark:bg-neutral-900 p-4 rounded-lg border font-mono text-sm whitespace-pre overflow-x-auto">${result.output}</pre>
 
-_File: \`${result.filePath}\`_`;
+*File: \`${result.filePath}\`*`;
   } catch (error) {
     console.error("Ledger CLI command error:", error);
-    return `<my-alert message="Failed to execute Ledger command: ${
-      error instanceof Error ? error.message : error
+    return `<custom-alert message="Failed to execute Ledger command: ${
+      error instanceof Error ? error.message.replace(/"/g, "&quot;") : error
     }" />`;
   }
 }
-
 // ================================================
 // USAGE EXAMPLES:
 // ledger balance

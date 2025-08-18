@@ -48,4 +48,7 @@
     Expenses:Personal:Misc    ฿380.00
     Expenses:Personal:Misc    ฿230.00
     Expenses:Personal:Misc    ฿150.00
-    Assets:Cash    ฿-1290.00
+    expenses:Personal:Misc    ฿60.00
+    expenses:Personal:Tax    ฿99.23
+    expenses:Personal:Misc    ฿67.50
+    Assets:Cash    ฿-1516.73
