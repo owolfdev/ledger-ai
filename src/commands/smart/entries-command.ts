@@ -20,7 +20,8 @@ export interface EntriesArgs {
   day?: string;
   year?: string;
   business?: string;
-  account?: string; // NEW: Account filter
+  account?: string; // Keep existing account filter
+  currency?: string; // ADD: Currency filter
   go?: string;
   range?: { start: string; end: string };
 }
@@ -181,6 +182,7 @@ function parseArgs(raw?: string): EntriesArgs {
   let business: string | undefined;
   let account: string | undefined; // NEW: Account filter
   let range: { start: string; end: string } | undefined;
+  let currency: string | undefined;
 
   if (!raw) return { sort, dir, limit, sum, count };
 
@@ -265,6 +267,17 @@ function parseArgs(raw?: string): EntriesArgs {
       continue;
     }
 
+    if (t === "--currency" && i + 1 < parts.length) {
+      currency = parts[i + 1].toUpperCase();
+      i++;
+      continue;
+    }
+
+    if (/^[A-Z]{3}$/.test(t.toUpperCase()) && !currency) {
+      currency = t.toUpperCase();
+      continue;
+    }
+
     if (!day && !month && !year && !range) {
       try {
         const dateAlias = parseDateAlias(parts[i]);
@@ -296,7 +309,8 @@ function parseArgs(raw?: string): EntriesArgs {
     day,
     year,
     business,
-    account, // NEW: Include account in return
+    account, // Keep existing account filter
+    currency, // ADD: Include currency in return
     go,
     range,
   };
@@ -378,11 +392,27 @@ function buildDateFilter(args: EntriesArgs): {
 }
 
 function currencySymbol(currency?: string | null) {
-  if (!currency || currency === "") return "฿";
-  if (currency === "THB") return "฿";
-  if (currency === "USD") return "$";
-  if (currency === "EUR") return "€";
-  return currency;
+  // Enhanced version with more currencies, but keep THB as default for existing users
+  if (!currency || currency === "") return "฿"; // Keep original default
+
+  const symbols: Record<string, string> = {
+    THB: "฿",
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    JPY: "¥",
+    CNY: "¥",
+    KRW: "₩",
+    SGD: "S$",
+    HKD: "HK$",
+    CAD: "C$",
+    AUD: "A$",
+    INR: "₹",
+    BTC: "₿",
+    ETH: "Ξ",
+  };
+
+  return symbols[currency.toUpperCase()] || currency.toUpperCase();
 }
 
 // Type for ledger entry from database
@@ -396,7 +426,61 @@ interface LedgerEntryData {
   entry_text?: string | null;
 }
 
+// Enhanced currency grouping for totals
+interface CurrencyTotal {
+  currency: string;
+  amount: number;
+  count: number;
+}
+
+function groupByCurrency(entries: LedgerEntryData[]): CurrencyTotal[] {
+  const groups = new Map<string, CurrencyTotal>();
+
+  entries.forEach((entry) => {
+    const currency = entry.currency || "THB"; // Keep THB default for existing users
+    const amount = Number(entry.amount) || 0;
+
+    if (groups.has(currency)) {
+      const existing = groups.get(currency)!;
+      existing.amount += amount;
+      existing.count += 1;
+    } else {
+      groups.set(currency, {
+        currency,
+        amount,
+        count: 1,
+      });
+    }
+  });
+
+  return Array.from(groups.values()).sort(
+    (a, b) => b.count - a.count // Sort by frequency (most common currency first)
+  );
+}
+
+function formatTotals(currencyTotals: CurrencyTotal[]): string {
+  if (currencyTotals.length === 0) return "";
+
+  if (currencyTotals.length === 1) {
+    const total = currencyTotals[0];
+    const sym = currencySymbol(total.currency);
+    return `\n\n**Total:** ${sym}${total.amount.toFixed(2)}`;
+  }
+
+  // Multiple currencies - show breakdown
+  const lines = currencyTotals.map((total) => {
+    const sym = currencySymbol(total.currency);
+    return `  - ${sym}${total.amount.toFixed(2)} ${total.currency} (${
+      total.count
+    } entries)`;
+  });
+
+  return `\n\n**Totals by Currency:**\n${lines.join("\n")}`;
+}
+
 // HTML for mobile, pure markdown for desktop
+// Enhanced formatEntryLine function with multi-currency support
+// Preserves all existing functionality while adding currency badges
 function formatEntryLine(entry: LedgerEntryData): string {
   const amt = Number(entry.amount) || 0;
   const entryId = Number(entry.id) || 0;
@@ -410,7 +494,14 @@ function formatEntryLine(entry: LedgerEntryData): string {
     businessName = businessMatch[1];
   }
 
-  // Mobile card (enhanced for better readability)
+  // NEW: Currency badge for non-THB currencies (preserves THB as default)
+  const currencyCode = entry.currency || "THB";
+  const showCurrencyBadge = currencyCode !== "THB"; // Show badge for non-default currency
+  const currencyBadge = showCurrencyBadge
+    ? `<span class="inline-flex items-center text-xs font-medium bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full border border-amber-200 dark:border-amber-800 ml-2">${currencyCode}</span>`
+    : "";
+
+  // Mobile card (enhanced for better readability with currency support)
   const mobileCard = `<div class="block sm:hidden bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl p-5 mb-4 shadow-sm hover:shadow-md transition-shadow">
     <div class="flex items-center justify-between mb-3">
       <div class="font-semibold text-lg text-neutral-900 dark:text-neutral-100 flex-1 pr-3 leading-tight">${
@@ -422,9 +513,12 @@ function formatEntryLine(entry: LedgerEntryData): string {
       <div class="text-sm font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">${
         entry.entry_date
       }</div>
-      <div class="text-2xl font-bold font-mono text-neutral-900 dark:text-neutral-100">${sym}${amt.toFixed(
+      <div class="flex items-center">
+        <div class="text-2xl font-bold font-mono text-neutral-900 dark:text-neutral-100">${sym}${amt.toFixed(
     2
   )}</div>
+        ${currencyBadge}
+      </div>
     </div>
     ${
       businessName
@@ -434,13 +528,14 @@ function formatEntryLine(entry: LedgerEntryData): string {
     <div class="pt-2 border-t border-neutral-100 dark:border-neutral-800"><a href="/ledger/entry/${entryId}" class="inline-flex items-center text-blue-600 dark:text-blue-400 text-sm font-medium hover:text-blue-700 dark:hover:text-blue-300 transition-colors">View Entry #${entryId} <span class="ml-1">→</span></a></div>
   </div>`;
 
-  // Desktop list item (pure markdown in a hidden div)
+  // Desktop list item (pure markdown in a hidden div with currency tag)
   const businessTag = businessName ? ` \`${businessName}\`` : "";
+  const currencyTag = showCurrencyBadge ? ` \`${currencyCode}\`` : ""; // NEW: Currency tag for desktop
   const desktopItem = `<div class="hidden sm:block markdown-content">
 
 ${entry.entry_date} • **${
     entry.description
-  }**${businessTag} — **${sym}${amt.toFixed(
+  }**${businessTag}${currencyTag} — **${sym}${amt.toFixed(
     2
   )}**${status} → [#${entryId}](/ledger/entry/${entryId})
 
@@ -448,7 +543,6 @@ ${entry.entry_date} • **${
 
   return mobileCard + "\n" + desktopItem;
 }
-
 export async function entriesListCommand(
   arg?: string,
   _pageCtx?: string,
@@ -508,6 +602,11 @@ export async function entriesListCommand(
       query = query.like("entry_text", `%${args.account}%`);
     }
 
+    if (args.currency) {
+      console.log("Adding currency filter:", args.currency);
+      query = query.eq("currency", args.currency);
+    }
+
     if (args.vendor) {
       console.log("Adding vendor filter:", args.vendor);
       query = query.ilike("description", `%${args.vendor}%`);
@@ -556,6 +655,10 @@ export async function entriesListCommand(
         countQuery = countQuery.ilike("description", `%${args.vendor}%`);
       }
 
+      if (args.currency) {
+        countQuery = countQuery.eq("currency", args.currency);
+      }
+
       try {
         const dateFilter = buildDateFilter(args);
         if (dateFilter.startDate && dateFilter.endDate) {
@@ -585,7 +688,13 @@ export async function entriesListCommand(
 
       if (args.sum && count && count > 0) {
         console.log("Executing sum query for count mode...");
-        let sumQuery = supabase.from("ledger_entries").select("amount");
+        let sumQuery = supabase
+          .from("ledger_entries")
+          .select("amount, currency");
+
+        if (args.currency) {
+          sumQuery = sumQuery.eq("currency", args.currency);
+        }
 
         if (user?.id) {
           sumQuery = sumQuery.eq("user_id", user.id);
@@ -623,12 +732,24 @@ export async function entriesListCommand(
           console.error("Sum query error:", sumError);
           result += ` (sum calculation failed: ${sumError.message})`;
         } else if (sumData) {
-          const total = sumData.reduce(
-            (sum: number, r: { amount?: number | null }) =>
-              sum + Number(r.amount || 0),
-            0
+          const currencyTotals = groupByCurrency(
+            sumData.map((r) => ({
+              id: 0,
+              entry_date: "",
+              description: "",
+              amount: r.amount || 0,
+              currency: r.currency || "THB",
+              is_cleared: false,
+            }))
           );
-          result += `\n\n**Total:** ฿${total.toFixed(2)}`;
+
+          if (currencyTotals.length === 1) {
+            const total = currencyTotals[0];
+            const sym = currencySymbol(total.currency);
+            result += `\n\n**Total:** ${sym}${total.amount.toFixed(2)}`;
+          } else {
+            result += formatTotals(currencyTotals);
+          }
         }
       }
 
@@ -663,18 +784,15 @@ export async function entriesListCommand(
     // Optional totals
     let totalsBlock = "";
     if (args.sum) {
-      const total = data.reduce(
-        (sum: number, r: { amount?: number | null }) =>
-          sum + Number(r.amount || 0),
-        0
-      );
-      totalsBlock = `\n\n**Total:** ฿${total.toFixed(2)}`;
+      const currencyTotals = groupByCurrency(data);
+      totalsBlock = formatTotals(currencyTotals);
     }
 
     const filterDesc =
       (args.business ? ` for ${args.business}` : "") +
       (args.vendor ? ` matching "${args.vendor}"` : "") +
-      (args.account ? ` with account "${args.account}"` : "") + // NEW: Account description
+      (args.account ? ` with account "${args.account}"` : "") +
+      (args.currency ? ` in ${args.currency}` : "") + // ADD this line
       (dateDescription ? ` ${dateDescription}` : "");
 
     const formatInfo = ""; // Remove format indicator since both are present
