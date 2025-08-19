@@ -97,7 +97,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
 
   entries: {
     description:
-      "List and filter ledger entries with powerful search options. Supports business filtering, vendor search, account filtering, date ranges with smart aliases, counting, and navigation to specific entries.",
+      "List and filter ledger entries with powerful search options including multi-currency support. Supports business filtering, vendor search, account filtering, currency filtering, date ranges with smart aliases, counting, and navigation to specific entries.",
     content: (
       arg?: string,
       pageCtx?: string,
@@ -138,8 +138,23 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`--business <name>\` — Filter by business (Personal, MyOnlineBusiness, etc.)
   • \`--vendor <name>\` — Filter by vendor/description (case-insensitive)
   • \`--account <pattern>\` — Filter by account name (supports partial matching)
+  • \`--currency <code>\` — **NEW:** Filter by currency (USD, THB, EUR, etc.)
   • \`--count\` — Show count only, no entries listed
-  • \`--sum\` — Show total amount at bottom
+  • \`--sum\` — **ENHANCED:** Show totals with multi-currency breakdown
+  
+  **Currency Filtering (NEW):**
+  • \`entries USD\` — Show only USD entries
+  • \`entries THB\` — Show only Thai Baht entries
+  • \`entries EUR\` — Show only Euro entries
+  • \`entries --currency USD\` — Explicit currency flag syntax
+  • \`entries USD sum\` — USD entries with total
+  • \`entries THB count\` — Count THB entries
+  
+  **Multi-Currency Totals (NEW):**
+  • \`entries sum\` — Shows breakdown by currency: "Total USD: $123.45, Total THB: ฿5,678.90"
+  • \`entries USD sum\` — Single currency total: "Total: $123.45"
+  • \`entries --business Personal sum\` — Personal totals by currency
+  • \`entries aug sum\` — August totals by currency
   
   **Account Filtering Examples:**
   • \`entries --account Coffee\` — Any account containing "Coffee"
@@ -151,20 +166,23 @@ export const commandRegistry: Record<string, CommandMeta> = {
   
   **Examples:**
   • \`entries go 330\` — Navigate to entry #330
-  • \`entries today sum\` — Today's entries with total
+  • \`entries today sum\` — Today's entries with multi-currency totals
   • \`entries aug --business Personal\` — Personal business entries in August
   • \`entries yesterday --vendor Starbucks\` — Yesterday's Starbucks purchases
   • \`entries 2025 count\` — Count all 2025 entries
   • \`entries --business Personal --count --sum\` — Count and total for personal entries
-  • \`entries --range jan mar sum\` — January-March total
+  • \`entries --range jan mar sum\` — January-March totals by currency
   • \`entries 2024 --vendor coffee\` — All 2024 coffee purchases
   • \`entries created desc 10 --business Channel60\` — Latest 10 Channel60 entries
   • \`entries --account Coffee --business Personal sum\` — Personal coffee expenses total
-  • \`entries --account Assets:Cash today\` — Today's cash transactions`,
+  • \`entries --account Assets:Cash today\` — Today's cash transactions
+  • \`entries USD --business Personal\` — **NEW:** Personal USD entries only
+  • \`entries THB --vendor 7-Eleven sum\` — **NEW:** Thai 7-Eleven purchases total
+  • \`entries --currency EUR --business MyBrick\` — **NEW:** MyBrick Euro transactions`,
   },
   ent: {
     description:
-      "Alias for entries command with same functionality including smart date aliases, navigation, filtering (business, vendor, account), and ranges",
+      "Alias for entries command with same functionality including smart date aliases, navigation, filtering (business, vendor, account, currency), multi-currency totals, and ranges",
     content: (
       arg?: string,
       pageCtx?: string,
@@ -181,6 +199,12 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`ent aug\` — August entries (current year)
   • \`ent jan\`, \`ent feb\`, etc. — Any month name
   
+  **Currency Filtering (NEW):**
+  • \`ent USD\` — **NEW:** Show only USD entries
+  • \`ent THB\` — **NEW:** Show only Thai Baht entries
+  • \`ent EUR\` — **NEW:** Show only Euro entries
+  • \`ent --currency USD\` — **NEW:** Explicit currency flag
+  
   **Navigation & Search:**
   • \`ent go 330\` — Navigate to entry #330
   • \`ent count\` — Total entry count
@@ -194,27 +218,33 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`ent --range today yesterday\` — Yesterday and today
   • \`ent --range jan mar\` — January through March
   
-  **Totals & Counting:**
-  • \`ent today sum\` — Today's total
-  • \`ent aug --sum\` — August total  
+  **Multi-Currency Totals & Counting (ENHANCED):**
+  • \`ent today sum\` — **ENHANCED:** Today's totals by currency
+  • \`ent aug --sum\` — **ENHANCED:** August totals by currency  
   • \`ent 2025 --count\` — Count this year's entries
-  • \`ent --business Personal --count --sum\` — Personal count and total
-  • \`ent --account Coffee --sum\` — Total coffee expenses
+  • \`ent --business Personal --count --sum\` — **ENHANCED:** Personal count and multi-currency totals
+  • \`ent --account Coffee --sum\` — **ENHANCED:** Coffee expenses by currency
+  • \`ent USD sum\` — **NEW:** USD-only total
+  • \`ent THB count\` — **NEW:** Count Thai Baht entries
   
   **Smart Examples:**
   • \`ent yesterday --vendor Starbucks\` — Yesterday's Starbucks purchases
-  • \`ent aug --business Channel60 sum\` — August Channel60 total
+  • \`ent aug --business Channel60 sum\` — **ENHANCED:** August Channel60 totals by currency
   • \`ent 2024 --vendor coffee count\` — Count 2024 coffee purchases
   • \`ent --range jan today --business Personal\` — Personal entries this year
   • \`ent --account Expenses:Food --business Personal\` — Personal food expenses
   • \`ent --account Assets --vendor ATM\` — ATM withdrawals from asset accounts
+  • \`ent USD --business Personal\` — **NEW:** Personal USD entries only
+  • \`ent THB --vendor 7-Eleven\` — **NEW:** Thai 7-Eleven purchases
+  • \`ent --currency EUR today sum\` — **NEW:** Today's Euro transactions total
   
   **All Features:**
   • **Date aliases:** today, yesterday, year (2025), month names (jan, feb, etc.)
   • **Ranges:** \`--range start end\` with dates, months, or aliases
   • **Navigation:** \`go <id>\` to jump to specific entry
-  • **Filtering:** \`--business\`, \`--vendor\`, \`--account\` with flexible matching
-  • **Counting:** \`--count\`, \`--sum\` for totals and statistics
+  • **Filtering:** \`--business\`, \`--vendor\`, \`--account\`, \`--currency\` with flexible matching
+  • **Multi-Currency:** \`USD\`, \`THB\`, \`EUR\` as standalone filters
+  • **Enhanced Totals:** \`--count\`, \`--sum\` with multi-currency breakdown
   • **Sorting:** \`date\`/\`created\` + \`asc\`/\`desc\`
   
   **Account Filtering:**
@@ -222,6 +252,11 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`--account Expenses:Personal:Food\` — Hierarchical matching
   • \`--account Assets\` — All asset accounts
   • \`--account Liabilities:CreditCard\` — Specific liability account
+  
+  **Currency Filtering:**
+  • \`USD\`, \`THB\`, \`EUR\` — **NEW:** Direct currency codes
+  • \`--currency USD\` — **NEW:** Explicit flag syntax
+  • Works with all other filters and date ranges
   
   See \`help entries\` for full documentation.`,
   },
