@@ -12,7 +12,9 @@ export const staticPages = [
   { title: "Projects", slug: "projects", route: "/projects" },
   { title: "Create", slug: "create", route: "/create" },
   { title: "Post", slug: "post", route: "/post" },
-  // Add others as needed
+  { title: "Ledger", slug: "ledger", route: "/ledger" },
+  { title: "Ledger Entries", slug: "ledger-entries", route: "/ledger/entries" },
+  { title: "Ledger Entry", slug: "ledger-entry", route: "/ledger/entry" },
 ];
 
 export async function buildPagesList() {

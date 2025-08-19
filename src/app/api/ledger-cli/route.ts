@@ -68,37 +68,48 @@ async function executeLedgerCommand(
   }
 }
 
+// function formatLedgerOutput(
+//   stdout: string,
+//   stderr: string,
+//   command: string
+// ): string {
+//   let output = "";
+
+//   if (stderr && stderr.trim()) {
+//     output += `⚠️ **Warning/Error:**\n\`\`\`\n${stderr.trim()}\n\`\`\`\n\n`;
+//   }
+
+//   if (stdout && stdout.trim()) {
+//     // Format different command types
+//     if (command === "balance" || command === "bal") {
+//       output += `💰 **Balance Report:**\n\`\`\`\n${stdout.trim()}\n\`\`\``;
+//     } else if (command === "register" || command === "reg") {
+//       output += `📋 **Register Report:**\n\`\`\`\n${stdout.trim()}\n\`\`\``;
+//     } else if (command === "accounts") {
+//       output += `📁 **Accounts List:**\n\`\`\`\n${stdout.trim()}\n\`\`\``;
+//     } else if (command === "payees") {
+//       output += `🏪 **Payees List:**\n\`\`\`\n${stdout.trim()}\n\`\`\``;
+//     } else if (command === "stats") {
+//       output += `📊 **Statistics:**\n\`\`\`\n${stdout.trim()}\n\`\`\``;
+//     } else {
+//       output += `**Ledger Output:**\n\`\`\`\n${stdout.trim()}\n\`\`\``;
+//     }
+//   } else {
+//     output += `_No output from ledger command._`;
+//   }
+
+//   return output;
+// }
+
 function formatLedgerOutput(
   stdout: string,
   stderr: string,
   command: string
 ): string {
-  let output = "";
-
   if (stderr && stderr.trim()) {
-    output += `⚠️ **Warning/Error:**\n\`\`\`\n${stderr.trim()}\n\`\`\`\n\n`;
+    return `⚠️ Warning: ${stderr.trim()}\n\n${stdout.trim()}`;
   }
-
-  if (stdout && stdout.trim()) {
-    // Format different command types
-    if (command === "balance" || command === "bal") {
-      output += `💰 **Balance Report:**\n\`\`\`\n${stdout.trim()}\n\`\`\``;
-    } else if (command === "register" || command === "reg") {
-      output += `📋 **Register Report:**\n\`\`\`\n${stdout.trim()}\n\`\`\``;
-    } else if (command === "accounts") {
-      output += `📁 **Accounts List:**\n\`\`\`\n${stdout.trim()}\n\`\`\``;
-    } else if (command === "payees") {
-      output += `🏪 **Payees List:**\n\`\`\`\n${stdout.trim()}\n\`\`\``;
-    } else if (command === "stats") {
-      output += `📊 **Statistics:**\n\`\`\`\n${stdout.trim()}\n\`\`\``;
-    } else {
-      output += `**Ledger Output:**\n\`\`\`\n${stdout.trim()}\n\`\`\``;
-    }
-  } else {
-    output += `_No output from ledger command._`;
-  }
-
-  return output;
+  return stdout.trim();
 }
 
 export async function POST(request: NextRequest) {

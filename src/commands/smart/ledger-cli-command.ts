@@ -84,7 +84,9 @@ export async function ledgerCliCommand(
     // Format with HTML pre block to preserve raw formatting without syntax highlighting
     return `✅ **Ledger CLI:** \`${args.rawInput}\`
 
-<pre class="bg-neutral-50 dark:bg-neutral-900 p-4 rounded-lg border font-mono text-sm whitespace-pre overflow-x-auto">${result.output}</pre>
+
+
+<pre class="font-mono text-sm whitespace-pre overflow-x-auto mb-6">${result.output}</pre>
 
 *File: \`${result.filePath}\`*`;
   } catch (error) {

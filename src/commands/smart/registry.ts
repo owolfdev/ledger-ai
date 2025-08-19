@@ -97,7 +97,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
 
   entries: {
     description:
-      "List and filter ledger entries with powerful search options. Supports business filtering, vendor search, date ranges with smart aliases, counting, and navigation to specific entries.",
+      "List and filter ledger entries with powerful search options. Supports business filtering, vendor search, account filtering, date ranges with smart aliases, counting, and navigation to specific entries.",
     content: (
       arg?: string,
       pageCtx?: string,
@@ -134,11 +134,18 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`--day YYYY-MM-DD\` — Filter by specific day (e.g., 2025-08-17)
   • \`--year YYYY\` — Filter by specific year (e.g., 2025)
   
-  **Other Filtering Options:**
+  **Filtering Options:**
   • \`--business <name>\` — Filter by business (Personal, MyOnlineBusiness, etc.)
   • \`--vendor <name>\` — Filter by vendor/description (case-insensitive)
+  • \`--account <pattern>\` — Filter by account name (supports partial matching)
   • \`--count\` — Show count only, no entries listed
   • \`--sum\` — Show total amount at bottom
+  
+  **Account Filtering Examples:**
+  • \`entries --account Coffee\` — Any account containing "Coffee"
+  • \`entries --account Expenses:Personal:Food\` — Specific account hierarchy
+  • \`entries --account Assets\` — All asset accounts
+  • \`entries --account Liabilities\` — All liability accounts
   
   **Filter Priority:** Range > Day > Month > Year (most specific wins)
   
@@ -151,11 +158,13 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`entries --business Personal --count --sum\` — Count and total for personal entries
   • \`entries --range jan mar sum\` — January-March total
   • \`entries 2024 --vendor coffee\` — All 2024 coffee purchases
-  • \`entries created desc 10 --business Channel60\` — Latest 10 Channel60 entries`,
+  • \`entries created desc 10 --business Channel60\` — Latest 10 Channel60 entries
+  • \`entries --account Coffee --business Personal sum\` — Personal coffee expenses total
+  • \`entries --account Assets:Cash today\` — Today's cash transactions`,
   },
   ent: {
     description:
-      "Alias for entries command with same functionality including smart date aliases, navigation, filtering, and ranges",
+      "Alias for entries command with same functionality including smart date aliases, navigation, filtering (business, vendor, account), and ranges",
     content: (
       arg?: string,
       pageCtx?: string,
@@ -177,6 +186,8 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`ent count\` — Total entry count
   • \`ent --business Personal\` — Personal business entries
   • \`ent --vendor coffee\` — Find coffee purchases
+  • \`ent --account Coffee\` — All coffee-related accounts
+  • \`ent --account Assets:Cash\` — Cash transactions only
   
   **Date Ranges:**
   • \`ent --range 2025-01 2025-06\` — January through June
@@ -188,20 +199,29 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`ent aug --sum\` — August total  
   • \`ent 2025 --count\` — Count this year's entries
   • \`ent --business Personal --count --sum\` — Personal count and total
+  • \`ent --account Coffee --sum\` — Total coffee expenses
   
   **Smart Examples:**
   • \`ent yesterday --vendor Starbucks\` — Yesterday's Starbucks purchases
   • \`ent aug --business Channel60 sum\` — August Channel60 total
   • \`ent 2024 --vendor coffee count\` — Count 2024 coffee purchases
   • \`ent --range jan today --business Personal\` — Personal entries this year
+  • \`ent --account Expenses:Food --business Personal\` — Personal food expenses
+  • \`ent --account Assets --vendor ATM\` — ATM withdrawals from asset accounts
   
   **All Features:**
   • **Date aliases:** today, yesterday, year (2025), month names (jan, feb, etc.)
   • **Ranges:** \`--range start end\` with dates, months, or aliases
   • **Navigation:** \`go <id>\` to jump to specific entry
-  • **Filtering:** \`--business\`, \`--vendor\` with flexible matching
+  • **Filtering:** \`--business\`, \`--vendor\`, \`--account\` with flexible matching
   • **Counting:** \`--count\`, \`--sum\` for totals and statistics
   • **Sorting:** \`date\`/\`created\` + \`asc\`/\`desc\`
+  
+  **Account Filtering:**
+  • \`--account Coffee\` — Partial matching (any account with "Coffee")
+  • \`--account Expenses:Personal:Food\` — Hierarchical matching
+  • \`--account Assets\` — All asset accounts
+  • \`--account Liabilities:CreditCard\` — Specific liability account
   
   See \`help entries\` for full documentation.`,
   },

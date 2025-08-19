@@ -20,6 +20,7 @@ export interface EntriesArgs {
   day?: string;
   year?: string;
   business?: string;
+  account?: string; // NEW: Account filter
   go?: string;
   range?: { start: string; end: string };
 }
@@ -178,6 +179,7 @@ function parseArgs(raw?: string): EntriesArgs {
   let year: string | undefined;
   let go: string | undefined;
   let business: string | undefined;
+  let account: string | undefined; // NEW: Account filter
   let range: { start: string; end: string } | undefined;
 
   if (!raw) return { sort, dir, limit, sum, count };
@@ -225,6 +227,12 @@ function parseArgs(raw?: string): EntriesArgs {
     }
     if (t === "--year" && i + 1 < parts.length) {
       year = parts[i + 1];
+      i++;
+      continue;
+    }
+    // NEW: Account filter parsing
+    if (t === "--account" && i + 1 < parts.length) {
+      account = parts[i + 1];
       i++;
       continue;
     }
@@ -288,6 +296,7 @@ function parseArgs(raw?: string): EntriesArgs {
     day,
     year,
     business,
+    account, // NEW: Include account in return
     go,
     range,
   };
@@ -493,6 +502,12 @@ export async function entriesListCommand(
       query = query.like("entry_text", `%Expenses:${args.business}:%`);
     }
 
+    // NEW: Account filter
+    if (args.account) {
+      console.log("Adding account filter:", args.account);
+      query = query.like("entry_text", `%${args.account}%`);
+    }
+
     if (args.vendor) {
       console.log("Adding vendor filter:", args.vendor);
       query = query.ilike("description", `%${args.vendor}%`);
@@ -517,7 +532,7 @@ export async function entriesListCommand(
       }" />`;
     }
 
-    // Count mode (existing logic)
+    // Count mode (existing logic with NEW account filter)
     if (args.count) {
       console.log("Executing count query...");
       let countQuery = supabase
@@ -532,6 +547,10 @@ export async function entriesListCommand(
           "entry_text",
           `%Expenses:${args.business}:%`
         );
+      }
+      // NEW: Account filter for count query
+      if (args.account) {
+        countQuery = countQuery.like("entry_text", `%${args.account}%`);
       }
       if (args.vendor) {
         countQuery = countQuery.ilike("description", `%${args.vendor}%`);
@@ -561,6 +580,7 @@ export async function entriesListCommand(
         `**${count || 0}** entries` +
         (args.vendor ? ` matching "${args.vendor}"` : "") +
         (args.business ? ` for business "${args.business}"` : "") +
+        (args.account ? ` with account "${args.account}"` : "") + // NEW: Account description
         (dateDescription ? ` ${dateDescription}` : "");
 
       if (args.sum && count && count > 0) {
@@ -575,6 +595,10 @@ export async function entriesListCommand(
             "entry_text",
             `%Expenses:${args.business}:%`
           );
+        }
+        // NEW: Account filter for sum query
+        if (args.account) {
+          sumQuery = sumQuery.like("entry_text", `%${args.account}%`);
         }
         if (args.vendor) {
           sumQuery = sumQuery.ilike("description", `%${args.vendor}%`);
@@ -650,6 +674,7 @@ export async function entriesListCommand(
     const filterDesc =
       (args.business ? ` for ${args.business}` : "") +
       (args.vendor ? ` matching "${args.vendor}"` : "") +
+      (args.account ? ` with account "${args.account}"` : "") + // NEW: Account description
       (dateDescription ? ` ${dateDescription}` : "");
 
     const formatInfo = ""; // Remove format indicator since both are present
