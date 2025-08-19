@@ -1,9 +1,4 @@
 // ================================================
-// SIMPLE MODULAR ARCHITECTURE
-// Based on the ORIGINAL WORKING version, split into focused modules
-// ================================================
-
-// ================================================
 // FILE: src/commands/smart/entries/types.ts
 // ================================================
 export type SortKey = "date" | "created";
@@ -21,9 +16,9 @@ export interface EntriesArgs {
   year?: string;
   business?: string;
   account?: string;
+  currency?: string; // NEW: Currency filter
   go?: string;
   range?: { start: string; end: string };
-  // NO currency field yet - start simple
 }
 
 export interface LedgerEntryData {

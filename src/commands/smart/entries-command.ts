@@ -9,6 +9,7 @@ import type { CommandMeta } from "./utils";
 import { parseArgs } from "./entries/parser";
 import { QueryBuilder } from "./entries/query-builder";
 import { formatEntryLine } from "./entries/formatting";
+import { groupByCurrency, formatTotals } from "./entries/currency"; // NEW: Import currency functions
 
 export async function entriesListCommand(
   arg?: string,
@@ -49,7 +50,8 @@ export async function entriesListCommand(
         `**${count || 0}** entries` +
         (args.vendor ? ` matching "${args.vendor}"` : "") +
         (args.business ? ` for business "${args.business}"` : "") +
-        (args.account ? ` with account "${args.account}"` : "");
+        (args.account ? ` with account "${args.account}"` : "") +
+        (args.currency ? ` in ${args.currency}` : ""); // NEW: Currency description
 
       // Simple sum (single currency for now)
       if (args.sum && count && count > 0) {
@@ -57,12 +59,9 @@ export async function entriesListCommand(
         const { data: sumData, error: sumError } = await sumQuery;
 
         if (!sumError && sumData) {
-          const total = sumData.reduce(
-            (sum: number, r: { amount?: number | null }) =>
-              sum + Number(r.amount || 0),
-            0
-          );
-          result += `\n\n**Total:** ฿${total.toFixed(2)}`;
+          // NEW: Multi-currency sum calculation
+          const currencyTotals = groupByCurrency(sumData);
+          result += formatTotals(currencyTotals);
         }
       }
 
@@ -82,21 +81,18 @@ export async function entriesListCommand(
 
     const lines = data.map((entry) => formatEntryLine(entry));
 
-    // Simple totals
+    // NEW: Multi-currency totals
     let totalsBlock = "";
     if (args.sum) {
-      const total = data.reduce(
-        (sum: number, r: { amount?: number | null }) =>
-          sum + Number(r.amount || 0),
-        0
-      );
-      totalsBlock = `\n\n**Total:** ฿${total.toFixed(2)}`;
+      const currencyTotals = groupByCurrency(data);
+      totalsBlock = formatTotals(currencyTotals);
     }
 
     const filterDesc =
       (args.business ? ` for ${args.business}` : "") +
       (args.vendor ? ` matching "${args.vendor}"` : "") +
-      (args.account ? ` with account "${args.account}"` : "");
+      (args.account ? ` with account "${args.account}"` : "") +
+      (args.currency ? ` in ${args.currency}` : ""); // NEW: Currency description
 
     return (
       [
@@ -109,21 +105,3 @@ export async function entriesListCommand(
     return `<my-alert message="Unexpected error: ${error}" />`;
   }
 }
-
-// ================================================
-// BENEFITS OF STARTING SIMPLE:
-// ================================================
-// 1. WORKING FOUNDATION: Based on proven, working code
-// 2. MODULAR STRUCTURE: Easy to enhance individual pieces
-// 3. TESTABLE: Each module can be tested independently
-// 4. INCREMENTAL: Add multi-currency features ONE AT A TIME
-// 5. DEBUGGABLE: Issues isolated to specific modules
-
-// ================================================
-// ENHANCEMENT PATH:
-// ================================================
-// Phase 1: Get this simple version working
-// Phase 2: Add currency filtering to parser.ts and query-builder.ts
-// Phase 3: Add multi-currency totals to currency.ts
-// Phase 4: Add currency badges to formatting.ts
-// Phase 5: Test each enhancement independently

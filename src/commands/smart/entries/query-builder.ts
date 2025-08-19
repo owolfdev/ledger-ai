@@ -26,6 +26,10 @@ export class QueryBuilder {
     if (args.account) {
       query = query.like("entry_text", `%${args.account}%`);
     }
+    // NEW: Currency filter
+    if (args.currency) {
+      query = query.eq("currency", args.currency);
+    }
     if (args.vendor) {
       query = query.ilike("description", `%${args.vendor}%`);
     }
@@ -55,6 +59,10 @@ export class QueryBuilder {
     if (args.account) {
       query = query.like("entry_text", `%${args.account}%`);
     }
+    // NEW: Currency filter
+    if (args.currency) {
+      query = query.eq("currency", args.currency);
+    }
     if (args.vendor) {
       query = query.ilike("description", `%${args.vendor}%`);
     }
@@ -63,7 +71,7 @@ export class QueryBuilder {
   }
 
   buildSumQuery(args: EntriesArgs, user: User | null) {
-    let query = this.supabase.from("ledger_entries").select("amount"); // Simple sum, no currency grouping yet
+    let query = this.supabase.from("ledger_entries").select("amount, currency"); // NEW: Include currency for proper totals
 
     // Same simple filters
     if (user?.id) {
@@ -74,6 +82,10 @@ export class QueryBuilder {
     }
     if (args.account) {
       query = query.like("entry_text", `%${args.account}%`);
+    }
+    // NEW: Currency filter
+    if (args.currency) {
+      query = query.eq("currency", args.currency);
     }
     if (args.vendor) {
       query = query.ilike("description", `%${args.vendor}%`);

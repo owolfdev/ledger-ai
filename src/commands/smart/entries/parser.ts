@@ -158,6 +158,7 @@ export function parseArgs(raw?: string): EntriesArgs {
   let go: string | undefined;
   let business: string | undefined;
   let account: string | undefined;
+  let currency: string | undefined; // NEW: Currency filter
   let range: { start: string; end: string } | undefined;
 
   if (!raw) return { sort, dir, limit, sum, count };
@@ -204,6 +205,18 @@ export function parseArgs(raw?: string): EntriesArgs {
       i++;
       continue;
     }
+    // NEW: Currency filter parsing
+    if (t === "--currency" && i + 1 < parts.length) {
+      currency = parts[i + 1].toUpperCase();
+      i++;
+      continue;
+    }
+    // NEW: Currency filter parsing
+    if (t === "--currency" && i + 1 < parts.length) {
+      currency = parts[i + 1].toUpperCase();
+      i++;
+      continue;
+    }
     if (t === "go" && i + 1 < parts.length) {
       go = parts[i + 1];
       i++;
@@ -243,6 +256,18 @@ export function parseArgs(raw?: string): EntriesArgs {
       continue;
     }
 
+    // NEW: Support currency codes as standalone arguments (USD, EUR, etc.)
+    if (/^[A-Z]{3}$/.test(t.toUpperCase()) && !currency) {
+      currency = t.toUpperCase();
+      continue;
+    }
+
+    // NEW: Support currency codes as standalone arguments (USD, EUR, etc.)
+    if (/^[A-Z]{3}$/.test(t.toUpperCase()) && !currency) {
+      currency = t.toUpperCase();
+      continue;
+    }
+
     // Date parsing (keep existing logic)
     if (!day && !month && !year && !range) {
       try {
@@ -275,6 +300,7 @@ export function parseArgs(raw?: string): EntriesArgs {
     year,
     business,
     account,
+    currency, // NEW: Include currency in return
     go,
     range,
   };
