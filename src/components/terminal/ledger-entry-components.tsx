@@ -89,20 +89,17 @@ export function EntryListItem({
   isCleared,
 }: EntryListItemProps) {
   const symbol = currencySymbol(currency);
-
-  // Convert props to proper types (MDX passes everything as strings)
   const numericAmount =
     typeof amount === "string" ? parseFloat(amount) : amount;
   const booleanCleared =
     typeof isCleared === "string" ? isCleared === "true" : isCleared;
   const numericId = typeof id === "string" ? parseInt(id) : id;
-
   const businessTag = business && business !== "" ? ` \`${business}\`` : "";
   const status = booleanCleared ? " ✅" : " ⏳";
 
   return (
-    <div className="hidden sm:block">
-      - {date} • <strong>{description}</strong>
+    <div className="hidden sm:block mb-1">
+      {date} • <strong>{description}</strong>
       {businessTag} —{" "}
       <strong>
         {symbol}
@@ -120,6 +117,7 @@ export function EntryListItem({
 }
 
 // Wrapper component that outputs both mobile and desktop versions
+// Wrapper component that outputs both mobile and desktop versions
 export function ResponsiveEntryItem({
   id,
   date,
@@ -130,7 +128,9 @@ export function ResponsiveEntryItem({
   isCleared,
 }: EntryCardProps) {
   return (
-    <>
+    <div className="entry-item">
+      {" "}
+      {/* Single wrapper prevents p-tag wrapping */}
       <EntryCard
         id={id}
         date={date}
@@ -149,6 +149,6 @@ export function ResponsiveEntryItem({
         business={business}
         isCleared={isCleared}
       />
-    </>
+    </div>
   );
 }

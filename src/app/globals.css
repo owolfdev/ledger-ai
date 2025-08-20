@@ -245,3 +245,11 @@ html {
   --editor-background: #1e1e1e;
   --editor-foreground: #d4d4d4;
 }
+
+.entry-item {
+  margin-bottom: 0.25rem;
+}
+
+.entry-item p {
+  margin: 0 !important;
+}
