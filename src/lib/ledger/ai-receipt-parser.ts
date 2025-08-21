@@ -1,5 +1,5 @@
 // src/lib/ledger/ai-receipt-parser.ts
-// IMPROVED: Better Thai handling, currency detection, and validation
+// IMPROVED: Better Thai handling, currency detection, validation, and command cleanup
 
 export interface AiReceiptParser {
   parseReceiptText(ocrText: string): Promise<string>;
@@ -34,6 +34,25 @@ function detectCurrency(text: string): string {
 
   // Default to Thai Baht for ambiguous cases
   return "฿";
+}
+
+// Clean up AI-generated commands
+function cleanCommand(command: string): string {
+  // Remove code block markers
+  command = command.replace(/```[a-z]*\n?/gi, "").replace(/```$/g, "");
+
+  // Remove leading/trailing whitespace
+  command = command.trim();
+
+  // Fix duplicate "new" commands
+  command = command.replace(/^new\s+new\s+/i, "new\n");
+
+  // Ensure command starts with "new" (but not duplicate)
+  if (!command.toLowerCase().startsWith("new")) {
+    command = `new\n${command}`;
+  }
+
+  return command;
 }
 
 // Validate command makes mathematical sense
@@ -118,7 +137,7 @@ function parseCommandStructure(command: string): ParsedCommand | null {
     const currency = currencyMatch ? currencyMatch[0] : "฿";
 
     // Extract items (between "new" and "@" or "--")
-    const itemsMatch = command.match(/new\s+(.+?)(?:\s+@|\s+--|\s*$)/);
+    const itemsMatch = command.match(/new\s+([\s\S]+?)(?:\s+@|\s+--|\s*$)/);
     if (!itemsMatch) return null;
 
     const itemsText = itemsMatch[1];
@@ -159,68 +178,88 @@ export function createOpenAiReceiptParser(apiKey: string): AiReceiptParser {
       const currency = detectCurrency(ocrText);
 
       const systemPrompt = `You are an expert receipt parser for Thai and international receipts. Convert raw OCR text into clean ledger commands.
-  
-  TASK: Create a "new" command using this EXACT syntax:
-  new item1 price1, item2 price2 @ vendor --date YYYY-MM-DD --memo "total amount"
-  
-  CRITICAL RULES:
-  1. Use ${currency} for ALL prices consistently
-  2. Item prices should NOT include currency symbol (just numbers)
-  3. Include currency symbol only in memo
-  4. Use simple, readable English item names (no product codes)
-  5. Extract actual vendor name, not addresses/tax info
-  6. Date format: YYYY-MM-DD only
-  7. INCLUDE TAX as a separate line item if present
-  8. Calculate subtotal from items, show in memo if different from total
-  
-  TAX HANDLING:
-  - If receipt shows tax/VAT, add it as: "tax [amount]"
-  - If service charge exists, add it as: "service charge [amount]"  
-  - Memo should show subtotal if tax was added separately
-  - Example: "new coffee 100, tax 7 @ Cafe --memo 'subtotal 100, total 107'"
-  
-  THAI RECEIPT GUIDANCE:
-  - Common Thai dishes: tom yum, pad thai, som tam, massaman, etc.
-  - Thai vendors: translate to English or use common names
-  - Thai currency: always use ฿ symbol
-  - Dates: Thai format DD/MM/YYYY → convert to YYYY-MM-DD
-  - VAT/Tax: common in Thai receipts, always include as separate item
-  
-  EXAMPLES:
-  
-  Thai Restaurant with VAT:
-  new tom yum kung 265, pad thai 180, thai iced tea 80, tax 36.75 @ Nara Restaurant --date 2002-01-11 --memo "subtotal 525, total 561.75"
-  
-  Grocery Store with Tax:
-  new beef sirloin 60.00, duck leg 52.00, gouda cheese 167.00, tax 22.11 @ FoodLand --date 2016-09-08 --memo "subtotal 279.00, total 301.11"
-  
-  Restaurant with Service Charge:
-  new green curry 180, rice 60, service charge 24, tax 18.48 @ Thai Restaurant --memo "subtotal 240, total 282.48"
-  
-  THAI RECEIPT GUIDANCE:
-  - Common Thai dishes: tom yum, pad thai, som tam, massaman, etc.
-  - Thai vendors: translate to English or use common names
-  - Thai currency: always use ฿ symbol
-  - Dates: Thai format DD/MM/YYYY → convert to YYYY-MM-DD
-  
-  EXAMPLES:
-  
-  Thai Restaurant:
-  new tom yum kung 265, pad thai 180, thai iced tea 80 @ Nara Restaurant --date 2002-01-11 --memo "total ฿525"
-  
-  Grocery Store:
-  new beef sirloin 60.00, duck leg 52.00, gouda cheese 167.00 @ FoodLand --date 2016-09-08 --memo "total ฿279.00"
-  
-  VALIDATION:
-  - Ensure items add up approximately to stated total
-  - Use reasonable prices (not 0.01 or 50000)
-  - Avoid identical item names unless actually repeated
-  
-  Return ONLY the command, no explanation.`;
+
+TASK: Create a "new" command using this EXACT multi-line syntax:
+new
+item1 price1,
+item2 price2
+@ vendor
+--date YYYY-MM-DD
+--memo "total amount"
+
+CRITICAL RULES:
+1. Use ${currency} for ALL prices consistently
+2. Item prices should NOT include currency symbol (just numbers)
+3. Include currency symbol only in memo
+4. Use simple, readable English item names (no product codes)
+5. Extract actual vendor name, not addresses/tax info
+6. Date format: YYYY-MM-DD only
+7. INCLUDE TAX as a separate line item if present
+8. Calculate subtotal from items, show in memo if different from total
+9. FORMAT AS MULTI-LINE for readability
+
+TAX HANDLING:
+- If receipt shows tax/VAT, add it as: "tax [amount]"
+- If service charge exists, add it as: "service charge [amount]"  
+- Memo should show subtotal if tax was added separately
+
+MULTI-LINE FORMAT EXAMPLES:
+
+Thai Restaurant with VAT:
+new
+tom yum kung 265,
+pad thai 180,
+thai iced tea 80,
+tax 36.75
+@ Nara Restaurant
+--date 2002-01-11
+--memo "subtotal 525, total 561.75"
+
+Grocery Store with Tax:
+new
+beef sirloin 60.00,
+duck leg 52.00,
+gouda cheese 167.00,
+tax 22.11
+@ FoodLand
+--date 2016-09-08
+--memo "subtotal 279.00, total 301.11"
+
+Restaurant with Service Charge:
+new
+green curry 180,
+rice 60,
+service charge 24,
+tax 18.48
+@ Thai Restaurant
+--memo "subtotal 240, total 282.48"
+
+FORMATTING RULES:
+- Start with "new" on its own line
+- Each item on its own line with comma (except last item)
+- Vendor line starts with "@ "
+- Each flag on its own line starting with "--"
+- Maintain proper indentation for readability
+
+THAI RECEIPT GUIDANCE:
+- Common Thai dishes: tom yum, pad thai, som tam, massaman, etc.
+- Thai vendors: translate to English or use common names
+- Thai currency: always use ฿ symbol
+- Dates: Thai format DD/MM/YYYY → convert to YYYY-MM-DD
+- VAT/Tax: common in Thai receipts, always include as separate item
+
+VALIDATION:
+- Ensure items add up approximately to stated total
+- Use reasonable prices (not 0.01 or 50000)
+- Avoid identical item names unless actually repeated
+
+IMPORTANT: Return ONLY the raw multi-line command text. Do NOT wrap it in code blocks, backticks, or any markdown formatting. Do NOT repeat the word "new" twice.
+
+Return ONLY the multi-line command, no explanation.`;
 
       const userPrompt = `Convert this receipt OCR text to a command (use ${currency} currency):
-  
-  ${ocrText}`;
+
+${ocrText}`;
 
       let attempts = 0;
       const maxAttempts = 2;
@@ -258,10 +297,8 @@ export function createOpenAiReceiptParser(apiKey: string): AiReceiptParser {
             throw new Error("AI failed to generate command");
           }
 
-          // Ensure command starts with "new"
-          if (!command.toLowerCase().startsWith("new ")) {
-            command = `new ${command}`;
-          }
+          // Clean up the command (remove backticks, fix duplicates)
+          command = cleanCommand(command);
 
           // Validate the command
           const parsed = parseCommandStructure(command);
@@ -389,24 +426,37 @@ export function createFallbackParser(): AiReceiptParser {
       }
 
       if (items.length === 0) {
-        return `new item 0 @ Unknown --memo "OCR parsing failed"`;
+        return `new\nitem 0\n@ Unknown\n--memo "OCR parsing failed"`;
       }
 
-      let command = `new ${items.join(", ")}`;
+      // Build multi-line command
+      const commandParts = ["new"];
 
+      // Add items (each on its own line with comma except the last)
+      items.forEach((item, index) => {
+        if (index === items.length - 1) {
+          commandParts.push(item); // Last item without comma
+        } else {
+          commandParts.push(item + ","); // Other items with comma
+        }
+      });
+
+      // Add vendor
       if (vendor) {
-        command += ` @ ${vendor}`;
+        commandParts.push(`@ ${vendor}`);
       }
 
+      // Add date flag
       if (date) {
-        command += ` --date ${date}`;
+        commandParts.push(`--date ${date}`);
       }
 
+      // Add memo flag
       if (total) {
-        command += ` --memo "total ${currency}${total}"`;
+        commandParts.push(`--memo "total ${currency}${total}"`);
       }
 
-      return command;
+      return commandParts.join("\n");
     },
   };
 }

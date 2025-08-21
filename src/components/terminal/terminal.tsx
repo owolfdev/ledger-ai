@@ -6,7 +6,7 @@ import TerminalOutputRenderer from "./terminal-output-renderer";
 import { TerminalOutputRendererProps } from "@/types/terminal";
 import type { CommandMeta } from "@/commands/utils";
 import { usePathname } from "next/navigation";
-import TerminalImageUpload from "./terminal-image-upload"; // ⬅️ add import
+import TerminalImageUpload from "./terminal-image-upload";
 
 export type TerminalProps = {
   storageKey?: string;
@@ -22,7 +22,7 @@ export type TerminalProps = {
     >,
     history: TerminalOutputRendererProps[]
   ) => boolean | void | Promise<boolean | void>;
-  onPopulateInput?: (cmd: string) => void; // ✅ ADD THIS LINE
+  onPopulateInput?: (cmd: string) => void;
 };
 
 function useScrollShortcuts(inputRef: React.RefObject<HTMLTextAreaElement>) {
@@ -123,7 +123,7 @@ function renderHistoryLines(history: TerminalOutputRendererProps[]) {
 
     return (
       <React.Fragment key={i}>
-        {isPrevInput && <div className="h-2" />} {/* 👈 adds vertical space */}
+        {isPrevInput && <div className="h-2" />}
         {h.type === "input" ? (
           <div className="text-primary font-medium">{h.content}</div>
         ) : (
@@ -146,7 +146,7 @@ export default function Terminal({
   maxHistory = 200,
   welcome,
   onCommand,
-  onPopulateInput, // ✅ ADD THIS PARAMETER
+  onPopulateInput,
 }: TerminalProps) {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -159,17 +159,20 @@ export default function Terminal({
   const lastCommandRef = useRef<string | null>(null);
   const didFirstMount = useRef(true);
 
-  // --- For navigation scroll suppression:
   const pathname = usePathname();
   const prevPathRef = useRef(pathname);
   const skipScrollOnNav = useRef(false);
-
-  // --- NEW: For suppressing scroll when clicking links:
   const suppressNextScrollRef = useRef(false);
 
+  const { history, setHistory, initialized } = useTerminalHistory(
+    storageKey,
+    maxHistory,
+    welcome
+  );
+
+  // All useCallback hooks at top level
   const populateInput = useCallback((cmd: string) => {
     setInput(cmd);
-    // Focus and scroll to input after a brief delay
     setTimeout(() => {
       inputRef.current?.focus();
       inputRef.current?.scrollIntoView({
@@ -179,18 +182,38 @@ export default function Terminal({
     }, 100);
   }, []);
 
-  function handleOutputClick(e: React.MouseEvent) {
-    // Only suppress if an <a> tag is clicked
+  const clearInput = useCallback(() => {
+    setInput("");
+    inputRef.current?.focus();
+  }, []);
+
+  const submitInput = useCallback(async () => {
+    if (!input.trim()) return;
+    lastCommandRef.current = input;
+    await onCommand?.(input, setHistory, history);
+    setInput("");
+  }, [input, onCommand, setHistory, history]);
+
+  const handleOutputClick = useCallback((e: React.MouseEvent) => {
     if ((e.target as HTMLElement).tagName === "A") {
       suppressNextScrollRef.current = true;
     }
-  }
+  }, []);
 
-  const { history, setHistory, initialized } = useTerminalHistory(
-    storageKey,
-    maxHistory,
-    welcome
-  );
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    mouseDownPos.current = { x: e.clientX, y: e.clientY };
+  }, []);
+
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+    if (!mouseDownPos.current) return;
+    const dx = Math.abs(e.clientX - mouseDownPos.current.x);
+    const dy = Math.abs(e.clientY - mouseDownPos.current.y);
+    const DRAG_THRESHOLD = 5;
+    if (dx < DRAG_THRESHOLD && dy < DRAG_THRESHOLD) {
+      inputRef.current?.focus();
+    }
+    mouseDownPos.current = null;
+  }, []);
 
   useScrollShortcuts(inputRef as React.RefObject<HTMLTextAreaElement>);
 
@@ -198,9 +221,8 @@ export default function Terminal({
     if (!initialized) return;
     if (didFirstMount.current) {
       didFirstMount.current = false;
-      return; // Skip scroll/focus on initial mount
+      return;
     }
-    // 👇 Skip scroll/focus if link in output was clicked
     if (suppressNextScrollRef.current) {
       suppressNextScrollRef.current = false;
       return;
@@ -215,7 +237,6 @@ export default function Terminal({
     return () => clearTimeout(timeout);
   }, [history, initialized]);
 
-  // Detect route change and suppress scroll/focus effect after navigation
   useEffect(() => {
     if (prevPathRef.current !== pathname) {
       skipScrollOnNav.current = true;
@@ -223,7 +244,6 @@ export default function Terminal({
     }
   }, [pathname]);
 
-  // Focus and scroll to bottom on history change (unless suppressing due to navigation)
   useEffect(() => {
     if (!initialized) return;
     if (!didInitialRestore.current) {
@@ -274,21 +294,6 @@ export default function Terminal({
 
   if (!initialized) return null;
 
-  function handleMouseDown(e: React.MouseEvent) {
-    mouseDownPos.current = { x: e.clientX, y: e.clientY };
-  }
-
-  function handleMouseUp(e: React.MouseEvent) {
-    if (!mouseDownPos.current) return;
-    const dx = Math.abs(e.clientX - mouseDownPos.current.x);
-    const dy = Math.abs(e.clientY - mouseDownPos.current.y);
-    const DRAG_THRESHOLD = 5;
-    if (dx < DRAG_THRESHOLD && dy < DRAG_THRESHOLD) {
-      inputRef.current?.focus();
-    }
-    mouseDownPos.current = null;
-  }
-
   return (
     <div
       className="p-0 font-mono mx-auto flex flex-col h-full w-full"
@@ -301,7 +306,7 @@ export default function Terminal({
         ref={scrollRef}
         className="flex-1 overflow-y-auto pb-3 flex flex-col scrollbar-hide"
         style={{ minHeight: 0 }}
-        onClick={handleOutputClick} // 👈 attach click handler for output
+        onClick={handleOutputClick}
       >
         {history.length > 200 && (
           <div className="text-xs text-neutral-500 italic mb-2">
@@ -313,10 +318,7 @@ export default function Terminal({
         <form
           onSubmit={async (e) => {
             e.preventDefault();
-            if (!input.trim()) return;
-            lastCommandRef.current = input;
-            await onCommand?.(input, setHistory, history);
-            setInput("");
+            await submitInput();
           }}
           className="flex flex-col gap-2 mt-2 mb-8"
         >
@@ -326,18 +328,15 @@ export default function Terminal({
               ref={inputRef}
               value={input}
               autoComplete="off"
-              autoCapitalize="off" // 👈 disables auto-capitalization
-              autoCorrect="off" // 👈 disables auto-correct
-              inputMode="text" // 👈 regular keyboard
+              autoCapitalize="off"
+              autoCorrect="off"
+              inputMode="text"
               spellCheck={false}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={async (e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  if (!input.trim()) return;
-                  lastCommandRef.current = input;
-                  await onCommand?.(input, setHistory, history);
-                  setInput("");
+                  await submitInput();
                 } else if (e.key === "Escape") {
                   justEscapedRef.current = false;
                   inputRef.current?.scrollIntoView({
@@ -357,11 +356,35 @@ export default function Terminal({
             />
           </div>
 
-          {/* ⬅️ our new button */}
           <div className="pt-2">
-            <TerminalImageUpload
-              onPopulateInput={onPopulateInput || populateInput} // ✅ CHANGE THIS LINE
-            />
+            {input.trim() ? (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={clearInput}
+                  className="inline-flex items-center gap-2 px-3 py-2 border rounded-md bg-background hover:bg-accent transition-colors"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onMouseUp={(e) => e.stopPropagation()}
+                >
+                  <span>✕</span>
+                  <span>Cancel</span>
+                </button>
+
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-2 px-3 py-2 border rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onMouseUp={(e) => e.stopPropagation()}
+                >
+                  <span>→</span>
+                  <span>Submit</span>
+                </button>
+              </div>
+            ) : (
+              <TerminalImageUpload
+                onPopulateInput={onPopulateInput || populateInput}
+              />
+            )}
           </div>
         </form>
       </div>

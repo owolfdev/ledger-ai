@@ -197,7 +197,7 @@ export default function TerminalImageUpload({
 
       // 5. Add image URL to command if not already present
       if (!command.includes("--image") && imageUrl) {
-        command += ` --image "${imageUrl}"`;
+        command += `\n--image "${imageUrl}"`; // Add newline before --image
       }
 
       setProgress(100);
