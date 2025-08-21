@@ -13,6 +13,15 @@ import {
 } from "@/app/actions/ledger/update-ledger-entry";
 import { ImageUpload } from "./image-upload";
 import { useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 type LedgerEntry = {
   id: number;
@@ -384,6 +393,8 @@ export default function EditableLedgerEntry({
     }))
   );
 
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
   // Extract business from entry_text
   const businessMatch = entry.entry_text?.match(/Expenses:([^:]+):/);
   const businessName =
@@ -391,17 +402,6 @@ export default function EditableLedgerEntry({
 
   // Delete function
   const handleDelete = () => {
-    const confirmed = confirm(
-      `Are you sure you want to delete Entry #${entry.id}?\n\n` +
-        `This will permanently remove:\n` +
-        `• The ledger entry and all postings\n` +
-        `• Any associated receipt images\n` +
-        `• The entry from your .ledger file\n\n` +
-        `This action cannot be undone.`
-    );
-
-    if (!confirmed) return;
-
     startTransition(async () => {
       try {
         const response = await fetch("/api/ledger-entry/delete", {
@@ -422,6 +422,8 @@ export default function EditableLedgerEntry({
       } catch (error) {
         console.error("Failed to delete entry:", error);
         alert("Failed to delete entry. Please try again.");
+      } finally {
+        setShowDeleteDialog(false);
       }
     });
   };
@@ -748,15 +750,62 @@ export default function EditableLedgerEntry({
           >
             Edit Entry
           </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDelete}
-            disabled={isPending}
-            className="w-full sm:w-auto"
-          >
-            {isPending ? "Deleting..." : "Delete"}
-          </Button>
+          <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <DialogTrigger asChild>
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={isPending}
+                className="w-full sm:w-auto"
+              >
+                {isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Delete Entry #{entry.id}</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to permanently delete this ledger entry?
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3 py-4">
+                <div className="text-sm bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                  <div className="font-medium text-red-800 dark:text-red-200 mb-2">
+                    This will permanently remove:
+                  </div>
+                  <ul className="space-y-1 text-red-700 dark:text-red-300 text-xs">
+                    <li>• The ledger entry and all postings</li>
+                    <li>• Any associated receipt images</li>
+                    <li>• The entry from your .ledger file</li>
+                  </ul>
+                </div>
+
+                <div className="text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                  <strong>This action cannot be undone.</strong>
+                </div>
+              </div>
+
+              <DialogFooter className="flex-col sm:flex-row gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteDialog(false)}
+                  disabled={isPending}
+                  className="w-full sm:w-auto"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={isPending}
+                  className="w-full sm:w-auto"
+                >
+                  {isPending ? "Deleting..." : "Delete Entry"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
