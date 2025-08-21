@@ -2,6 +2,39 @@
 
 import { ReceiptShape, ReceiptItem } from "./build-postings-from-receipt";
 
+function normalizeMultiLineCommand(input: string): string {
+  let normalized = input
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .join(" ");
+
+  console.log("Before comma insertion:", normalized);
+
+  // Simple regex: insert comma between $amount and any letter
+  normalized = normalized.replace(
+    /(\$\d+(?:\.\d{2})?)\s+([A-Za-z])/g,
+    "$1, $2"
+  );
+
+  console.log("After comma insertion:", normalized);
+
+  return normalized;
+}
+
+// function splitMultipleItems(token: string): string[] {
+//   // Pattern to match item + price combinations
+//   const itemPattern = /([^$฿]+)([\$฿]\d+(?:\.\d{2})?)/g;
+//   const matches = [...token.matchAll(itemPattern)];
+
+//   if (matches.length > 1) {
+//     // Multiple items found, split them
+//     return matches.map(match => `${match[1].trim()} ${match[2]}`);
+//   }
+
+//   return [token]; // Single item or no matches
+// }
+
 export function formatLocalDate(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -343,11 +376,16 @@ export function parseManualNewCommand(input: string): {
   memo?: string;
   paymentAccount: string;
   business?: string;
-  imageUrl?: string; // 👈 ADD THIS TO RETURN TYPE
+  imageUrl?: string;
 } {
+  const normalizedInput = normalizeMultiLineCommand(input);
+
+  console.log("Original input:", input);
+  console.log("Normalized input:", normalizedInput);
+
   // 1) Check for prefix business syntax (BusinessName:)
   const { business: prefixBusiness, cleanInput } =
-    extractBusinessFromInput(input);
+    extractBusinessFromInput(normalizedInput);
 
   // 2) Tokenize the cleaned input
   const tokens = tokenize(cleanInput);
@@ -400,8 +438,8 @@ export function parseManualNewCommand(input: string): {
 
   // 11) Currency detection (symbol-based)
   let currency = "THB";
-  if (/\$/.test(input)) currency = "USD";
-  if (/฿/.test(input)) currency = "THB";
+  if (/\$/.test(normalizedInput)) currency = "USD";
+  if (/฿/.test(normalizedInput)) currency = "THB";
 
   return {
     date: finalDate,

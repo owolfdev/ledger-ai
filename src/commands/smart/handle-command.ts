@@ -305,8 +305,16 @@ export function createHandleCommand(
     history?: TerminalOutputRendererProps[]
   ): Promise<boolean> {
     const trimmed = cmd.trim();
-    const [rawBase, ...rest] = trimmed.split(" ");
-    const base = (rawBase || "").toLowerCase(); // 👈 Lowercase the command name!
+    const [rawBase, ...rest] = trimmed.split(/[\s\n]+/);
+    const base = (rawBase || "").toLowerCase();
+
+    console.log(
+      "Command base:",
+      base,
+      "Available commands:",
+      Object.keys(commands)
+    );
+
     const arg = rest.join(" ");
     // ----------- Side-effect/Imperative Commands ----------- //
 
@@ -856,6 +864,7 @@ export function createHandleCommand(
     // --- NEW: LEDGER ENTRY from plain language ---
 
     if (base === "new" && commands[base]) {
+      console.log("Calling handleNew with:", cmd, arg);
       await handleNew(setHistory, cmd, arg);
       return true;
     }
