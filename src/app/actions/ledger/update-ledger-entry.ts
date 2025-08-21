@@ -25,6 +25,7 @@ const UpdateEntrySchema = z.object({
   memo: z.string().max(1000).optional(),
   is_cleared: z.boolean(),
   image_url: z.union([z.string().url(), z.null()]).optional(),
+  currency: z.string().length(3).optional(), // Add currency field
   postings: z
     .array(PostingSchema)
     .min(2, "Must have at least 2 postings")
@@ -40,6 +41,7 @@ type LedgerEntryUpdate = {
   memo: string | null;
   is_cleared: boolean;
   amount: number | string;
+  currency?: string; // Add currency field
   updated_at: string;
   image_url?: string | null;
   entry_text?: string; // Add entry_text for regeneration
@@ -110,6 +112,11 @@ export async function updateLedgerEntry(input: UpdateEntryInput) {
       amount: newAmount,
       updated_at: new Date().toISOString(),
     };
+
+    // Add currency if provided
+    if (validatedData.currency) {
+      updateData.currency = validatedData.currency;
+    }
 
     // Handle image URL update properly
     console.log(
@@ -203,7 +210,7 @@ export async function updateLedgerEntry(input: UpdateEntryInput) {
             amount: p.amount,
             currency: p.currency,
           })),
-          updatedPostings[0]?.currency || "USD"
+          validatedData.currency || updatedPostings[0]?.currency || "USD"
         );
 
         // Update the entry with new entry_text
@@ -240,7 +247,7 @@ export async function updateLedgerEntry(input: UpdateEntryInput) {
             amount: p.amount,
             currency: p.currency,
           })),
-          currentPostings[0]?.currency || "USD"
+          validatedData.currency || currentPostings[0]?.currency || "USD"
         );
 
         // Update the entry with new entry_text

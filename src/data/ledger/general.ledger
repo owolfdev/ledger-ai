@@ -3,13 +3,14 @@
     Expenses:Personal:Misc    ฿0.00
     Assets:Cash    ฿-5490.00
 
-2025/08/18 Gourmet Market
-    Expenses:Personal:Food:Groceries    ฿3041.00
-    Assets:Cash    ฿-3041.00
-
 2025/08/18 J Value
     Expenses:Personal:Misc    ฿65.00
     Assets:Cash    ฿-65.00
+
+2025/08/18 Vista Cafe
+    Expenses:Personal:Food:Coffee    ฿300.00
+    Expenses:Personal:Misc    ฿45.00
+    Assets:Cash    ฿-345.00
 
 2025/08/18 J Value
     Expenses:Personal:Misc    ฿100.00
@@ -35,6 +36,10 @@
     Expenses:Personal:Food:Fruit    ฿45.00
     Assets:Cash    ฿-105.00
 
+2025/08/18 Gourmet Market
+    Expenses:Personal:Food:Groceries    ฿3041.00
+    Assets:Cash    ฿-3041.00
+
 2025/08/18 Ichiba Dining
     Expenses:Personal:Misc    ฿180.00
     Expenses:Personal:Misc    ฿150.00
@@ -48,10 +53,14 @@
     expenses:Personal:Misc    ฿67.50
     Assets:Cash    ฿-1516.73
 
-2025/08/18 Vista Cafe
-    Expenses:Personal:Food:Coffee    ฿300.00
-    Expenses:Personal:Misc    ฿45.00
-    Assets:Cash    ฿-345.00
+2025/08/19 7-Eleven
+    Expenses:Personal:Misc    ฿24.00
+    Expenses:Personal:Misc    ฿73.00
+    Expenses:Personal:Misc    ฿73.00
+    Expenses:Personal:Food:Dairy    ฿60.00
+    Expenses:Personal:Misc    ฿33.00
+    Expenses:Personal:Food:Fruit    ฿14.00
+    Assets:Cash    ฿-277.00
 
 2025/08/19 Value Co.
     Expenses:Personal:Misc    ฿399.00
@@ -68,15 +77,6 @@
     Expenses:Personal:Misc    ฿310.00
     Expenses:Personal:Misc    ฿97.50
     Assets:Cash    ฿-1072.50
-
-2025/08/19 7-Eleven
-    Expenses:Personal:Misc    ฿24.00
-    Expenses:Personal:Misc    ฿73.00
-    Expenses:Personal:Misc    ฿73.00
-    Expenses:Personal:Food:Dairy    ฿60.00
-    Expenses:Personal:Misc    ฿33.00
-    Expenses:Personal:Food:Fruit    ฿14.00
-    Assets:Cash    ฿-277.00
 
 2025/08/20 Conkey's Bakery
     Expenses:Personal:Misc    ฿120.00
@@ -106,3 +106,40 @@
     Expenses:Personal:Misc    ฿20.00
     expenses:Personal:Misc    ฿74.00
     Assets:Cash    ฿-352.00
+
+2025/08/21 La Cabra Thailand
+    Expenses:Personal:Food:Bakery    ฿100.00
+    Expenses:Personal:Food:Coffee    ฿140.00
+    Assets:Cash    ฿-240.00
+
+2025/08/21 Shell
+    Expenses:Personal:Misc    ฿1000.00
+    Assets:Cash    ฿-1000.00
+
+2025/08/21 The White Story
+    Expenses:Personal:Food:Fruit    ฿80.00
+    Expenses:Personal:Food:Fruit    ฿40.00
+    Expenses:Taxes:Sales    ฿7.85
+    Assets:Cash    ฿-127.85
+
+2025/08/21 office mate
+    Expenses:Personal:Misc    ฿105.00
+    Expenses:Personal:Misc    ฿80.00
+    Assets:Cash    ฿-185.00
+
+2025/08/21 Villa Market
+    Expenses:Personal:Misc    ฿200.00
+    Expenses:Personal:Misc    ฿10.00
+    Expenses:Personal:Misc    ฿99.00
+    Expenses:Personal:Misc    ฿76.00
+    Expenses:Personal:Food:Vegetables    ฿109.00
+    Expenses:Personal:Misc    ฿166.00
+    Expenses:Personal:Misc    ฿165.00
+    Expenses:Personal:Food:Fruit    ฿49.00
+    Expenses:Personal:Misc    ฿89.00
+    Assets:Cash    ฿-963.00
+
+2025/08/21 PASH Juices and Smoothies
+    Expenses:Personal:Food:Dairy    ฿130.00
+    Expenses:Taxes:Sales    ฿8.60
+    Assets:Cash    ฿-138.60

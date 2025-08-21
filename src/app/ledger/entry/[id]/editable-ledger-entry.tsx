@@ -2,7 +2,7 @@
 // src/app/ledger/entry/[id]/editable-ledger-entry.tsx
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -94,6 +94,16 @@ function EditablePostings({
     onUpdate(newPostings);
   };
 
+  // Add this useEffect to EditablePostings component
+  useEffect(() => {
+    setEditPostings((prev) =>
+      prev.map((posting) => ({
+        ...posting,
+        currency: currency, // Update all postings to use the new currency
+      }))
+    );
+  }, [currency]);
+
   // Mobile-friendly reordering
   const movePosting = (fromIndex: number, direction: "up" | "down") => {
     const newPostings = [...editPostings];
@@ -118,7 +128,7 @@ function EditablePostings({
     const newPosting: EditablePosting = {
       account: "",
       amount: 0,
-      currency,
+      currency, // This will use the updated currency from props
       sort_order: editPostings.length,
       isNew: true,
     };
@@ -365,6 +375,7 @@ export default function EditableLedgerEntry({
     entry_date: entry.entry_date,
     is_cleared: entry.is_cleared,
     image_url: entry.image_url,
+    currency: entry.currency,
   });
   const [editPostings, setEditPostings] = useState<EditablePosting[]>(
     postings.map((p, index) => ({
@@ -425,15 +436,20 @@ export default function EditableLedgerEntry({
           entry_date: editData.entry_date,
           is_cleared: editData.is_cleared,
           image_url: editData.image_url,
+          currency: editData.currency,
         };
 
-        if (editMode === "advanced") {
-          payload.postings = editPostings.map((p, index) => ({
-            id: p.id,
-            account: p.account,
-            amount: p.amount,
-            currency: p.currency,
-            sort_order: index,
+        // Always include postings when currency changes to ensure all postings get updated
+        // This is necessary because currency changes affect all postings
+        const hasCurrencyChanged = editData.currency !== entry.currency;
+
+        if (editMode === "advanced" || hasCurrencyChanged) {
+          payload.postings = editPostings.map((posting) => ({
+            id: posting.id,
+            account: posting.account,
+            amount: posting.amount,
+            currency: editData.currency,
+            sort_order: posting.sort_order,
           }));
         }
 
@@ -460,6 +476,7 @@ export default function EditableLedgerEntry({
       entry_date: entry.entry_date,
       is_cleared: entry.is_cleared,
       image_url: entry.image_url,
+      currency: entry.currency,
     });
     setEditPostings(postings.map((p, index) => ({ ...p, sort_order: index })));
     setIsEditing(false);
@@ -478,6 +495,18 @@ export default function EditableLedgerEntry({
     setEditPostings(newPostings);
   };
 
+  const handleCurrencyChange = (newCurrency: string) => {
+    // Update the entry currency
+    setEditData((prev) => ({ ...prev, currency: newCurrency }));
+
+    // Update all postings to use the new currency
+    const updatedPostings = editPostings.map((posting) => ({
+      ...posting,
+      currency: newCurrency,
+    }));
+    setEditPostings(updatedPostings);
+  };
+
   const postingsTotal = editPostings.reduce((sum, p) => sum + p.amount, 0);
   const postingsBalanced = Math.abs(postingsTotal) < 0.01;
   const canSave =
@@ -493,7 +522,7 @@ export default function EditableLedgerEntry({
               Edit Entry #{entry.id}
             </h1>
             <p className="text-sm text-neutral-500">
-              {editData.entry_date} • {entry.currency}
+              {editData.entry_date} • {editData.currency}
               {businessName && ` • ${businessName}`}
             </p>
           </div>
@@ -568,7 +597,7 @@ export default function EditableLedgerEntry({
             />
           </div>
 
-          {/* Mobile: Stack date and cleared vertically */}
+          {/* Mobile: Stack date, currency, and cleared vertically */}
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">Date</label>
@@ -580,6 +609,21 @@ export default function EditableLedgerEntry({
                 }
                 disabled={isPending}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Currency</label>
+              <Input
+                value={editData.currency}
+                onChange={(e) => handleCurrencyChange(e.target.value)}
+                placeholder="USD, EUR, THB, etc."
+                disabled={isPending}
+                className="font-mono"
+              />
+              <p className="text-xs text-neutral-500 mt-1">
+                This will update the currency for the entire entry and all
+                postings
+              </p>
             </div>
 
             <div className="flex items-center space-x-3">
@@ -628,7 +672,7 @@ export default function EditableLedgerEntry({
           <section className="rounded-2xl border p-3 sm:p-4">
             <EditablePostings
               postings={postings}
-              currency={entry.currency}
+              currency={editData.currency}
               onUpdate={handlePostingsUpdate}
               disabled={isPending}
             />
