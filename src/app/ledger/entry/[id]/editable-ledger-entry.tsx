@@ -573,7 +573,7 @@ export default function EditableLedgerEntry({
                 size="sm"
                 onClick={handleSave}
                 disabled={isPending || !canSave}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto sm:h-[32px] h-12 text-lg"
               >
                 {isPending ? "Saving..." : "Save Changes"}
               </Button>
@@ -746,7 +746,7 @@ export default function EditableLedgerEntry({
             variant="outline"
             size="sm"
             onClick={() => setIsEditing(true)}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto sm:h-[32px] h-12 text-lg"
           >
             Edit Entry
           </Button>
