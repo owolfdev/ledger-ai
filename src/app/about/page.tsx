@@ -1,5 +1,5 @@
 //src/app/about/page.tsx
-import SmartTerminal from "@/components/terminal/smart-terminal";
+// import SmartTerminal from "@/components/terminal/smart-terminal";
 
 // Dynamically import MDX and its metadata
 export async function generateMetadata() {
@@ -25,13 +25,13 @@ export default async function About() {
         <div className="px-4 pb-4">
           <MdxContent />
         </div>
-        <div className="px-4">
+        {/* <div className="px-4">
           <SmartTerminal
             storageKey="ledger_ai_terminal_key_about"
             commandSet="about"
             contextKey="pages/about"
           />
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import type { User } from "@/types/user";
 import type { CommandMeta } from "./utils";
 import { syncLedgerFile } from "@/app/actions/ledger/sync-ledger-file";
+import { clearAllTerminalHistories } from "@/lib/utils/clear-terminal-histories";
 
 export interface EditEntryArgs {
   entryId: string;
@@ -253,6 +254,7 @@ export async function editEntryCommand(
     if (args.delete) {
       try {
         await deleteEntry(args.entryId, user.id);
+        clearAllTerminalHistories(); // Clear all terminal histories
         return `✅ **Entry ${args.entryId} deleted successfully**
 
 The entry, all its postings, and any associated receipt images have been removed from your ledger.`;

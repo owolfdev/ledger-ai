@@ -22,6 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { clearAllTerminalHistories } from "@/lib/utils/clear-terminal-histories";
 
 type LedgerEntry = {
   id: number;
@@ -415,7 +416,8 @@ export default function EditableLedgerEntry({
         const result = await response.json();
 
         if (result.success) {
-          router.push("/ledger/entries");
+          clearAllTerminalHistories(); // Clear all terminal histories
+          router.push("/");
         } else {
           alert(`Failed to delete entry: ${result.error}`);
         }
@@ -458,6 +460,7 @@ export default function EditableLedgerEntry({
         const result = await updateLedgerEntry(payload);
 
         if (result.success) {
+          clearAllTerminalHistories(); // Clear all terminal histories
           setIsEditing(false);
           setEditMode("basic");
           window.location.reload();

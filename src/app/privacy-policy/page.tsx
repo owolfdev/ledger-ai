@@ -1,5 +1,5 @@
 // app/privacy/page.tsx
-import SmartTerminal from "@/components/terminal/smart-terminal";
+// import SmartTerminal from "@/components/terminal/smart-terminal";
 
 export async function generateMetadata() {
   const mdxModule = (await import("@/content/pages/privacy.mdx")) as {
@@ -23,13 +23,13 @@ export default async function Privacy() {
         <div className="px-4 pb-4">
           <MdxContent />
         </div>
-        <div className="px-4">
+        {/* <div className="px-4">
           <SmartTerminal
             storageKey="ledger_ai_terminal_key_privacy"
             commandSet="privacy"
             contextKey="pages/privacy"
           />
-        </div>
+        </div> */}
       </div>
     </div>
   );

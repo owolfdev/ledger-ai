@@ -1,5 +1,5 @@
 // app/contact/page.tsx
-import SmartTerminal from "@/components/terminal/smart-terminal";
+// import SmartTerminal from "@/components/terminal/smart-terminal";
 import ContactForm from "@/components/contact/contact-form";
 
 // Optionally: for SEO metadata
@@ -29,13 +29,13 @@ export default async function Contact() {
         <div className="px-4 pb-4">
           <ContactForm />
         </div>
-        <div className="px-4">
+        {/* <div className="px-4">
           <SmartTerminal
             storageKey="ledger_ai_terminal_key_contact"
             commandSet="contact"
             contextKey="pages/contact"
           />
-        </div>
+        </div> */}
       </div>
     </div>
   );
