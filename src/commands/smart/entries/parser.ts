@@ -85,12 +85,12 @@ export function parseDateAlias(alias: string): {
   }
 
   if (/^\d{4}$/.test(alias)) {
-            // console.log(`Parsed year alias: ${alias}`);
+    // console.log(`Parsed year alias: ${alias}`);
     return { year: alias };
   }
 
   if (MONTH_NAMES[lower]) {
-            // console.log(`Parsed month alias: ${alias} -> ${parseMonthAlias(alias)}`);
+    // console.log(`Parsed month alias: ${alias} -> ${parseMonthAlias(alias)}`);
     return { month: parseMonthAlias(alias) };
   }
 
@@ -101,7 +101,7 @@ export function parseDateAlias(alias: string): {
     return { month: alias };
   }
 
-          // console.log(`No date alias match for: ${alias}`);
+  // console.log(`No date alias match for: ${alias}`);
   return {};
 }
 
@@ -148,7 +148,7 @@ function parseRangeArguments(args: string[]): { start: string; end: string } {
 export function parseArgs(raw?: string): EntriesArgs {
   let sort: SortKey = "date";
   let dir: Dir = "desc";
-  let limit = 20;
+  let limit = 10;
   let sum = false;
   let count = false;
   let vendor: string | undefined;

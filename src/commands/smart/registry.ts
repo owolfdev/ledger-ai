@@ -192,7 +192,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
     usage: `ent [limit] [date|created] [asc|desc] [options]
   
   **Quick Date Access:**
-  • \`ent\` — Recent entries (20 most recent)
+  • \`ent\` — Recent entries (10 most recent)
   • \`ent today\` — Today's entries
   • \`ent yesterday\` — Yesterday's entries
   • \`ent 2025\` — All 2025 entries
