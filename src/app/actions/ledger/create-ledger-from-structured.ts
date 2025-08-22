@@ -19,13 +19,37 @@ export interface CreateLedgerFromStructuredInput {
 export async function createLedgerFromStructured(
   input: CreateLedgerFromStructuredInput
 ) {
-      // console.log("CHECK HERE!: ");
-    // console.log("input!: ", input);
+  // console.log("CHECK HERE!: ");
+  // console.log("input!: ", input);
 
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   const user = auth?.user;
   if (!user) throw new Error("Not authenticated");
+
+  // Helper function to cleanup orphaned image if entry creation fails
+  const cleanupOrphanedImage = async (imageUrl: string | null | undefined) => {
+    if (!imageUrl) return;
+
+    try {
+      // Extract file path from URL for cleanup
+      const url = new URL(imageUrl);
+      const pathParts = url.pathname.split("/");
+      const receiptsIndex = pathParts.findIndex((part) => part === "receipts");
+
+      if (receiptsIndex > -1 && receiptsIndex < pathParts.length - 1) {
+        const filePath = pathParts.slice(receiptsIndex + 1).join("/");
+
+        // Only cleanup if the file belongs to the current user
+        if (filePath.startsWith(user.id + "/")) {
+          await supabase.storage.from("receipts").remove([filePath]);
+          console.log("Cleaned up orphaned image:", filePath);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to cleanup orphaned image:", error);
+    }
+  };
 
   const currency = input.currency || "THB";
   const postings = buildPostingsFromReceipt(input.receipt, {
@@ -60,9 +84,17 @@ export async function createLedgerFromStructured(
     ])
     .select("id")
     .limit(1);
-  if (insErr) throw insErr;
+  if (insErr) {
+    // Cleanup orphaned image if entry creation fails
+    await cleanupOrphanedImage(input.imageUrl);
+    throw insErr;
+  }
   const entry_id = headerRows?.[0]?.id as number | undefined;
-  if (!entry_id) throw new Error("Failed to create header entry");
+  if (!entry_id) {
+    // Cleanup orphaned image if no entry ID returned
+    await cleanupOrphanedImage(input.imageUrl);
+    throw new Error("Failed to create header entry");
+  }
 
   // Insert postings
   const rows = postings.map((p, i) => ({
@@ -77,6 +109,8 @@ export async function createLedgerFromStructured(
     .insert(rows);
   if (postErr) {
     await supabase.from("ledger_entries").delete().eq("id", entry_id);
+    // Cleanup orphaned image if posting insertion fails
+    await cleanupOrphanedImage(input.imageUrl);
     throw postErr;
   }
 

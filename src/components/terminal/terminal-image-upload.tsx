@@ -2,7 +2,7 @@
 // SIMPLE APPROACH: Minimal React, maximum native behavior
 
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Tesseract from "tesseract.js";
 import {
   createOpenAiReceiptParser,
@@ -38,6 +38,54 @@ async function preprocessAndUpload(file: File) {
   };
 }
 
+// Helper function to extract file path from Supabase Storage URL for cleanup
+function extractFilePathFromUrl(url: string): string | null {
+  try {
+    const urlObj = new URL(url);
+    const pathParts = urlObj.pathname.split("/");
+
+    // Find the index after "receipts" in the path
+    const receiptsIndex = pathParts.findIndex((part) => part === "receipts");
+
+    if (receiptsIndex > -1 && receiptsIndex < pathParts.length - 1) {
+      // Get everything after "/receipts/" as the file path
+      return pathParts.slice(receiptsIndex + 1).join("/");
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// Helper function to delete image from Supabase Storage
+async function deleteImageFromStorage(imageUrl: string): Promise<void> {
+  try {
+    const filePath = extractFilePathFromUrl(imageUrl);
+    if (!filePath) {
+      console.warn("Could not extract file path from URL:", imageUrl);
+      return;
+    }
+
+    // Make cleanup API call to delete the image
+    const response = await fetch("/api/receipt-cleanup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ filePath }),
+    });
+
+    if (!response.ok) {
+      console.warn("Failed to cleanup image:", filePath);
+    } else {
+      console.log("Successfully cleaned up image:", filePath);
+    }
+  } catch (error) {
+    console.error("Error during image cleanup:", error);
+  }
+}
+
 interface TerminalImageUploadProps {
   onPopulateInput: (cmd: string) => void;
 }
@@ -48,7 +96,24 @@ export default function TerminalImageUpload({
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<string>("");
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Cleanup function for uploaded images
+  const cleanupUploadedImage = async () => {
+    if (uploadedImageUrl) {
+      await deleteImageFromStorage(uploadedImageUrl);
+      setUploadedImageUrl(null);
+    }
+  };
+
+  // Cleanup on component unmount or when user navigates away
+  useEffect(() => {
+    return () => {
+      // This will run when component unmounts
+      cleanupUploadedImage();
+    };
+  }, [uploadedImageUrl]); // Include uploadedImageUrl to ensure cleanup runs with latest value
 
   // Handle button click - direct file input trigger
   const handleButtonClick = (e: React.MouseEvent) => {
@@ -81,6 +146,9 @@ export default function TerminalImageUpload({
       // 1. Upload and preprocess image
       const processed = await preprocessAndUpload(file);
       const imageUrl = processed.url;
+
+      // Track the uploaded image for potential cleanup
+      setUploadedImageUrl(imageUrl);
 
       setStatus("Processing with OCR...");
 
@@ -255,15 +323,33 @@ export default function TerminalImageUpload({
 
       // 6. Send command to terminal
       onPopulateInput(command);
+
+      // 7. Clear the uploaded image tracking since it's now part of the command
+      // The image will be properly managed by the entry creation process
+      setUploadedImageUrl(null);
     } catch (error: unknown) {
       console.error("Image processing failed:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Image processing failed";
       alert(errorMessage);
+
+      // Cleanup uploaded image on error
+      await cleanupUploadedImage();
     } finally {
       setLoading(false);
       setProgress(0);
       setStatus("");
+    }
+  };
+
+  // Handle manual cancellation
+  const handleCancel = async () => {
+    if (loading) {
+      setLoading(false);
+      setProgress(0);
+      setStatus("");
+      // Cleanup uploaded image on manual cancel
+      await cleanupUploadedImage();
     }
   };
 
@@ -305,6 +391,21 @@ export default function TerminalImageUpload({
           </>
         )}
       </button>
+
+      {/* Cancel button - only show when loading */}
+      {loading && (
+        <button
+          type="button"
+          onClick={handleCancel}
+          className="inline-flex items-center gap-2 px-3 py-2 border rounded-md bg-red-50 hover:bg-red-100 text-red-700 border-red-200 transition-colors"
+          // Prevent terminal from interfering
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
+        >
+          <span>✕</span>
+          <span>Cancel</span>
+        </button>
+      )}
     </div>
   );
 }

@@ -85,6 +85,30 @@ export async function handleNewCommand(
   } = await supabase.auth.getUser();
   if (userErr || !user) return { ok: false, error: "Not authenticated." };
 
+  // Helper function to cleanup orphaned image if entry creation fails
+  const cleanupOrphanedImage = async (imageUrl: string | null | undefined) => {
+    if (!imageUrl) return;
+
+    try {
+      // Extract file path from URL for cleanup
+      const url = new URL(imageUrl);
+      const pathParts = url.pathname.split("/");
+      const receiptsIndex = pathParts.findIndex((part) => part === "receipts");
+
+      if (receiptsIndex > -1 && receiptsIndex < pathParts.length - 1) {
+        const filePath = pathParts.slice(receiptsIndex + 1).join("/");
+
+        // Only cleanup if the file belongs to the current user
+        if (filePath.startsWith(user.id + "/")) {
+          await supabase.storage.from("receipts").remove([filePath]);
+          console.log("Cleaned up orphaned image:", filePath);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to cleanup orphaned image:", error);
+    }
+  };
+
   const built = buildPostingsFromReceipt(payload.receipt, {
     currency: payload.currency,
     paymentAccount: payload.paymentAccount || "Assets:Cash",
@@ -119,6 +143,8 @@ export async function handleNewCommand(
     .single();
 
   if (insHeaderErr || !headerRow) {
+    // Cleanup orphaned image if entry creation fails
+    await cleanupOrphanedImage(payload.imageUrl);
     return {
       ok: false,
       error: insHeaderErr?.message || "insert ledger_entries failed",
@@ -137,6 +163,8 @@ export async function handleNewCommand(
   const zeroSum = round2(rows.reduce((s, r) => s + r.amount, 0));
   if (Math.abs(zeroSum) > EPS) {
     await supabase.from("ledger_entries").delete().eq("id", entry_id);
+    // Cleanup orphaned image if postings are not balanced
+    await cleanupOrphanedImage(payload.imageUrl);
     return {
       ok: false,
       error: `postings not balanced (sum=${zeroSum.toFixed(2)})`,
@@ -148,6 +176,8 @@ export async function handleNewCommand(
     .insert(rows);
   if (insPostsErr) {
     await supabase.from("ledger_entries").delete().eq("id", entry_id);
+    // Cleanup orphaned image if posting insertion fails
+    await cleanupOrphanedImage(payload.imageUrl);
     return {
       ok: false,
       error: `insert ledger_postings failed: ${insPostsErr.message}`,
@@ -159,7 +189,7 @@ export async function handleNewCommand(
     try {
       const res = await syncLedgerFileFromDB();
       if (!res.ok) console.warn("[ledger-sync] failed:", res.error);
-              // else console.log("[ledger-sync] OK");
+      // else console.log("[ledger-sync] OK");
     } catch (e) {
       console.warn("[ledger-sync] exception:", e);
     }

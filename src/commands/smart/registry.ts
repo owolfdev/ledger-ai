@@ -93,6 +93,15 @@ export const commandRegistry: Record<string, CommandMeta> = {
     usage: "logout",
   },
 
+  // --- Cleanup Commands ---
+  "cleanup-orphaned-images": {
+    content:
+      "`cleanup-orphaned-images [--force]` - Scan and clean up orphaned receipt images",
+    description:
+      "Scan Supabase Storage for receipt images that don't have corresponding database entries and optionally delete them. Use --force to actually delete the orphaned images.",
+    usage: "cleanup-orphaned-images [--force]",
+  },
+
   // Ledger CLI
 
   entries: {

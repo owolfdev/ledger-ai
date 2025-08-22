@@ -216,7 +216,7 @@ ${Object.entries(commands)
 
   if (response.status === 429) {
     const data = await response.json();
-            // console.log("RATE LIMITED:", data); // Debug!
+    // console.log("RATE LIMITED:", data); // Debug!
     setHistory((h) => [
       ...h.slice(0, -1),
       {
@@ -923,6 +923,15 @@ export function createHandleCommand(
         ]);
         return true;
       }
+    }
+
+    // ----------- CLEANUP ORPHANED IMAGES COMMAND ----------- //
+    if (base === "cleanup-orphaned-images") {
+      const { handleCleanupOrphanedImages } = await import(
+        "./cleanup-orphaned-images-command"
+      );
+      await handleCleanupOrphanedImages(setHistory, cmd, arg);
+      return true;
     }
 
     // ----------- AI Fallback: unknown or not allowed ----------- //
