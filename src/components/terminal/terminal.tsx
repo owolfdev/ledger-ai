@@ -189,9 +189,10 @@ export default function Terminal({
 
   const submitInput = useCallback(async () => {
     if (!input.trim()) return;
-    lastCommandRef.current = input;
-    await onCommand?.(input, setHistory, history);
-    setInput("");
+    const command = input;
+    setInput(""); // Clear immediately
+    lastCommandRef.current = command;
+    await onCommand?.(command, setHistory, history);
   }, [input, onCommand, setHistory, history]);
 
   const handleOutputClick = useCallback((e: React.MouseEvent) => {
