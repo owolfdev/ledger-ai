@@ -255,10 +255,10 @@ async function processAndSaveEntry(
   try {
     const result = await serverHandleNewCommand(payload);
 
-    console.log("Server response:", result);
+    // console.log("Server response:", result);
 
     if (result.ok) {
-      console.log("Entry ID:", result.entry_id);
+      // console.log("Entry ID:", result.entry_id);
       updateHistoryWithSuccess(setHistory, result.entry_id?.toString());
     } else {
       updateHistoryWithError(setHistory, result.error);

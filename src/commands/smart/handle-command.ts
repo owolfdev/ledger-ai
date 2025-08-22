@@ -216,7 +216,7 @@ ${Object.entries(commands)
 
   if (response.status === 429) {
     const data = await response.json();
-    console.log("RATE LIMITED:", data); // Debug!
+            // console.log("RATE LIMITED:", data); // Debug!
     setHistory((h) => [
       ...h.slice(0, -1),
       {
@@ -308,12 +308,12 @@ export function createHandleCommand(
     const [rawBase, ...rest] = trimmed.split(/[\s\n]+/);
     const base = (rawBase || "").toLowerCase();
 
-    console.log(
-      "Command base:",
-      base,
-      "Available commands:",
-      Object.keys(commands)
-    );
+    // console.log(
+    //   "Command base:",
+    //   base,
+    //   "Available commands:",
+    //   Object.keys(commands)
+    // );
 
     const arg = rest.join(" ");
     // ----------- Side-effect/Imperative Commands ----------- //
@@ -864,7 +864,7 @@ export function createHandleCommand(
     // --- NEW: LEDGER ENTRY from plain language ---
 
     if (base === "new" && commands[base]) {
-      console.log("Calling handleNew with:", cmd, arg);
+      // console.log("Calling handleNew with:", cmd, arg);
       await handleNew(setHistory, cmd, arg);
       return true;
     }

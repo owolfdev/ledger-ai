@@ -12,7 +12,7 @@ const RelatedPostsList = async ({
   postType,
 }: RelatedPostsListProps) => {
   if (!relatedSlugs || relatedSlugs.length === 0) {
-    console.log("no related posts");
+    // console.log("no related posts");
     return null;
   }
 
@@ -20,7 +20,7 @@ const RelatedPostsList = async ({
   const relatedPosts = await getRelatedPostTitles(relatedSlugs);
 
   if (!relatedPosts || relatedPosts.length === 0) {
-    console.log("no related posts found");
+    // console.log("no related posts found");
     return null;
   }
 

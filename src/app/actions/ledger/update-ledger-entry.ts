@@ -49,12 +49,12 @@ type LedgerEntryUpdate = {
 
 export async function updateLedgerEntry(input: UpdateEntryInput) {
   try {
-    console.log("=== SERVER ACTION DEBUG ===");
-    console.log("Raw input:", input);
+    // console.log("=== SERVER ACTION DEBUG ===");
+    // console.log("Raw input:", input);
 
     // Validate input
     const validatedData = UpdateEntrySchema.parse(input);
-    console.log("Validated data:", validatedData);
+    // console.log("Validated data:", validatedData);
 
     // Validate balance if postings are included
     if (validatedData.postings) {
@@ -119,12 +119,12 @@ export async function updateLedgerEntry(input: UpdateEntryInput) {
     }
 
     // Handle image URL update properly
-    console.log(
-      "Has image_url property:",
-      validatedData.hasOwnProperty("image_url")
-    );
-    console.log("image_url value:", validatedData.image_url);
-    console.log("image_url type:", typeof validatedData.image_url);
+    // console.log(
+    //   "Has image_url property:",
+    //   validatedData.hasOwnProperty("image_url")
+    // );
+    // console.log("image_url value:", validatedData.image_url);
+    // console.log("image_url type:", typeof validatedData.image_url);
 
     if (validatedData.hasOwnProperty("image_url")) {
       if (
@@ -133,20 +133,20 @@ export async function updateLedgerEntry(input: UpdateEntryInput) {
         validatedData.image_url === undefined
       ) {
         updateData.image_url = null;
-        console.log("Setting image_url to null for removal");
+        // console.log("Setting image_url to null for removal");
       } else if (
         typeof validatedData.image_url === "string" &&
         validatedData.image_url.length > 0
       ) {
         updateData.image_url = validatedData.image_url;
-        console.log("Setting image_url to:", validatedData.image_url);
+        // console.log("Setting image_url to:", validatedData.image_url);
       } else {
         updateData.image_url = null;
-        console.log("Default: Setting image_url to null");
+        // console.log("Default: Setting image_url to null");
       }
     }
 
-    console.log("Final updateData:", updateData);
+    // console.log("Final updateData:", updateData);
 
     // Update the entry
     const { data: updatedEntry, error: updateError } = await supabase
@@ -161,7 +161,7 @@ export async function updateLedgerEntry(input: UpdateEntryInput) {
       return { success: false, error: "Failed to update entry" };
     }
 
-    console.log("Database update successful:", updatedEntry);
+    // console.log("Database update successful:", updatedEntry);
 
     // Update postings if provided
     if (validatedData.postings) {
@@ -223,7 +223,7 @@ export async function updateLedgerEntry(input: UpdateEntryInput) {
           console.warn("Failed to update entry_text:", entryTextUpdateError);
           // Don't fail the operation, just log the warning
         } else {
-          console.log("✅ Regenerated entry_text with updated postings");
+          // console.log("✅ Regenerated entry_text with updated postings");
         }
       }
     } else {
@@ -259,7 +259,7 @@ export async function updateLedgerEntry(input: UpdateEntryInput) {
         if (entryTextUpdateError) {
           console.warn("Failed to update entry_text:", entryTextUpdateError);
         } else {
-          console.log("✅ Regenerated entry_text with updated description");
+          // console.log("✅ Regenerated entry_text with updated description");
         }
       }
     }
@@ -269,7 +269,7 @@ export async function updateLedgerEntry(input: UpdateEntryInput) {
       try {
         const syncResult = await syncLedgerFile();
         if (syncResult.success) {
-          console.log("✅ Auto-synced ledger file after entry update");
+          // console.log("✅ Auto-synced ledger file after entry update");
         } else {
           console.warn("⚠️ Sync skipped:", syncResult.reason);
         }
@@ -290,7 +290,7 @@ export async function updateLedgerEntry(input: UpdateEntryInput) {
   } catch (error) {
     console.error("Server action error:", error);
     if (error instanceof z.ZodError) {
-      console.log("Zod validation errors:", error.errors);
+      // console.log("Zod validation errors:", error.errors);
       return {
         success: false,
         error: "Validation failed",

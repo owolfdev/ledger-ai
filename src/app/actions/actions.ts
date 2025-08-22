@@ -58,7 +58,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
   const callbackUrl = formData.get("callbackUrl")?.toString();
 
   //log the callbackUrl
-  console.log("forgot password callbackUrl", callbackUrl);
+  // console.log("forgot password callbackUrl", callbackUrl);
 
   if (!email) {
     return encodedRedirect("error", "/forgot-password", "Email is required");

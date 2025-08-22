@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   // Only allow "pages/..." or "posts/..."
   const parts = contentPath.split("/");
   if (parts.length < 2 || !ALLOWED_ROOTS.includes(parts[0])) {
-    console.log("[MDX-RAW] Invalid path:", contentPath);
+    // console.log("[MDX-RAW] Invalid path:", contentPath);
     return new NextResponse("Invalid path", { status: 400 });
   }
 
@@ -25,18 +25,18 @@ export async function GET(req: NextRequest) {
     `${contentPath}.mdx`
   );
   if (!fs.existsSync(filePath)) {
-    console.log("[MDX-RAW] Not found:", filePath);
+    // console.log("[MDX-RAW] Not found:", filePath);
     return new NextResponse("Not found", { status: 404 });
   }
 
   const content = fs.readFileSync(filePath, "utf8");
   // Log the file path and preview of content for debug (never log full in prod)
-  console.log(
-    "[MDX-RAW] Serving:",
-    filePath,
-    "Preview:",
-    content.slice(0, 100)
-  );
+  // console.log(
+  //   "[MDX-RAW] Serving:",
+  //   filePath,
+  //   "Preview:",
+  //   content.slice(0, 100)
+  // );
 
   return new NextResponse(content, {
     status: 200,

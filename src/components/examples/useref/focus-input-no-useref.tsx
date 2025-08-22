@@ -6,7 +6,7 @@ function InputWithoutRef() {
 
   const focusInput = () => {
     // Issue: No way to programmatically focus the input
-    console.log("Cannot focus the input without a reference!");
+    // console.log("Cannot focus the input without a reference!");
   };
 
   return (

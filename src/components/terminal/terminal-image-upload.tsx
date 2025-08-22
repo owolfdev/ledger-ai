@@ -95,7 +95,7 @@ export default function TerminalImageUpload({
       const imageBlob = await ocrResponse.blob();
 
       // 3. Extract text with optimized Tesseract settings
-      console.log("Starting OCR with optimized Tesseract settings...");
+              // console.log("Starting OCR with optimized Tesseract settings...");
 
       const ocrConfigs = [
         {
@@ -132,7 +132,7 @@ export default function TerminalImageUpload({
 
       for (const config of ocrConfigs) {
         try {
-          console.log(`Trying OCR config: ${config.name}`);
+          // console.log(`Trying OCR config: ${config.name}`);
 
           const result = await Tesseract.recognize(imageBlob, config.lang, {
             logger: (info) => {
@@ -166,7 +166,7 @@ export default function TerminalImageUpload({
             };
           }
         } catch (error) {
-          console.log(`${config.name} failed:`, error);
+                      // console.log(`${config.name} failed:`, error);
         }
       }
 
@@ -186,11 +186,11 @@ export default function TerminalImageUpload({
       const openaiApiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 
       if (openaiApiKey) {
-        console.log("Using AI parser...");
+        // console.log("Using AI parser...");
         const aiParser = createOpenAiReceiptParser(openaiApiKey);
         command = await aiParser.parseReceiptText(text);
       } else {
-        console.log("No OpenAI API key - using fallback parser");
+        // console.log("No OpenAI API key - using fallback parser");
         const fallbackParser = createFallbackParser();
         command = await fallbackParser.parseReceiptText(text);
       }
@@ -203,7 +203,7 @@ export default function TerminalImageUpload({
       setProgress(100);
       setStatus("Complete!");
 
-      console.log("Generated command:", command);
+              // console.log("Generated command:", command);
 
       // 6. Send command to terminal
       onPopulateInput(command);

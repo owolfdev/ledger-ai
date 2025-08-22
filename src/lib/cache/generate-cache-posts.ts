@@ -63,9 +63,9 @@ async function fetchLikesCount(postId: string): Promise<number> {
 }
 
 export async function generatePostsCache(): Promise<Post[]> {
-  console.log(
-    "Generating posts cache from src/lib/cache/generate-cache-posts.ts..."
-  );
+  // console.log(
+  //   "Generating posts cache from src/lib/cache/generate-cache-posts.ts..."
+  // );
 
   const postsDirectory = path.join(process.cwd(), "src/content/posts");
   const files = fs

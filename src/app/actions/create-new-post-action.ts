@@ -122,7 +122,7 @@ export async function createNewPostAction(
         console.error("Error writing file:", err);
         reject(err);
       } else {
-        console.log("File saved to", filePath);
+        // console.log("File saved to", filePath);
 
         generatePostsCache();
 
@@ -134,7 +134,7 @@ export async function createNewPostAction(
               console.error(`exec error: ${error}`);
               return;
             }
-            console.log(`stdout: ${stdout}`);
+            // console.log(`stdout: ${stdout}`);
             console.error(`stderr: ${stderr}`);
           });
 

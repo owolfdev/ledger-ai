@@ -45,7 +45,7 @@ async function fetchLikesCount(postId: string) {
 export async function generatePostsCache() {
   try {
     const postsDirectory = path.join(process.cwd(), "content/posts");
-    console.log(`Posts directory: ${postsDirectory}`);
+    // console.log(`Posts directory: ${postsDirectory}`);
 
     const fileNames = fs
       .readdirSync(postsDirectory)
@@ -53,7 +53,7 @@ export async function generatePostsCache() {
         (fileName) => !fileName.startsWith(".") && fileName.endsWith(".mdx")
       );
 
-    console.log(`Found ${fileNames.length} MDX files:`, fileNames);
+    // console.log(`Found ${fileNames.length} MDX files:`, fileNames);
 
     const currentDate = startOfDay(new Date());
     const allPosts = await Promise.all(
@@ -74,7 +74,7 @@ export async function generatePostsCache() {
         const postId = metadata.id;
         const likesCount = await fetchLikesCount(postId);
 
-        console.log(`Likes count for postId ${postId}: ${likesCount}`);
+        // console.log(`Likes count for postId ${postId}: ${likesCount}`);
 
         const slug = fileName.replace(".mdx", "");
 
@@ -92,7 +92,7 @@ export async function generatePostsCache() {
       })
     );
 
-    console.log("Processing completed for all files.");
+    // console.log("Processing completed for all files.");
 
     const publishedPosts = [];
     const finalAllPosts = [];
@@ -106,18 +106,18 @@ export async function generatePostsCache() {
       }
     }
 
-    console.log(`Final all posts count: ${finalAllPosts.length}`);
-    console.log(`Published posts count: ${publishedPosts.length}`);
+    // console.log(`Final all posts count: ${finalAllPosts.length}`);
+    // console.log(`Published posts count: ${publishedPosts.length}`);
 
     const cacheDir = path.join(process.cwd(), "public/cache");
-    console.log(`Cache directory: ${cacheDir}`);
+    // console.log(`Cache directory: ${cacheDir}`);
 
     if (!fs.existsSync(cacheDir)) {
-      console.log("Creating cache directory...");
+      // console.log("Creating cache directory...");
       fs.mkdirSync(cacheDir);
     }
 
-    console.log("Writing cache files...");
+    // console.log("Writing cache files...");
 
     fs.writeFileSync(
       path.join(cacheDir, "all-posts.json"),
@@ -129,7 +129,7 @@ export async function generatePostsCache() {
       JSON.stringify(publishedPosts, null, 2)
     );
 
-    console.log("Cache files written successfully.");
+    // console.log("Cache files written successfully.");
     return publishedPosts;
   } catch (error) {
     console.error("❌ Error in generatePostsCache:", error);

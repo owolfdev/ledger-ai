@@ -147,10 +147,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`Ledger CLI request: ${command} ${args.join(" ")}`);
+    // console.log(`Ledger CLI request: ${command} ${args.join(" ")}`);
 
     // Sync the ledger file first
-    console.log("Syncing ledger file before executing command...");
+    // console.log("Syncing ledger file before executing command...");
     await syncLedgerFile();
 
     // Path to the synced ledger file

@@ -3,11 +3,11 @@
 import { exec } from "node:child_process";
 
 export async function openInVSCode(data: string) {
-  console.log("data from open in VS Code:", data);
+  // console.log("data from open in VS Code:", data);
 
   const filePath = `${data}`;
 
-  console.log("filePath:", filePath);
+  // console.log("filePath:", filePath);
 
   exec(
     `code "${filePath}"`,
@@ -16,7 +16,7 @@ export async function openInVSCode(data: string) {
         console.error(`exec error: ${error.message}`);
         return;
       }
-      console.log(`stdout: ${stdout.toString()}`);
+      // console.log(`stdout: ${stdout.toString()}`);
       console.error(`stderr: ${stderr.toString()}`);
     }
   );
@@ -41,11 +41,11 @@ export const openInVSCodeAction = async (path: string) => {
 };
 
 export async function openInCursor(data: string) {
-  console.log("data from open in Cursor:", data);
+  // console.log("data from open in Cursor:", data);
 
   const filePath = `${data}`;
 
-  console.log("filePath:", filePath);
+  // console.log("filePath:", filePath);
 
   exec(
     `cursor "${filePath}"`,
@@ -54,7 +54,7 @@ export async function openInCursor(data: string) {
         console.error(`exec error: ${error.message}`);
         return;
       }
-      console.log(`stdout: ${stdout.toString()}`);
+      // console.log(`stdout: ${stdout.toString()}`);
       console.error(`stderr: ${stderr.toString()}`);
     }
   );

@@ -4,8 +4,8 @@ const bar = "Loading";
 
 export default function Loading() {
   useEffect(() => {
-    console.log("Loading mounted");
-    return () => console.log("Loading unmounted");
+      // console.log("Loading mounted");
+  return () => // console.log("Loading unmounted");
   }, []);
 
   return (

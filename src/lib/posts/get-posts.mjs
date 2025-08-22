@@ -106,7 +106,7 @@ export function getPosts(
     posts = posts.slice(start, start + limit);
   }
 
-  console.log("Posts fetched:", posts);
+      // console.log("Posts fetched:", posts);
 
   return { posts, totalPosts };
 }

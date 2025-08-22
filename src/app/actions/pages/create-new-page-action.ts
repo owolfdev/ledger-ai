@@ -100,7 +100,7 @@ export default async function Page() {
           console.error("Error creating route file:", routeErr);
           reject(routeErr);
         } else {
-          console.log("Route created at", routeFilePath);
+          // console.log("Route created at", routeFilePath);
           resolve(finalSlug);
         }
       });

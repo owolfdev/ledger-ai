@@ -12,11 +12,11 @@ const __dirname = path.dirname(__filename);
 const envPath = path.resolve(__dirname, "../../.env.local");
 dotenv.config({ path: envPath });
 
-console.log("Resolved .env.local path: ", envPath);
-console.log(
-  "process.env.NEXT_PUBLIC_SUPABASE_URL:",
-  process.env.NEXT_PUBLIC_SUPABASE_URL
-);
+// console.log("Resolved .env.local path: ", envPath);
+// console.log(
+//   "process.env.NEXT_PUBLIC_SUPABASE_URL:",
+//   process.env.NEXT_PUBLIC_SUPABASE_URL
+// );
 
 // Supabase configuration
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -29,7 +29,7 @@ if (!supabaseUrl || !supabaseKey) {
   process.exit(1); // Exit if the configuration is invalid
 }
 
-console.log("✅ Supabase configuration loaded successfully.");
+// console.log("✅ Supabase configuration loaded successfully.");
 
 // Initialize Supabase client
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -42,7 +42,7 @@ async function populateLikesTable() {
     // Read and parse likes_new.json
     const likesData = JSON.parse(readFileSync(LIKES_NEW_FILE, "utf8"));
 
-    console.log(`Read ${likesData.length} entries from ${LIKES_NEW_FILE}`);
+    // console.log(`Read ${likesData.length} entries from ${LIKES_NEW_FILE}`);
 
     // Insert likes into the mdxblog_likes table
     for (const like of likesData) {
@@ -60,11 +60,11 @@ async function populateLikesTable() {
       if (error) {
         console.error(`❌ Error inserting like (id: ${id}):`, error);
       } else {
-        console.log(`✅ Successfully inserted like (id: ${id}):`, data);
+        // console.log(`✅ Successfully inserted like (id: ${id}):`, data);
       }
     }
 
-    console.log("✅ Likes table population complete.");
+    // console.log("✅ Likes table population complete.");
   } catch (error) {
     console.error("❌ Error populating likes table:", error);
   }

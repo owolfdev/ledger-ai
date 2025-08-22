@@ -9,7 +9,7 @@ function normalizeMultiLineCommand(input: string): string {
     .filter((line) => line.length > 0)
     .join(" ");
 
-  console.log("Before comma insertion:", normalized);
+  // console.log("Before comma insertion:", normalized);
 
   // Simple regex: insert comma between $amount and any letter
   normalized = normalized.replace(
@@ -17,7 +17,7 @@ function normalizeMultiLineCommand(input: string): string {
     "$1, $2"
   );
 
-  console.log("After comma insertion:", normalized);
+  // console.log("After comma insertion:", normalized);
 
   return normalized;
 }
@@ -380,8 +380,8 @@ export function parseManualNewCommand(input: string): {
 } {
   const normalizedInput = normalizeMultiLineCommand(input);
 
-  console.log("Original input:", input);
-  console.log("Normalized input:", normalizedInput);
+  // console.log("Original input:", input);
+  // console.log("Normalized input:", normalizedInput);
 
   // 1) Check for prefix business syntax (BusinessName:)
   const { business: prefixBusiness, cleanInput } =

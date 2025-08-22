@@ -17,7 +17,7 @@ export interface ContactMessage {
 export async function getContactMessages(
   limit = 20
 ): Promise<ContactMessage[]> {
-  console.log("running contact messages");
+  // console.log("running contact messages");
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -28,7 +28,7 @@ export async function getContactMessages(
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  console.log("data from get contact messages:", data);
+  // console.log("data from get contact messages:", data);
   if (error) throw new Error(error.message);
   return data ?? [];
 }

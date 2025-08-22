@@ -8,7 +8,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function countLikes(postId: string) {
   const tableName = config.likesTable; // Accessing table name from config
-  console.log("countLikes", postId);
+  // console.log("countLikes", postId);
   try {
     const { error, count } = await supabase
       .from(tableName)
@@ -26,7 +26,7 @@ export async function countLikes(postId: string) {
 
 export async function addLike(postId: string, userId: string) {
   const tableName = config.likesTable;
-  console.log("addLike", postId, userId);
+  // console.log("addLike", postId, userId);
   try {
     if (!postId || !userId) {
       throw new Error("Missing postId or userId");
@@ -47,7 +47,7 @@ export async function addLike(postId: string, userId: string) {
 
 export async function removeLike(postId: string, userId: string) {
   const tableName = config.likesTable;
-  console.log("removeLike", postId, userId);
+  // console.log("removeLike", postId, userId);
   try {
     if (!postId || !userId) {
       throw new Error("Missing postId or userId");
@@ -70,7 +70,7 @@ export async function removeLike(postId: string, userId: string) {
 
 export async function removeAllLikes() {
   const tableName = config.likesTable; // Accessing table name from config
-  console.log("removeAllLikes");
+  // console.log("removeAllLikes");
   try {
     const { data, error } = await supabase.from(tableName).delete();
 
@@ -96,7 +96,7 @@ export async function isPostLikedByUser(postId: string, userId: string) {
   }
 
   const tableName = config.likesTable; // Accessing table name from config
-  console.log("isPostLikedByUser", postId, userId);
+  // console.log("isPostLikedByUser", postId, userId);
 
   try {
     const { data, error } = await supabase

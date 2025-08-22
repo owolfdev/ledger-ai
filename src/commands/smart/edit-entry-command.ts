@@ -144,7 +144,7 @@ async function deleteEntry(entryId: string, userId: string): Promise<void> {
         // Get everything after "/receipts/" as the file path
         const filePath = pathParts.slice(receiptsIndex + 1).join("/");
 
-        console.log(`Deleting image from receipts bucket: ${filePath}`);
+        // console.log(`Deleting image from receipts bucket: ${filePath}`);
 
         const { error: storageError } = await supabase.storage
           .from("receipts")
@@ -154,7 +154,7 @@ async function deleteEntry(entryId: string, userId: string): Promise<void> {
           console.error("Failed to delete image from storage:", storageError);
           // Don't fail the whole operation, just log the error
         } else {
-          console.log("Successfully deleted image from receipts bucket");
+          // console.log("Successfully deleted image from receipts bucket");
         }
       } else {
         console.error(
@@ -232,7 +232,7 @@ export async function editEntryCommand(
 
   try {
     // Step 1: Fetch the existing entry to verify ownership and get current data
-    console.log("Fetching entry:", args.entryId);
+    // console.log("Fetching entry:", args.entryId);
     const { data: entry, error: fetchError } = await supabase
       .from("ledger_entries")
       .select("*")
@@ -294,7 +294,7 @@ The entry, all its postings, and any associated receipt images have been removed
     }
 
     // Step 3: Update the main entry
-    console.log("Updating entry with:", updates);
+    // console.log("Updating entry with:", updates);
     const { error: updateError } = await supabase
       .from("ledger_entries")
       .update(updates)
@@ -307,7 +307,7 @@ The entry, all its postings, and any associated receipt images have been removed
     }
 
     // Step 4: Update individual postings as needed
-    console.log("Updating postings...");
+    // console.log("Updating postings...");
 
     // Fetch all postings for this entry
     const { data: postings, error: postingsError } = await supabase
@@ -359,7 +359,7 @@ The entry, all its postings, and any associated receipt images have been removed
 
     // Step 5: Sync the ledger file if in development
     try {
-      console.log("Syncing ledger file...");
+      // console.log("Syncing ledger file...");
       await syncLedgerFile();
     } catch (syncError) {
       console.error("Failed to sync ledger file:", syncError);

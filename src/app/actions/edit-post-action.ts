@@ -109,11 +109,11 @@ export async function editPostAction(data: EditPostData, openInVSCode = false) {
 
   try {
     fs.writeFileSync(newFilePath, newFileContent);
-    console.log("File saved to", newFilePath);
+    // console.log("File saved to", newFilePath);
 
     if (originalFilename !== filename) {
       fs.unlinkSync(originalFilePath);
-      console.log("Original file deleted:", originalFilePath);
+      // console.log("Original file deleted:", originalFilePath);
     }
 
     await generatePostsCache();
@@ -124,7 +124,7 @@ export async function editPostAction(data: EditPostData, openInVSCode = false) {
           console.error(`exec error: ${error}`);
           return;
         }
-        console.log(`stdout: ${stdout}`);
+        // console.log(`stdout: ${stdout}`);
         console.error(`stderr: ${stderr}`);
       });
     }

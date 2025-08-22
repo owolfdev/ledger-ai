@@ -45,7 +45,7 @@ async function deleteEntryWithCleanup(
         // Get everything after "/receipts/" as the file path
         const filePath = pathParts.slice(receiptsIndex + 1).join("/");
 
-        console.log(`Deleting image from receipts bucket: ${filePath}`);
+        // console.log(`Deleting image from receipts bucket: ${filePath}`);
 
         const { error: storageError } = await supabase.storage
           .from("receipts")
@@ -55,7 +55,7 @@ async function deleteEntryWithCleanup(
           console.error("Failed to delete image from storage:", storageError);
           // Don't fail the whole operation, just log the error
         } else {
-          console.log("Successfully deleted image from receipts bucket");
+          // console.log("Successfully deleted image from receipts bucket");
         }
       } else {
         console.error(
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`API: Deleting entry ${entryId} for user ${user.id}`);
+    // console.log(`API: Deleting entry ${entryId} for user ${user.id}`);
 
     // Delete the entry with full cleanup
     await deleteEntryWithCleanup(entryId, user.id);

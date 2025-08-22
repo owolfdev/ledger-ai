@@ -159,7 +159,7 @@ export async function handleNewCommand(
     try {
       const res = await syncLedgerFileFromDB();
       if (!res.ok) console.warn("[ledger-sync] failed:", res.error);
-      else console.log("[ledger-sync] OK");
+              // else console.log("[ledger-sync] OK");
     } catch (e) {
       console.warn("[ledger-sync] exception:", e);
     }

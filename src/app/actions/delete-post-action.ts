@@ -6,7 +6,7 @@ export async function deletePostAction(data: { filename: string }) {
   const path = data.filename;
   const filePath = `content/posts/${path}`;
 
-  console.log("filePath to delete:", filePath);
+  // console.log("filePath to delete:", filePath);
 
   try {
     await new Promise<void>((resolve, reject) => {
@@ -15,8 +15,8 @@ export async function deletePostAction(data: { filename: string }) {
           console.error(`exec error: ${error}`);
           reject(error);
         } else {
-          console.log("file deleted");
-          console.log(`stdout: ${stdout}`);
+          // console.log("file deleted");
+          // console.log(`stdout: ${stdout}`);
           console.error(`stderr: ${stderr}`);
           resolve();
         }

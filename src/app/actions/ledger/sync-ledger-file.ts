@@ -12,7 +12,7 @@ const LEDGER_FILE_PATH = path.resolve(
 
 export async function syncLedgerFile() {
   if (!isLocalLedgerWriteEnabled()) {
-    console.log("[syncLedgerFile] Skipped: not in dev or not allowed.");
+    // console.log("[syncLedgerFile] Skipped: not in dev or not allowed.");
     return { success: false, reason: "Not allowed in current environment" };
   }
 
@@ -66,7 +66,7 @@ export async function syncLedgerFile() {
     .join("\n\n");
 
   await fs.writeFile(LEDGER_FILE_PATH, content, "utf-8");
-  console.log("[syncLedgerFile] Wrote ledger to", LEDGER_FILE_PATH);
+      // console.log("[syncLedgerFile] Wrote ledger to", LEDGER_FILE_PATH);
 
   return { success: true };
 }

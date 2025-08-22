@@ -76,7 +76,7 @@ export async function ledgerCliCommand(
   }
 
   try {
-    console.log(`Executing Ledger CLI: ${args.command} ${args.args.join(" ")}`);
+    // console.log(`Executing Ledger CLI: ${args.command} ${args.args.join(" ")}`);
 
     // Execute via API route
     const result = await executeLedgerCommand(args.command, args.args);

@@ -162,7 +162,7 @@ export async function parseReceiptWithConfidence(
 
       // Skip if no items found
       if (!data.items?.length) {
-        console.log(`${attempt.label}: No items found`);
+        // console.log(`${attempt.label}: No items found`);
         continue;
       }
 
@@ -182,11 +182,11 @@ export async function parseReceiptWithConfidence(
         errors: mathValidation.errors,
       });
 
-      console.log(
-        `${attempt.label}: confidence=${confidence.toFixed(2)}, mathValid=${
-          mathValidation.isValid
-        }, items=${data.items.length}`
-      );
+      // console.log(
+      //   `${attempt.label}: confidence=${confidence.toFixed(2)}, mathValid=${
+      //     mathValidation.isValid
+      //   }, items=${data.items.length}`
+      // );
     } catch (error) {
       console.warn(
         `Parser ${attempt.parser} failed on ${attempt.label}:`,
@@ -210,11 +210,11 @@ export async function parseReceiptWithConfidence(
   const best = results[0];
 
   // 4. Log selection reasoning
-  console.log(
-    `Selected: ${best.parser} parser, confidence=${best.confidence.toFixed(
-      2
-    )}, mathValid=${best.mathValid}`
-  );
+  // console.log(
+  //   `Selected: ${best.parser} parser, confidence=${best.confidence.toFixed(
+  //     2
+  //   )}, mathValid=${best.mathValid}`
+  // );
 
   return best;
 }
@@ -249,7 +249,7 @@ export function enhancedCoalesceSummary(data: ReceiptData): ReceiptData {
 
     if (diff >= -0.01 && diff <= maxTax + 0.01 && diff >= minTax - 0.01) {
       out.tax = diff < 0 ? 0 : diff;
-      console.log(`Inferred tax: ${out.tax} from total-subtotal difference`);
+      // console.log(`Inferred tax: ${out.tax} from total-subtotal difference`);
     }
   }
 
@@ -259,14 +259,14 @@ export function enhancedCoalesceSummary(data: ReceiptData): ReceiptData {
     if (sub >= 0 && sub >= itemsSum * 0.8) {
       // subtotal should be close to items sum
       out.subtotal = sub;
-      console.log(`Inferred subtotal: ${out.subtotal} from total-tax`);
+      // console.log(`Inferred subtotal: ${out.subtotal} from total-tax`);
     }
   }
 
   // Total inference with better validation
   if (!hasTot && hasSub && hasTax) {
     out.total = round2((out.subtotal as number) + (out.tax as number));
-    console.log(`Inferred total: ${out.total} from subtotal+tax`);
+    // console.log(`Inferred total: ${out.total} from subtotal+tax`);
   }
 
   return out;

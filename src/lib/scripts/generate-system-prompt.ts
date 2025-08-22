@@ -46,7 +46,7 @@ async function generateSystemPrompt(): Promise<void> {
 
   await writeFile(outputPath, systemPromptFinal.trim(), "utf8");
 
-  console.log(`✅ System prompt generated successfully at ${outputPath}`);
+      // console.log(`✅ System prompt generated successfully at ${outputPath}`);
 }
 
 generateSystemPrompt().catch((err) => {

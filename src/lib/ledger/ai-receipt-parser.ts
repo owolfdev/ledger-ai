@@ -305,10 +305,10 @@ ${ocrText}`;
           if (parsed) {
             const validation = validateCommand(parsed);
             if (!validation.valid && attempts < maxAttempts - 1) {
-              console.log(
-                `Validation failed (attempt ${attempts + 1}):`,
-                validation.issues
-              );
+              // console.log(
+              //   `Validation failed (attempt ${attempts + 1}):`,
+              //   validation.issues
+              // );
               attempts++;
               continue; // Try again with same prompt
             }
@@ -325,7 +325,7 @@ ${ocrText}`;
           if (attempts >= maxAttempts) {
             throw error;
           }
-          console.log(`Attempt ${attempts} failed, retrying...`);
+          // console.log(`Attempt ${attempts} failed, retrying...`);
         }
       }
 

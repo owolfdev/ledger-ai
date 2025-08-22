@@ -19,7 +19,7 @@ async function embedManualTest() {
   if (error) {
     console.error("❌ Failed to update embedding:", error);
   } else {
-    console.log("✅ Successfully updated embedding for manual test.");
+    // console.log("✅ Successfully updated embedding for manual test.");
   }
 }
 

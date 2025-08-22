@@ -144,7 +144,7 @@ export function convertOcrToManualCommand(
   const currency = originalOcrText
     ? detectCurrencyFromText(originalOcrText)
     : CURRENCY_CONFIGS.USD;
-  console.log(`💱 Detected currency: ${currency.code} (${currency.symbol})`);
+      // console.log(`💱 Detected currency: ${currency.code} (${currency.symbol})`);
 
   const cleanItems = extractCleanItems(receiptData);
 
@@ -225,11 +225,11 @@ export function testConverter() {
     thaiOcrText // 👈 NEW: Pass OCR text for currency detection
   );
 
-  console.log("Original complex JSON:");
-  console.log(JSON.stringify(sampleReceiptData, null, 2));
+  // console.log("Original complex JSON:");
+  // console.log(JSON.stringify(sampleReceiptData, null, 2));
 
-  console.log("\nConverted to manual command:");
-  console.log(result);
+  // console.log("\nConverted to manual command:");
+  // console.log(result);
 
   // 👈 UPDATED: Expected output with Thai Baht
   // Expected output for Thai receipt:

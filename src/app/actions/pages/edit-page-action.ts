@@ -65,12 +65,12 @@ export async function editPageAction(
   // Write the updated file content to the new file path
   try {
     fs.writeFileSync(newFilePath, newFileContent);
-    console.log("File saved to", newFilePath);
+          // console.log("File saved to", newFilePath);
 
     // If the filename has changed, delete the original file
     if (originalFilename !== filename) {
       fs.unlinkSync(originalFilePath);
-      console.log("Original file deleted:", originalFilePath);
+      // console.log("Original file deleted:", originalFilePath);
     }
 
     // Conditionally open the file in VS Code
@@ -80,7 +80,7 @@ export async function editPageAction(
           console.error(`exec error: ${error}`);
           return;
         }
-        console.log(`stdout: ${stdout}`);
+        // console.log(`stdout: ${stdout}`);
         console.error(`stderr: ${stderr}`);
       });
     }

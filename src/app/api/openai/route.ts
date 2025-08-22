@@ -94,7 +94,7 @@ ${conversation}`;
 
   const fullPromptString = `${fullSystemPrompt}\n\nUser: ${prompt}`;
   const wordCount = fullPromptString.split(/\s+/).filter(Boolean).length;
-  console.log(`[OpenAI] Full Prompt Word Count: ${wordCount}`);
+      // console.log(`[OpenAI] Full Prompt Word Count: ${wordCount}`);
 
   // --- Prepare messages for OpenAI ---
   const messages = [
