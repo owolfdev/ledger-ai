@@ -365,6 +365,7 @@ ledger register coffee
 
 ## **Project Structure**
 
+tree /Users/wolf/Documents/Development/Projects/Ledger/ledger-app/src
 /Users/wolf/Documents/Development/Projects/Ledger/ledger-app/src
 ├── actions
 │   └── comments
@@ -426,6 +427,9 @@ ledger register coffee
 │   │   │   └── route.ts
 │   │   ├── ledger-cli
 │   │   │   └── route.ts
+│   │   ├── ledger-entry
+│   │   │   └── delete
+│   │   │   └── route.ts
 │   │   ├── mdx-raw
 │   │   │   └── route.ts
 │   │   ├── openai
@@ -472,8 +476,8 @@ ledger register coffee
 │   │   ├── editable-ledger-entry.tsx
 │   │   ├── image-upload.tsx
 │   │   └── page.tsx
-│   ├── loading-bak.tsx
 │   ├── loading.tsx
+│   ├── manifest.json
 │   ├── not-found.tsx
 │   ├── page.tsx
 │   ├── post
@@ -492,11 +496,19 @@ ledger register coffee
 │   │   ├── [slug]
 │   │   │   └── page.tsx
 │   │   └── page.tsx
-│   └── protected
+│   ├── protected
+│   │   └── page.tsx
+│   └── test
 │   └── page.tsx
 ├── commands
 │   ├── smart
 │   │   ├── edit-entry-command.ts
+│   │   ├── entries
+│   │   │   ├── currency.ts
+│   │   │   ├── formatting.ts
+│   │   │   ├── parser.ts
+│   │   │   ├── query-builder.ts
+│   │   │   └── types.ts
 │   │   ├── entries-command.ts
 │   │   ├── handle-command.ts
 │   │   ├── ledger-cli-command.ts
@@ -624,8 +636,11 @@ ledger register coffee
 │   │   ├── select-limit-posts.tsx
 │   │   └── sort-posts.tsx
 │   ├── sign-up-form.tsx
+│   ├── sw-register.tsx
 │   ├── terminal
+│   │   ├── command-loading.tsx
 │   │   ├── custom-mdx-components.tsx
+│   │   ├── ledger-entry-components.tsx
 │   │   ├── smart-terminal.tsx
 │   │   ├── terminal-image-upload.tsx
 │   │   ├── terminal-loading.tsx
@@ -783,4 +798,4 @@ ledger register coffee
 │   └── server.ts
 └── utils.ts
 
-118 directories, 298 files
+122 directories, 308 files
