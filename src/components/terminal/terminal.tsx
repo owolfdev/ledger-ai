@@ -7,6 +7,7 @@ import { TerminalOutputRendererProps } from "@/types/terminal";
 import type { CommandMeta } from "@/commands/utils";
 import { usePathname } from "next/navigation";
 import TerminalImageUpload from "./terminal-image-upload";
+import CommandLoading from "./command-loading";
 
 export type TerminalProps = {
   storageKey?: string;
@@ -170,6 +171,9 @@ export default function Terminal({
     welcome
   );
 
+  const [isCommandLoading, setIsCommandLoading] = useState(false);
+  const [loadingCommand, setLoadingCommand] = useState("");
+
   // All useCallback hooks at top level
   const populateInput = useCallback((cmd: string) => {
     setInput(cmd);
@@ -190,9 +194,20 @@ export default function Terminal({
   const submitInput = useCallback(async () => {
     if (!input.trim()) return;
     const command = input;
+
+    // Set loading state
+    setLoadingCommand(command);
+    setIsCommandLoading(true);
     setInput(""); // Clear immediately
-    lastCommandRef.current = command;
-    await onCommand?.(command, setHistory, history);
+
+    try {
+      lastCommandRef.current = command;
+      await onCommand?.(command, setHistory, history);
+    } finally {
+      // Clear loading state when done
+      setIsCommandLoading(false);
+      setLoadingCommand("");
+    }
   }, [input, onCommand, setHistory, history]);
 
   const handleOutputClick = useCallback((e: React.MouseEvent) => {
@@ -323,70 +338,78 @@ export default function Terminal({
           }}
           className="flex flex-col gap-2 mt-2 mb-8"
         >
-          <div className="flex items-center gap-2">
-            <span className="text-primary select-none hidden sm:block">$</span>
-            <Textarea
-              ref={inputRef}
-              value={input}
-              autoComplete="off"
-              autoCapitalize="off"
-              autoCorrect="off"
-              inputMode="text"
-              spellCheck={false}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={async (e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  await submitInput();
-                } else if (e.key === "Escape") {
-                  justEscapedRef.current = false;
-                  inputRef.current?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "center",
-                  });
-                  inputRef.current?.focus();
-                }
-              }}
-              className="flex-1 bg-transparent px-0 py-2 outline-none focus:ring-0 font-mono !text-lg md:!text-base autofill:bg-transparent sm:pl-2 h-auto sm:min-h-28 resize-none border-none"
-              style={{
-                minHeight: 32,
-                boxShadow: "none",
-                backgroundColor: "transparent",
-              }}
-              placeholder="Type a command..."
-            />
-          </div>
-
-          <div className="pt-2">
-            {input.trim() ? (
+          {isCommandLoading ? (
+            <CommandLoading command={loadingCommand} />
+          ) : (
+            <>
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={clearInput}
-                  className="inline-flex items-center gap-2 px-3 py-2 border rounded-md bg-background hover:bg-accent transition-colors"
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onMouseUp={(e) => e.stopPropagation()}
-                >
-                  <span>✕</span>
-                  <span>Cancel</span>
-                </button>
-
-                <button
-                  type="submit"
-                  className="inline-flex items-center gap-2 px-3 py-2 border rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onMouseUp={(e) => e.stopPropagation()}
-                >
-                  <span>→</span>
-                  <span>Submit</span>
-                </button>
+                <span className="text-primary select-none hidden sm:block">
+                  $
+                </span>
+                <Textarea
+                  ref={inputRef}
+                  value={input}
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  inputMode="text"
+                  spellCheck={false}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={async (e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      await submitInput();
+                    } else if (e.key === "Escape") {
+                      justEscapedRef.current = false;
+                      inputRef.current?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                      });
+                      inputRef.current?.focus();
+                    }
+                  }}
+                  className="flex-1 bg-transparent px-0 py-2 outline-none focus:ring-0 font-mono !text-lg md:!text-base autofill:bg-transparent sm:pl-2 h-auto sm:min-h-28 resize-none border-none"
+                  style={{
+                    minHeight: 32,
+                    boxShadow: "none",
+                    backgroundColor: "transparent",
+                  }}
+                  placeholder="Type a command..."
+                />
               </div>
-            ) : (
-              <TerminalImageUpload
-                onPopulateInput={onPopulateInput || populateInput}
-              />
-            )}
-          </div>
+
+              <div className="pt-2">
+                {input.trim() ? (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={clearInput}
+                      className="inline-flex items-center gap-2 px-3 py-2 border rounded-md bg-background hover:bg-accent transition-colors"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onMouseUp={(e) => e.stopPropagation()}
+                    >
+                      <span>✕</span>
+                      <span>Cancel</span>
+                    </button>
+
+                    <button
+                      type="submit"
+                      className="inline-flex items-center gap-2 px-3 py-2 border rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onMouseUp={(e) => e.stopPropagation()}
+                    >
+                      <span>→</span>
+                      <span>Submit</span>
+                    </button>
+                  </div>
+                ) : (
+                  <TerminalImageUpload
+                    onPopulateInput={onPopulateInput || populateInput}
+                  />
+                )}
+              </div>
+            </>
+          )}
         </form>
       </div>
     </div>

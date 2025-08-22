@@ -106,6 +106,7 @@ export async function entriesListCommand(
       header,
       "", // Empty line after header
       ...formattedEntries,
+      "<div class='h-4'></div>",
     ];
 
     return parts.join("\n\n") + totalsBlock; // Double newlines for component separation
