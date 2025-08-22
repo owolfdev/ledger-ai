@@ -10,7 +10,7 @@ export function TypedInputUsage() {
         label="Age"
         initialValue={0}
         validate={(v) => (v < 18 ? "Must be at least 18." : null)}
-        onChange={(v) => // console.log("✅ Valid age:", v)}
+        onChange={(v) => console.log("✅ Valid age:", v)}
       />
 
       <TypedInput<string>
@@ -19,7 +19,7 @@ export function TypedInputUsage() {
         validate={(v) =>
           v.length < 2 ? "Username must be at least 2 characters." : null
         }
-        onChange={(v) => // console.log("✅ Valid username:", v)}
+        onChange={(v) => console.log("✅ Valid username:", v)}
       />
     </div>
   );
