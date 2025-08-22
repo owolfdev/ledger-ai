@@ -95,44 +95,66 @@ export default function TerminalImageUpload({
       const imageBlob = await ocrResponse.blob();
 
       // 3. Extract text with optimized Tesseract settings
-              // console.log("Starting OCR with optimized Tesseract settings...");
+      // console.log("Starting OCR with optimized Tesseract settings...");
 
       const ocrConfigs = [
         {
           name: "Receipt-optimized",
           lang: "eng",
           options: {
-            tessedit_pageseg_mode: 6,
-            tessedit_ocr_engine_mode: 1,
+            tessedit_pageseg_mode: 6, // Uniform block of text
+            tessedit_ocr_engine_mode: 1, // Neural nets LSTM engine
             tessedit_char_whitelist:
               "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz฿$€£.,/-:()% ",
             preserve_interword_spaces: 1,
+            tessedit_do_invert: 0, // Don't invert colors
+            textord_heavy_nr: 1, // Better noise removal
+            textord_min_linesize: 2.5, // Better line detection
+            textord_old_baselines: 0, // Use modern baseline detection
+            textord_force_make_prop_words: 0, // Don't force proportional words
+            textord_min_xheight: 10, // Minimum x-height for text
+            textord_old_xheight: 0, // Use modern x-height detection
           },
         },
         {
           name: "Thai+English hybrid",
           lang: "tha+eng",
           options: {
-            tessedit_pageseg_mode: 4,
-            tessedit_ocr_engine_mode: 1,
+            tessedit_pageseg_mode: 4, // Single column of text
+            tessedit_ocr_engine_mode: 1, // Neural nets LSTM engine
             preserve_interword_spaces: 1,
+            tessedit_do_invert: 0, // Don't invert colors
+            textord_heavy_nr: 1, // Better noise removal
+            textord_min_linesize: 2.5, // Better line detection
+            textord_old_baselines: 0, // Use modern baseline detection
+            textord_force_make_prop_words: 0, // Don't force proportional words
+            textord_min_xheight: 10, // Minimum x-height for text
+            textord_old_xheight: 0, // Use modern x-height detection
           },
         },
         {
           name: "Auto-detect fallback",
           lang: "eng",
           options: {
-            tessedit_pageseg_mode: 3,
-            tessedit_ocr_engine_mode: 2,
+            tessedit_pageseg_mode: 3, // Fully automatic page segmentation
+            tessedit_ocr_engine_mode: 2, // Legacy + LSTM engines
+            tessedit_do_invert: 0, // Don't invert colors
+            textord_heavy_nr: 1, // Better noise removal
+            textord_min_linesize: 2.5, // Better line detection
+            textord_old_baselines: 0, // Use modern baseline detection
+            textord_force_make_prop_words: 0, // Don't force proportional words
+            textord_min_xheight: 10, // Minimum x-height for text
+            textord_old_xheight: 0, // Use modern x-height detection
           },
         },
       ];
 
-      let bestResult = { text: "", confidence: 0, configName: "" };
+      // PARALLEL OCR EXECUTION: Run all configs simultaneously for speed
+      setStatus("Running OCR in parallel...");
 
-      for (const config of ocrConfigs) {
+      const ocrPromises = ocrConfigs.map(async (config) => {
         try {
-          // console.log(`Trying OCR config: ${config.name}`);
+          // console.log(`Starting OCR config: ${config.name}`);
 
           const result = await Tesseract.recognize(imageBlob, config.lang, {
             logger: (info) => {
@@ -140,10 +162,11 @@ export default function TerminalImageUpload({
                 info.status === "recognizing text" &&
                 typeof info.progress === "number"
               ) {
-                const adjustedProgress = Math.round(info.progress * 70);
-                if (adjustedProgress > progress) {
-                  setProgress(adjustedProgress);
-                }
+                // Distribute progress across all configs for better UX
+                const adjustedProgress = Math.round(
+                  (info.progress * 70) / ocrConfigs.length
+                );
+                setProgress((prev) => Math.min(prev + adjustedProgress, 70));
               }
             },
             ...config.options,
@@ -158,17 +181,42 @@ export default function TerminalImageUpload({
           if (text.length > 100) qualityScore += 5;
           if (/\d{1,2}\/\d{1,2}\/\d{2,4}/.test(text)) qualityScore += 5;
 
-          if (qualityScore > bestResult.confidence) {
+          return {
+            text,
+            confidence: qualityScore,
+            configName: config.name,
+            success: true,
+          };
+        } catch (error) {
+          // console.log(`${config.name} failed:`, error);
+          return {
+            text: "",
+            confidence: 0,
+            configName: config.name,
+            success: false,
+            error,
+          };
+        }
+      });
+
+      // Wait for all OCR attempts to complete (much faster than sequential)
+      const ocrResults = await Promise.allSettled(ocrPromises);
+
+      // Find the best result from all successful OCR attempts
+      let bestResult = { text: "", confidence: 0, configName: "" };
+
+      ocrResults.forEach((result, index) => {
+        if (result.status === "fulfilled" && result.value.success) {
+          const ocrResult = result.value;
+          if (ocrResult.confidence > bestResult.confidence) {
             bestResult = {
-              text: text,
-              confidence: qualityScore,
-              configName: config.name,
+              text: ocrResult.text,
+              confidence: ocrResult.confidence,
+              configName: ocrResult.configName,
             };
           }
-        } catch (error) {
-                      // console.log(`${config.name} failed:`, error);
         }
-      }
+      });
 
       const text = bestResult.text;
 
@@ -203,7 +251,7 @@ export default function TerminalImageUpload({
       setProgress(100);
       setStatus("Complete!");
 
-              // console.log("Generated command:", command);
+      // console.log("Generated command:", command);
 
       // 6. Send command to terminal
       onPopulateInput(command);
