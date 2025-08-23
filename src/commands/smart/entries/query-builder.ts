@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // ================================================
 // FILE: src/commands/smart/entries/query-builder.ts
-// FIXED VERSION - with date filtering
+// FIXED VERSION - Case-insensitive account filtering
 // ================================================
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { User } from "@/types/user";
@@ -30,7 +30,6 @@ export class QueryBuilder {
       const [year, month] = args.month.split("-").map(Number);
       const lastDay = new Date(year, month, 0).getDate();
       const endOfMonth = `${args.month}-${lastDay.toString().padStart(2, "0")}`;
-
       return query
         .gte("entry_date", startOfMonth)
         .lte("entry_date", endOfMonth);
@@ -40,7 +39,6 @@ export class QueryBuilder {
     if (args.year) {
       const startOfYear = `${args.year}-01-01`;
       const endOfYear = `${args.year}-12-31`;
-
       return query.gte("entry_date", startOfYear).lte("entry_date", endOfYear);
     }
 
@@ -59,9 +57,9 @@ export class QueryBuilder {
       query = query.like("entry_text", `%Expenses:${args.business}:%`);
     }
 
-    // Account filter
+    // Account filter - FIXED: Now case-insensitive
     if (args.account) {
-      query = query.like("entry_text", `%${args.account}%`);
+      query = query.ilike("entry_text", `%${args.account}%`);
     }
 
     // Currency filter

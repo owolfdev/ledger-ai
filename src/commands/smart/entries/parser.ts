@@ -1,6 +1,6 @@
 // ================================================
 // FILE: src/commands/smart/entries/parser.ts
-// SIMPLE VERSION - basic parsing only
+// FIXED VERSION - Month parsing corrected
 // ================================================
 import type { Dir, EntriesArgs, SortKey } from "./types";
 
@@ -158,7 +158,7 @@ export function parseArgs(raw?: string): EntriesArgs {
   let go: string | undefined;
   let business: string | undefined;
   let account: string | undefined;
-  let currency: string | undefined; // NEW: Currency filter
+  let currency: string | undefined;
   let range: { start: string; end: string } | undefined;
 
   if (!raw) return { sort, dir, limit, sum, count };
@@ -205,13 +205,6 @@ export function parseArgs(raw?: string): EntriesArgs {
       i++;
       continue;
     }
-    // NEW: Currency filter parsing
-    if (t === "--currency" && i + 1 < parts.length) {
-      currency = parts[i + 1].toUpperCase();
-      i++;
-      continue;
-    }
-    // NEW: Currency filter parsing
     if (t === "--currency" && i + 1 < parts.length) {
       currency = parts[i + 1].toUpperCase();
       i++;
@@ -235,11 +228,30 @@ export function parseArgs(raw?: string): EntriesArgs {
         );
       }
     }
+
+    // FIXED: Month parsing now handles both formats correctly
     if (t === "--month" && i + 1 < parts.length) {
-      month = parts[i + 1];
+      const monthArg = parts[i + 1];
+
+      // Check if it's already in YYYY-MM format
+      if (/^\d{4}-\d{2}$/.test(monthArg)) {
+        month = monthArg;
+      }
+      // Check if it's a month name
+      else if (MONTH_NAMES[monthArg.toLowerCase()]) {
+        month = parseMonthAlias(monthArg);
+      }
+      // Invalid format
+      else {
+        throw new Error(
+          `Invalid month format: ${monthArg}. Use YYYY-MM or month name (e.g., "august", "aug")`
+        );
+      }
+
       i++;
       continue;
     }
+
     if (t === "--day" && i + 1 < parts.length) {
       day = parts[i + 1];
       i++;
@@ -256,19 +268,7 @@ export function parseArgs(raw?: string): EntriesArgs {
       continue;
     }
 
-    // NEW: Support currency codes as standalone arguments (USD, EUR, etc.)
-    if (/^[A-Z]{3}$/.test(t.toUpperCase()) && !currency) {
-      currency = t.toUpperCase();
-      continue;
-    }
-
-    // NEW: Support currency codes as standalone arguments (USD, EUR, etc.)
-    if (/^[A-Z]{3}$/.test(t.toUpperCase()) && !currency) {
-      currency = t.toUpperCase();
-      continue;
-    }
-
-    // Date parsing (keep existing logic)
+    // Date parsing (keep existing logic but handle already processed month/day/year)
     if (!day && !month && !year && !range) {
       try {
         const dateAlias = parseDateAlias(parts[i]);
@@ -279,8 +279,15 @@ export function parseArgs(raw?: string): EntriesArgs {
           continue;
         }
       } catch (error) {
-        // Ignore parsing errors
+        // Ignore parsing errors for unrecognized tokens
       }
+    }
+
+    // Support currency codes as standalone arguments (USD, EUR, etc.)
+    // Check this AFTER date parsing to avoid conflicts with month abbreviations
+    if (/^[A-Z]{3}$/.test(t.toUpperCase()) && !currency) {
+      currency = t.toUpperCase();
+      continue;
     }
   }
 
@@ -300,7 +307,7 @@ export function parseArgs(raw?: string): EntriesArgs {
     year,
     business,
     account,
-    currency, // NEW: Include currency in return
+    currency,
     go,
     range,
   };
