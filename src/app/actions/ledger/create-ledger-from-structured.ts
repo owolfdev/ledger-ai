@@ -52,7 +52,7 @@ export async function createLedgerFromStructured(
   };
 
   const currency = input.currency || "THB";
-  const postings = buildPostingsFromReceipt(input.receipt, {
+  const postings = await buildPostingsFromReceipt(input.receipt, {
     currency,
     paymentAccount: input.paymentAccount || "Assets:Cash",
     includeTaxLine: true,
