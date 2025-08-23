@@ -10,6 +10,7 @@ import {
 import { renderLedger } from "@/lib/ledger/render-ledger";
 import { parseManualNewCommand } from "@/lib/ledger/parse-manual-command";
 import { mapAccount as accountMap } from "@/lib/ledger/account-map";
+import { mapAccountWithAI } from "@/lib/ledger/ai-account-mapper";
 import {
   validateNewCommandPayload,
   type NewCommandPayload,
