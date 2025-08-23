@@ -1,78 +1,104 @@
 // /src/app/actions/ledger/create-ledger-from-structured.ts
 "use server";
 import { createClient } from "@/utils/supabase/server";
-import {
-  buildPostingsFromReceipt,
-  type ReceiptShape,
-} from "@/lib/ledger/build-postings-from-receipt";
+import { type ReceiptShape } from "@/lib/ledger/build-postings-from-receipt";
 import { renderLedger, assertBalanced } from "@/lib/ledger/render-ledger";
+import { mapAccountWithHybridAI } from "@/lib/ledger/hybrid-account-mapper";
 
 export interface CreateLedgerFromStructuredInput {
-  date: string; // YYYY-MM-DD
-  payee: string; // merchant
-  receipt: ReceiptShape; // structured items/subtotal/tax/total
-  imageUrl?: string; // optional image URL
-  currency?: string; // default THB
-  paymentAccount?: string; // default Assets:Cash
+  date: string;
+  payee: string;
+  receipt: ReceiptShape;
+  imageUrl?: string;
+  currency?: string;
+  paymentAccount?: string;
+  business?: string;
+}
+
+// ✅ AI-based postings generator (server side, async)
+async function buildPostingsFromReceiptAI(
+  receipt: ReceiptShape,
+  opts: {
+    currency: string;
+    paymentAccount: string;
+    business?: string;
+    vendor?: string;
+  }
+) {
+  const { currency, paymentAccount, business, vendor } = opts;
+
+  // map each item
+  const itemMappings = await Promise.all(
+    receipt.items.map(async (item) => ({
+      account: await mapAccountWithHybridAI(item.description, {
+        vendor,
+        business,
+      }),
+      amount: +(+item.price).toFixed(2),
+      currency,
+    }))
+  );
+
+  const postings = [...itemMappings];
+
+  // add tax line
+  if (receipt.tax && receipt.tax > 0) {
+    postings.push({
+      account: await mapAccountWithHybridAI("tax", { business }),
+      amount: +(+receipt.tax).toFixed(2),
+      currency,
+    });
+  }
+
+  // add payment line
+  const total =
+    receipt.total ??
+    receipt.subtotal ??
+    postings.reduce((s, p) => s + p.amount, 0);
+
+  postings.push({
+    account: paymentAccount,
+    amount: -total,
+    currency,
+  });
+
+  return postings;
 }
 
 export async function createLedgerFromStructured(
   input: CreateLedgerFromStructuredInput
 ) {
-  // console.log("CHECK HERE!: ");
-  // console.log("input!: ", input);
-
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   const user = auth?.user;
   if (!user) throw new Error("Not authenticated");
 
-  // Helper function to cleanup orphaned image if entry creation fails
-  const cleanupOrphanedImage = async (imageUrl: string | null | undefined) => {
-    if (!imageUrl) return;
-
-    try {
-      // Extract file path from URL for cleanup
-      const url = new URL(imageUrl);
-      const pathParts = url.pathname.split("/");
-      const receiptsIndex = pathParts.findIndex((part) => part === "receipts");
-
-      if (receiptsIndex > -1 && receiptsIndex < pathParts.length - 1) {
-        const filePath = pathParts.slice(receiptsIndex + 1).join("/");
-
-        // Only cleanup if the file belongs to the current user
-        if (filePath.startsWith(user.id + "/")) {
-          await supabase.storage.from("receipts").remove([filePath]);
-          console.log("Cleaned up orphaned image:", filePath);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to cleanup orphaned image:", error);
-    }
-  };
-
   const currency = input.currency || "THB";
-  const postings = await buildPostingsFromReceipt(input.receipt, {
+
+  // 🔥 use AI mapping here
+  const postings = await buildPostingsFromReceiptAI(input.receipt, {
     currency,
     paymentAccount: input.paymentAccount || "Assets:Cash",
-    includeTaxLine: true,
+    business: input.business || "Personal",
+    vendor: input.payee,
   });
 
   assertBalanced(postings);
 
-  // Render ledger text for convenience/preview
+  // preview text
   const entry_text = renderLedger(input.date, input.payee, postings, currency);
 
-  // Insert header
+  // insert entry
   const amountPaid = Math.abs(
     postings.filter((p) => p.amount < 0).reduce((s, p) => s + p.amount, 0)
   );
+
   const { data: headerRows, error: insErr } = await supabase
     .from("ledger_entries")
     .insert([
       {
         user_id: user.id,
-        business_id: null, // set later via classification if needed
+        business_id: null,
         entry_date: input.date,
         description: input.payee,
         entry_raw: JSON.stringify(input.receipt),
@@ -84,19 +110,12 @@ export async function createLedgerFromStructured(
     ])
     .select("id")
     .limit(1);
-  if (insErr) {
-    // Cleanup orphaned image if entry creation fails
-    await cleanupOrphanedImage(input.imageUrl);
-    throw insErr;
-  }
-  const entry_id = headerRows?.[0]?.id as number | undefined;
-  if (!entry_id) {
-    // Cleanup orphaned image if no entry ID returned
-    await cleanupOrphanedImage(input.imageUrl);
-    throw new Error("Failed to create header entry");
-  }
 
-  // Insert postings
+  if (insErr) throw insErr;
+  const entry_id = headerRows?.[0]?.id as number | undefined;
+  if (!entry_id) throw new Error("Failed to create header entry");
+
+  // insert postings
   const rows = postings.map((p, i) => ({
     entry_id,
     account: p.account,
@@ -109,8 +128,6 @@ export async function createLedgerFromStructured(
     .insert(rows);
   if (postErr) {
     await supabase.from("ledger_entries").delete().eq("id", entry_id);
-    // Cleanup orphaned image if posting insertion fails
-    await cleanupOrphanedImage(input.imageUrl);
     throw postErr;
   }
 
