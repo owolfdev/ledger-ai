@@ -1,20 +1,20 @@
-// /commands/smart/new-command-handler.ts (patched)
+// /commands/smart/new-command-handler.ts (Client-side AI processing)
 "use client";
 
 import { TerminalOutputRendererProps } from "@/types/terminal";
 import { handleNewCommand as serverHandleNewCommand } from "@/app/actions/ledger/route-new-commands";
-import {
-  buildPostingsFromReceipt,
-  type ReceiptShape,
-} from "@/lib/ledger/build-postings-from-receipt";
 import { renderLedger } from "@/lib/ledger/render-ledger";
 import { parseManualNewCommand } from "@/lib/ledger/parse-manual-command";
-import { mapAccount as accountMap } from "@/lib/ledger/account-map";
-import { mapAccountWithAI } from "@/lib/ledger/ai-account-mapper";
+import { mapAccountWithHybridAI } from "@/lib/ledger/hybrid-account-mapper";
+import { mapAccount } from "@/lib/ledger/account-map";
 import {
   validateNewCommandPayload,
   type NewCommandPayload,
 } from "@/lib/ledger/schemas";
+import type {
+  ReceiptShape,
+  ReceiptItem,
+} from "@/lib/ledger/build-postings-from-receipt";
 
 export type SetHistory = React.Dispatch<
   React.SetStateAction<TerminalOutputRendererProps[]>
@@ -33,13 +33,14 @@ interface StructuredInput {
   tax?: number | null;
   total?: number | null;
   date?: string;
-  payee?: string; // canonical
-  vendor?: string; // alias from OCR UI
+  payee?: string;
+  vendor?: string;
   currency?: string;
   memo?: string | null;
   paymentAccount?: string;
   imageUrl?: string | null;
-  business?: string; // NEW: business context
+  business?: string;
+  useAI?: boolean;
 }
 
 interface ProcessingResult {
@@ -50,7 +51,104 @@ interface ProcessingResult {
   paymentAccount?: string;
   memo?: string | null;
   imageUrl?: string | null;
-  business?: string; // NEW: business context
+  business?: string;
+  useAI?: boolean;
+}
+
+// Client-side posting generation (pre-resolved accounts)
+type ClientPosting = { account: string; amount: number; currency: string };
+
+function generateDefaultMemo(receipt: ReceiptShape): string | null {
+  if (!receipt.items || receipt.items.length === 0) return null;
+
+  if (receipt.items.length === 1) {
+    // Just the single item description
+    return receipt.items[0].description || null;
+  }
+
+  // Multiple items: join with commas and include count
+  const itemNames = receipt.items.map((i) => i.description).filter(Boolean);
+  if (itemNames.length === 0) return null;
+  return `${itemNames.join(", ")} (${receipt.items.length} items)`;
+}
+
+async function generateClientPostings(
+  receipt: ReceiptShape,
+  opts: {
+    currency: string;
+    paymentAccount: string;
+    business?: string;
+    vendor?: string;
+    useAI: boolean;
+  }
+): Promise<ClientPosting[]> {
+  const { currency, paymentAccount, business, vendor, useAI } = opts;
+
+  // Map all items to accounts (with AI if enabled)
+  const itemMappings = await Promise.all(
+    receipt.items.map(async (item) => {
+      const account = useAI
+        ? await mapAccountWithHybridAI(item.description, { vendor, business })
+        : mapAccount(item.description, { vendor, business });
+
+      return {
+        account,
+        amount: +(+item.price).toFixed(2),
+        currency,
+      };
+    })
+  );
+
+  // Handle tax if present
+  const postings: ClientPosting[] = [...itemMappings];
+  if (receipt.tax && receipt.tax > 0) {
+    const taxAccount = useAI
+      ? await mapAccountWithHybridAI("tax", { business })
+      : mapAccount("tax", { business });
+
+    postings.push({
+      account: taxAccount,
+      amount: +(+receipt.tax).toFixed(2),
+      currency,
+    });
+  }
+
+  // Add payment account (negative amount)
+  const total =
+    receipt.total ??
+    receipt.subtotal ??
+    postings.reduce((sum, p) => sum + p.amount, 0);
+
+  postings.push({
+    account: paymentAccount,
+    amount: -total,
+    currency,
+  });
+
+  // Balance check and adjustment
+  const sum = +postings.reduce((s, p) => s + p.amount, 0).toFixed(2);
+  if (Math.abs(sum) > 0.005) {
+    const diff = -sum;
+    // Find smallest positive posting to adjust
+    let idx = -1;
+    let min = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < postings.length - 1; i++) {
+      // Exclude payment account
+      if (postings[i].amount > 0 && postings[i].amount < min) {
+        min = postings[i].amount;
+        idx = i;
+      }
+    }
+
+    if (idx >= 0) {
+      postings[idx] = {
+        ...postings[idx],
+        amount: +(postings[idx].amount + diff).toFixed(2),
+      };
+    }
+  }
+
+  return postings;
 }
 
 function isValidStructuredInput(obj: unknown): obj is StructuredInput {
@@ -97,7 +195,7 @@ function todayISO(): string {
 
 function processStructuredInput(structured: StructuredInput): ProcessingResult {
   const receipt = normalizeReceiptData(structured);
-  const payee = structured.payee || structured.vendor || "Unknown"; // map vendor→payee
+  const payee = structured.payee || structured.vendor || "Unknown";
   const date = structured.date || todayISO();
   return {
     date,
@@ -107,7 +205,8 @@ function processStructuredInput(structured: StructuredInput): ProcessingResult {
     paymentAccount: structured.paymentAccount ?? undefined,
     memo: structured.memo ?? null,
     imageUrl: structured.imageUrl ?? null,
-    business: structured.business, // NEW: pass business through
+    business: structured.business,
+    useAI: structured.useAI ?? true,
   };
 }
 
@@ -125,24 +224,20 @@ function toPayload(result: ProcessingResult): NewCommandPayload {
     paymentAccount: result.paymentAccount,
     memo: result.memo ?? null,
     imageUrl: result.imageUrl ?? null,
-    business: result.business, // NEW: pass business through
+    business: result.business,
   });
 }
 
-// NEW: Helper to format Zod errors for display
 function formatZodErrorForAlert(error: unknown): string {
   if (error instanceof Error) {
     try {
-      // Try to parse as Zod error JSON
       const parsed = JSON.parse(error.message);
       if (Array.isArray(parsed)) {
-        // Format multiple validation errors as bullet points
         return parsed
           .map((err: { message: string }) => `• ${err.message}`)
           .join("\n");
       }
     } catch {
-      // Not JSON, use the raw error message
       return error.message;
     }
   }
@@ -170,7 +265,6 @@ function updateHistoryWithSuccess(
   let successMessage: string;
 
   if (entryId) {
-    // Try HTML link instead of markdown
     successMessage = `✅ Entry saved to your ledger - <a href="/ledger/entry/${entryId}">View Entry #${entryId}</a>`;
   } else {
     successMessage = "_✅ Entry saved to your ledger (Supabase)_";
@@ -185,6 +279,7 @@ function updateHistoryWithSuccess(
     },
   ]);
 }
+
 function updateHistoryWithError(setHistory: SetHistory, message: string): void {
   const formattedMessage = formatZodErrorForAlert(message);
 
@@ -198,20 +293,50 @@ function updateHistoryWithError(setHistory: SetHistory, message: string): void {
   ]);
 }
 
+function updateHistoryWithAIStatus(
+  setHistory: SetHistory,
+  status: "using" | "failed" | "disabled"
+): void {
+  let message: string;
+
+  switch (status) {
+    case "using":
+      message = "_🤖 Using AI for smart categorization..._";
+      break;
+    case "failed":
+      message = "_⚠️ AI categorization failed, using rule-based fallback_";
+      break;
+    case "disabled":
+      message = "_📋 Using rule-based categorization_";
+      break;
+  }
+
+  setHistory((h) => [
+    ...h.slice(0, -1),
+    {
+      type: "output",
+      content: message,
+      format: "markdown",
+    },
+  ]);
+}
+
 async function processAndSaveEntry(
   result: ProcessingResult,
   setHistory: SetHistory
 ): Promise<void> {
-  // Validate payload strictly before render/save
+  if (!result.memo || result.memo.trim() === "") {
+    const autoMemo = generateDefaultMemo(result.receipt);
+    if (autoMemo) result.memo = autoMemo;
+  }
+
   let payload: NewCommandPayload;
   try {
     payload = toPayload(result);
   } catch (err) {
-    // Format the error properly here
     let formattedError: string;
 
     if (err instanceof Error) {
-      // Check if it's a Zod validation error (contains JSON array)
       if (err.message.trim().startsWith("[")) {
         try {
           const zodErrors = JSON.parse(err.message);
@@ -234,46 +359,113 @@ async function processAndSaveEntry(
     return;
   }
 
-  const posts = buildPostingsFromReceipt(payload.receipt, {
-    currency: payload.currency,
-    paymentAccount: payload.paymentAccount || DEFAULT_CONFIG.paymentAccount,
-    includeTaxLine: DEFAULT_CONFIG.includeTaxLine,
-    mapAccount: accountMap,
-    vendor: payload.payee,
-    business: payload.business, // NEW: pass business through
-  });
-
-  // renderLedger doesn't need business parameter - it uses the accounts from posts
-  const ledgerPreview = renderLedger(
-    payload.date,
-    payload.payee,
-    posts,
-    payload.currency
-  );
-
-  updateHistoryWithLedger(setHistory, ledgerPreview);
+  // Show AI status
+  if (result.useAI !== false) {
+    updateHistoryWithAIStatus(setHistory, "using");
+  } else {
+    updateHistoryWithAIStatus(setHistory, "disabled");
+  }
 
   try {
-    const result = await serverHandleNewCommand(payload);
+    // Generate postings with AI on client side
+    const postings = await generateClientPostings(payload.receipt, {
+      currency: payload.currency,
+      paymentAccount: payload.paymentAccount || DEFAULT_CONFIG.paymentAccount,
+      business: payload.business,
+      vendor: payload.payee,
+      useAI: result.useAI !== false,
+    });
 
-    // console.log("Server response:", result);
+    const ledgerPreview = renderLedger(
+      payload.date,
+      payload.payee,
+      postings,
+      payload.currency
+    );
 
-    if (result.ok) {
-      // console.log("Entry ID:", result.entry_id);
-      updateHistoryWithSuccess(setHistory, result.entry_id?.toString());
+    updateHistoryWithLedger(setHistory, ledgerPreview);
+
+    const serverResult = await serverHandleNewCommand(payload);
+
+    if (serverResult.ok) {
+      updateHistoryWithSuccess(setHistory, serverResult.entry_id?.toString());
     } else {
-      updateHistoryWithError(setHistory, result.error);
+      updateHistoryWithError(setHistory, serverResult.error);
     }
   } catch (e) {
-    updateHistoryWithError(
-      setHistory,
-      e instanceof Error ? e.message : String(e)
-    );
-    return;
+    // If AI mapping failed, show warning and retry with rules
+    if (result.useAI !== false && e instanceof Error) {
+      updateHistoryWithAIStatus(setHistory, "failed");
+
+      try {
+        // Retry with rule-based mapping
+        const postings = await generateClientPostings(payload.receipt, {
+          currency: payload.currency,
+          paymentAccount:
+            payload.paymentAccount || DEFAULT_CONFIG.paymentAccount,
+          business: payload.business,
+          vendor: payload.payee,
+          useAI: false, // Force rule-based
+        });
+
+        const ledgerPreview = renderLedger(
+          payload.date,
+          payload.payee,
+          postings,
+          payload.currency
+        );
+
+        updateHistoryWithLedger(setHistory, ledgerPreview);
+
+        const serverResult = await serverHandleNewCommand(payload);
+
+        if (serverResult.ok) {
+          updateHistoryWithSuccess(
+            setHistory,
+            serverResult.entry_id?.toString()
+          );
+        } else {
+          updateHistoryWithError(setHistory, serverResult.error);
+        }
+      } catch (retryError) {
+        updateHistoryWithError(
+          setHistory,
+          retryError instanceof Error ? retryError.message : String(retryError)
+        );
+      }
+    } else {
+      updateHistoryWithError(
+        setHistory,
+        e instanceof Error ? e.message : String(e)
+      );
+    }
   }
 }
 
-// Updated section in /commands/smart/new-command-handler.ts
+function parseManualCommandWithAI(arg: string): {
+  parsed: ReturnType<typeof parseManualNewCommand>;
+  useAI: boolean;
+} {
+  // Check for AI flags in the command
+  const useAIFlag = /--use-ai\b/.test(arg);
+  const noAIFlag = /--no-ai\b/.test(arg);
+
+  // Remove AI flags before parsing
+  const cleanedArg = arg
+    .replace(/--use-ai\b/g, "")
+    .replace(/--no-ai\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const parsed = parseManualNewCommand(cleanedArg);
+
+  // Determine AI usage: explicit flags override default
+  let useAI = true; // Default to AI enabled
+  if (noAIFlag) useAI = false;
+  if (useAIFlag) useAI = true;
+
+  return { parsed, useAI };
+}
 
 export async function handleNew(
   setHistory: SetHistory,
@@ -299,8 +491,8 @@ export async function handleNew(
       return true;
     }
 
-    // 2) Manual grammar path
-    const parsed = parseManualNewCommand(arg);
+    // 2) Manual grammar path with AI detection
+    const { parsed, useAI } = parseManualCommandWithAI(arg);
     const result: ProcessingResult = {
       date: parsed.date,
       payee: parsed.payee,
@@ -308,8 +500,9 @@ export async function handleNew(
       receipt: parsed.receipt,
       paymentAccount: parsed.paymentAccount,
       memo: parsed.memo ?? null,
-      imageUrl: parsed.imageUrl ?? null, // 👈 ADD THIS LINE
+      imageUrl: parsed.imageUrl ?? null,
       business: parsed.business,
+      useAI,
     };
 
     await processAndSaveEntry(result, setHistory);

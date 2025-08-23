@@ -29,7 +29,9 @@ const DBG = process.env.NEXT_PUBLIC_LEDGER_DEBUG === "true";
 const EPS = 0.005;
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-type BuiltPosting = ReturnType<typeof buildPostingsFromReceipt>[number];
+type BuiltPosting = Awaited<
+  ReturnType<typeof buildPostingsFromReceipt>
+>[number];
 
 type NormalizedPosting = {
   account: string;
@@ -117,7 +119,7 @@ export async function handleNewCommand(
     business: payload.business, // NEW: pass business context
   });
 
-  const postings = normalizePostings(built, payload.currency);
+  const postings = normalizePostings(await built, payload.currency);
   const entry_text = renderLedger(
     payload.date,
     payload.payee,
