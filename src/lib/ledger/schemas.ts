@@ -94,6 +94,15 @@ export const NewCommandPayloadSchema = z.object({
     .optional()
     .nullable(),
   business: BusinessName.optional(), // NEW: business context
+  postings: z
+    .array(
+      z.object({
+        account: z.string(),
+        amount: z.number(),
+        currency: z.string(),
+      })
+    )
+    .optional(), // NEW: pre-generated AI-enhanced postings
 });
 
 export type NewCommandPayload = z.infer<typeof NewCommandPayloadSchema>;

@@ -218,3 +218,27 @@
     Expenses:Personal:Food:Fruit   ฿500.00
     Assets:Cash                   ฿-500.00
 
+2025/08/24 Grocery
+    Expenses:Personal:Food:Fruit   ฿500.00
+    Assets:Cash                   ฿-500.00
+
+2025/08/24 Grocery
+    Expenses:Personal:Food:Fruit   ฿500.00
+    Assets:Cash                   ฿-500.00
+
+2025/08/24 Groceries
+    Expenses:Personal:Food:Fruit:Apples ฿400.00
+    Assets:Cash                   ฿-400.00
+
+2025/08/24 Apple Store
+    Expenses:Personal:Electronics:Apple ฿40000.00
+    Assets:Cash                   ฿-40000.00
+
+2025/08/24 Q Concept
+    Expenses:Personal:Misc         ฿100.00
+    Assets:Cash                   ฿-100.00
+
+2025/08/24 B-Trend
+    Expenses:Personal:Supplies:Packaging ฿200.00
+    Assets:Cash                   ฿-200.00
+

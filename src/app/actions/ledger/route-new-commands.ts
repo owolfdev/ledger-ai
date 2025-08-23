@@ -9,6 +9,7 @@ import {
 import { renderLedger } from "@/lib/ledger/render-ledger";
 import { syncLedgerFileFromDB } from "@/app/actions/ledger/after-save-ledger-sync";
 import { isLocalLedgerWriteEnabled } from "@/lib/ledger/is-local-write-enabled";
+import { mapAccountWithHybridAI } from "@/lib/ledger/hybrid-account-mapper";
 
 export type NewCommandPayload = {
   date: string; // YYYY-MM-DD (local)
@@ -19,6 +20,7 @@ export type NewCommandPayload = {
   memo?: string | null;
   imageUrl?: string | null;
   business?: string; // NEW: business context
+  postings?: Array<{ account: string; amount: number; currency: string }>; // NEW: pre-generated AI-enhanced postings
 };
 
 export type HandleNewResult =
@@ -111,15 +113,29 @@ export async function handleNewCommand(
     }
   };
 
-  const built = buildPostingsFromReceipt(payload.receipt, {
-    currency: payload.currency,
-    paymentAccount: payload.paymentAccount || "Assets:Cash",
-    includeTaxLine: true,
-    vendor: payload.payee,
-    business: payload.business, // NEW: pass business context
-  });
+  // Use pre-generated postings if provided, otherwise generate from receipt
+  let postings: NormalizedPosting[];
+  if (payload.postings && payload.postings.length > 0) {
+    // Use client-generated AI-enhanced postings
+    postings = payload.postings.map((p, i) => ({
+      account: p.account,
+      amount: p.amount,
+      currency: p.currency,
+    }));
+  } else {
+    // Fallback to server-side generation
+    const built = buildPostingsFromReceipt(payload.receipt, {
+      currency: payload.currency,
+      paymentAccount: payload.paymentAccount || "Assets:Cash",
+      includeTaxLine: true,
+      vendor: payload.payee,
+      business: payload.business, // NEW: pass business context
+      mapAccount: mapAccountWithHybridAI, // NEW: use AI-enhanced account mapping
+    });
 
-  const postings = normalizePostings(await built, payload.currency);
+    postings = normalizePostings(await built, payload.currency);
+  }
+
   const entry_text = renderLedger(
     payload.date,
     payload.payee,

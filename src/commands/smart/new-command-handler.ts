@@ -210,8 +210,11 @@ function processStructuredInput(structured: StructuredInput): ProcessingResult {
   };
 }
 
-function toPayload(result: ProcessingResult): NewCommandPayload {
-  return validateNewCommandPayload({
+function toPayload(
+  result: ProcessingResult,
+  postings?: ClientPosting[]
+): NewCommandPayload {
+  return {
     date: result.date,
     payee: result.payee,
     currency: result.currency,
@@ -225,7 +228,8 @@ function toPayload(result: ProcessingResult): NewCommandPayload {
     memo: result.memo ?? null,
     imageUrl: result.imageUrl ?? null,
     business: result.business,
-  });
+    postings: postings, // NEW: include the generated postings
+  };
 }
 
 function formatZodErrorForAlert(error: unknown): string {
@@ -332,7 +336,16 @@ async function processAndSaveEntry(
 
   let payload: NewCommandPayload;
   try {
-    payload = toPayload(result);
+    // Generate postings with AI on client side
+    const postings = await generateClientPostings(result.receipt, {
+      currency: result.currency,
+      paymentAccount: result.paymentAccount || DEFAULT_CONFIG.paymentAccount,
+      business: result.business,
+      vendor: result.payee,
+      useAI: result.useAI !== false,
+    });
+
+    payload = toPayload(result, postings);
   } catch (err) {
     let formattedError: string;
 
@@ -367,19 +380,10 @@ async function processAndSaveEntry(
   }
 
   try {
-    // Generate postings with AI on client side
-    const postings = await generateClientPostings(payload.receipt, {
-      currency: payload.currency,
-      paymentAccount: payload.paymentAccount || DEFAULT_CONFIG.paymentAccount,
-      business: payload.business,
-      vendor: payload.payee,
-      useAI: result.useAI !== false,
-    });
-
     const ledgerPreview = renderLedger(
       payload.date,
       payload.payee,
-      postings,
+      payload.postings || [],
       payload.currency
     );
 
@@ -399,12 +403,12 @@ async function processAndSaveEntry(
 
       try {
         // Retry with rule-based mapping
-        const postings = await generateClientPostings(payload.receipt, {
-          currency: payload.currency,
+        const postings = await generateClientPostings(result.receipt, {
+          currency: result.currency,
           paymentAccount:
-            payload.paymentAccount || DEFAULT_CONFIG.paymentAccount,
-          business: payload.business,
-          vendor: payload.payee,
+            result.paymentAccount || DEFAULT_CONFIG.paymentAccount,
+          business: result.business,
+          vendor: result.payee,
           useAI: false, // Force rule-based
         });
 
@@ -417,7 +421,9 @@ async function processAndSaveEntry(
 
         updateHistoryWithLedger(setHistory, ledgerPreview);
 
-        const serverResult = await serverHandleNewCommand(payload);
+        // Create new payload with rule-based postings
+        const retryPayload = toPayload(result, postings);
+        const serverResult = await serverHandleNewCommand(retryPayload);
 
         if (serverResult.ok) {
           updateHistoryWithSuccess(
