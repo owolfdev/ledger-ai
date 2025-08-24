@@ -3,6 +3,7 @@ export const globalCommandKeys = [
   "help",
   "clear",
   "clearall",
+  "c",
   "go",
   "nav",
   "pwd",
@@ -25,6 +26,7 @@ export const globalCommandKeys = [
   "update",
   "entries",
   "ent",
+  "e",
   "edit-entry", // NEW
   "editent", // NEW
   "ledger",

@@ -363,7 +363,7 @@ export function createHandleCommand(
       return true;
     }
     // Clear terminal history
-    if (base === "clear") {
+    if (base === "clear" || base === "c") {
       setHistory([]);
       return true;
     }
@@ -871,7 +871,7 @@ export function createHandleCommand(
 
     // ----------- NEW: ENT GO INTERCEPTOR ----------- //
     // Handle "ent go <id>" before it gets to the entries command
-    if (base === "ent" && arg.startsWith("go ")) {
+    if ((base === "ent" || base === "e") && arg.startsWith("go ")) {
       const entryId = arg.split(" ")[1];
       if (!/^\d+$/.test(entryId)) {
         setHistory([
@@ -885,9 +885,8 @@ export function createHandleCommand(
         return true;
       }
       router.push(`/ledger/entry/${entryId}`);
-      return true; // Don't add to history, just navigate
+      return true;
     }
-
     // ----------- DATA-DRIVEN COMMANDS (must be in allowed set) ----------- //
 
     // Blog/project commands (logic only enabled if in allowed set)

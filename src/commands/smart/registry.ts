@@ -26,6 +26,11 @@ export const commandRegistry: Record<string, CommandMeta> = {
     description: "Clear the terminal history.",
     usage: "clear",
   },
+  c: {
+    content: "`c` - clear the terminal",
+    description: "Clear the terminal history (alias for clear)",
+    usage: "c",
+  },
   clearall: {
     content: "__RESET_HISTORY__",
     description: "Clear all terminal histories from local storage.",
@@ -268,6 +273,12 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • Works with all other filters and date ranges
   
   See \`help entries\` for full documentation.`,
+  },
+  e: {
+    description: "Alias for entries - list and filter ledger entries",
+    content: (arg, pageCtx, cmds, user) =>
+      entriesListCommand(arg, pageCtx, cmds, user),
+    usage: "e [options] - see 'help entries' for full usage",
   },
 
   "edit-entry": {
