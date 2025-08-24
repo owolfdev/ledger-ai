@@ -64,12 +64,12 @@ export function formatEntryLine(entry: LedgerEntryData): string {
   const businessName = extractBusinessName(entry.entry_text);
 
   // Mobile card component
-  const mobileCard = `<div class="block sm:hidden bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4 mb-3 shadow-sm">
+  const mobileCard = `<div class="block sm:hidden  border border-neutral-200 dark:border-neutral-700 rounded-lg p-4 mb-3 shadow-sm">
     <div class="flex items-start justify-between mb-2">
       <div class="font-medium text-base flex-1 pr-2">${sanitizeForAttribute(
         entry.description
       )}</div>
-      <div class="text-lg">${entry.is_cleared ? "✅" : "⏳"}</div>
+      // <div class="text-lg">${entry.is_cleared ? "✅" : "⏳"}</div>
     </div>
     <div class="flex items-center justify-between mb-2">
       <div class="text-sm text-neutral-600 dark:text-neutral-400">${
