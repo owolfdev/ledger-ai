@@ -16,6 +16,7 @@ import {
   EntryListItem,
   ResponsiveEntryItem,
 } from "@/components/terminal/ledger-entry-components";
+import { MobileEntryCard } from "@/components/ledger/mobile-entry-card";
 
 function MDXImage(props: React.ComponentProps<typeof Image>) {
   return (
@@ -178,6 +179,7 @@ export function getMDXComponents(overrides: MDXComponents = {}): MDXComponents {
     "entry-card": EntryCard,
     "entry-list-item": EntryListItem,
     "responsive-entry-item": ResponsiveEntryItem,
+    "mobile-entry-card": MobileEntryCard,
     ...overrides,
   };
 }

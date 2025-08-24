@@ -69,7 +69,7 @@ export function formatEntryLine(entry: LedgerEntryData): string {
       <div class="font-medium text-base flex-1 pr-2">${sanitizeForAttribute(
         entry.description
       )}</div>
-      // <div class="text-lg">${entry.is_cleared ? "✅" : "⏳"}</div>
+      <div class="text-lg">${entry.is_cleared ? "✅" : "⏳"}</div>
     </div>
     <div class="flex items-center justify-between mb-2">
       <div class="text-sm text-neutral-600 dark:text-neutral-400">${
