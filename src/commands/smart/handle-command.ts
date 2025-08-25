@@ -870,8 +870,8 @@ export function createHandleCommand(
     }
 
     // ----------- NEW: ENT GO INTERCEPTOR ----------- //
-    // Handle "ent go <id>" before it gets to the entries command
-    if ((base === "ent" || base === "e") && arg.startsWith("go ")) {
+    // Handle "ent --go <id>" before it gets to the entries command
+    if ((base === "ent" || base === "e") && arg.startsWith("--go ")) {
       const entryId = arg.split(" ")[1];
       if (!/^\d+$/.test(entryId)) {
         setHistory([

@@ -1,6 +1,6 @@
 // ================================================
 // FILE: src/commands/smart/entries-command.ts
-// FIXED - Component separation and utility integration
+// REFACTORED - Standardized flag system and improved UX
 // ================================================
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@/types/user";

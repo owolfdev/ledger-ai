@@ -452,14 +452,16 @@ function parseManualCommandWithAI(arg: string): {
   parsed: ReturnType<typeof parseManualNewCommand>;
   useAI: boolean;
 } {
-  // Check for AI flags in the command
-  const useAIFlag = /--use-ai\b/.test(arg);
-  const noAIFlag = /--no-ai\b/.test(arg);
+  // Check for AI flags in the command (support both long and short flags)
+  const useAIFlag = /--use-ai\b|-u\b/.test(arg);
+  const noAIFlag = /--no-ai\b|-n\b/.test(arg);
 
-  // Remove AI flags before parsing
+  // Remove AI flags before parsing (both long and short versions)
   const cleanedArg = arg
     .replace(/--use-ai\b/g, "")
     .replace(/--no-ai\b/g, "")
+    .replace(/-u\b/g, "")
+    .replace(/-n\b/g, "")
     .replace(/\s+/g, " ")
     .trim();
 

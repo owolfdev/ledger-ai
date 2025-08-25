@@ -249,22 +249,22 @@ function extractFlags(tokens: string[]): {
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
 
-    // --business flag
-    if (token === "--business" && i + 1 < tokens.length) {
+    // --business flag (with short flag -b)
+    if ((token === "--business" || token === "-b") && i + 1 < tokens.length) {
       business = tokens[i + 1];
       i++; // Skip the value token
       continue;
     }
 
-    // --payment flag
-    if (token === "--payment" && i + 1 < tokens.length) {
+    // --payment flag (with short flag -p)
+    if ((token === "--payment" || token === "-p") && i + 1 < tokens.length) {
       payment = tokens[i + 1];
       i++; // Skip the value token
       continue;
     }
 
-    // --memo flag
-    if (token === "--memo" && i + 1 < tokens.length) {
+    // --memo flag (with short flag -m)
+    if ((token === "--memo" || token === "-m") && i + 1 < tokens.length) {
       const memoValue = tokens[i + 1];
       // Remove quotes if present
       memo = memoValue.replace(/^"(.*)"$/, "$1");
@@ -272,8 +272,8 @@ function extractFlags(tokens: string[]): {
       continue;
     }
 
-    // --date flag
-    if (token === "--date" && i + 1 < tokens.length) {
+    // --date flag (with short flag -d)
+    if ((token === "--date" || token === "-d") && i + 1 < tokens.length) {
       const dateValue = tokens[i + 1];
       const parsedDate = parseDateToken(dateValue);
       if (parsedDate) {
@@ -284,8 +284,8 @@ function extractFlags(tokens: string[]): {
     }
 
     // 👈 ADD THIS SECTION
-    // --image flag
-    if (token === "--image" && i + 1 < tokens.length) {
+    // --image flag (with short flag -i)
+    if ((token === "--image" || token === "-i") && i + 1 < tokens.length) {
       const imageValue = tokens[i + 1];
       // Remove quotes if present
       imageUrl = imageValue.replace(/^"(.*)"$/, "$1");

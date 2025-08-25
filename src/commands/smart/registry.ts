@@ -118,81 +118,72 @@ export const commandRegistry: Record<string, CommandMeta> = {
       cmds?: Record<string, CommandMeta>,
       user?: User | null
     ) => entriesListCommand(arg || "", pageCtx || "", cmds || {}, user || null),
-    usage: `entries [limit] [date|created] [asc|desc] [options]
+    usage: `entries [options]
   
-  **Basic Usage:**
-  • \`entries\` — List 20 most recent entries
-  • \`entries 50\` — List 50 most recent entries  
-  • \`entries created asc\` — Sort by creation date, oldest first
+  **📋 Quick Reference - All Available Flags:**
   
-  **Navigation:**
-  • \`entries go <id>\` — Navigate directly to entry by ID (e.g., \`entries go 330\`)
+  **Filtering:**
+  • \`--business <name>\` / \`-b <name>\`     — Filter by business account
+  • \`--vendor <name>\` / \`-v <name>\`       — Filter by vendor/description
+  • \`--account <pattern>\` / \`-A <pattern>\` — Filter by account name
+  • \`--currency <code>\` / \`-c <code>\`     — Filter by currency (USD, THB, EUR)
   
-  **Smart Date Aliases:**
-  • \`entries today\` — Today's entries
-  • \`entries yesterday\` — Yesterday's entries
-  • \`entries 2025\` — All entries for year 2025
-  • \`entries 2024\` — All entries for year 2024
-  • \`entries jan\` or \`entries january\` — January entries (current year)
-  • \`entries aug\` or \`entries august\` — August entries (current year)
-  • \`entries may\`, \`entries sep\`, etc. — Any month name
+  **Date Filtering:**
+  • \`--month <YYYY-MM|name>\` / \`-m <YYYY-MM|name>\` — Filter by month
+  • \`--day <YYYY-MM-DD>\` / \`-D <YYYY-MM-DD>\`       — Filter by specific day
+  • \`--year <YYYY>\` / \`-y <YYYY>\`                   — Filter by year
+  • \`--range <start> <end>\` / \`-r <start> <end>\`   — Filter by date range
   
-  **Date Ranges:**
-  • \`entries --range 2025-01 2025-06\` — January through June 2025
-  • \`entries --range today yesterday\` — Yesterday and today
-  • \`entries --range 2024-12 2025-02\` — Cross-year range
-  • \`entries --range 2025-01-01 2025-01-31\` — Specific date range
+  **Output & Navigation:**
+  • \`--sum\` / \`-s\`                    — Show totals with multi-currency breakdown
+  • \`--count\` / \`-n\`                  — Show count only, no entries listed
+  • \`--go <id>\` / \`-g <id>\`           — Navigate to specific entry by ID
   
-  **Traditional Date Filtering:**
-  • \`--month YYYY-MM\` — Filter by specific month (e.g., 2025-08)
-  • \`--day YYYY-MM-DD\` — Filter by specific day (e.g., 2025-08-17)
-  • \`--year YYYY\` — Filter by specific year (e.g., 2025)
+  **Sorting & Limits:**
+  • \`--sort <date|created>\` / \`-D <date|created>\` — Sort by date or creation time
+  • \`--dir <asc|desc>\` / \`-d <asc|desc>\`           — Sort direction
+  • \`--limit <number>\` / \`-l <number>\`             — Limit number of results
   
-  **Filtering Options:**
-  • \`--business <name>\` — Filter by business (Personal, MyOnlineBusiness, etc.)
-  • \`--vendor <name>\` — Filter by vendor/description (case-insensitive)
-  • \`--account <pattern>\` — Filter by account name (supports partial matching)
-  • \`--currency <code>\` — **NEW:** Filter by currency (USD, THB, EUR, etc.)
-  • \`--count\` — Show count only, no entries listed
-  • \`--sum\` — **ENHANCED:** Show totals with multi-currency breakdown
+  **🚀 Smart Date Aliases (No Flags Needed):**
+  • \`entries today\`      — Today's entries
+  • \`entries yesterday\`  — Yesterday's entries
+  • \`entries 2025\`       — All 2025 entries
+  • \`entries jan\`        — January entries (current year)
+  • \`entries august\`     — August entries (current year)
   
-  **Currency Filtering (NEW):**
-  • \`entries USD\` — Show only USD entries
-  • \`entries THB\` — Show only Thai Baht entries
-  • \`entries EUR\` — Show only Euro entries
-  • \`entries --currency USD\` — Explicit currency flag syntax
-  • \`entries USD sum\` — USD entries with total
-  • \`entries THB count\` — Count THB entries
+  **💡 Quick Examples:**
+  • \`entries\`                           — Recent entries (10 most recent)
+  • \`entries -l 50\`                     — 50 most recent entries
+  • \`entries -s\`                        — With totals
+  • \`entries -n\`                        — Count only
+  • \`entries -b Personal\`                — Personal business entries
+  • \`entries -v Starbucks\`               — Starbucks purchases
+  • \`entries -A Coffee\`                  — Coffee-related accounts
+  • \`entries -c USD\`                     — USD entries only
+  • \`entries -g 330\`                     — Navigate to entry #330
+  • \`entries today -s\`                   — Today with totals
+  • \`entries aug -b Personal\`            — August personal entries
+  • \`entries -m 2025-01 -s\`              — January 2025 with totals
+  • \`entries -r jan mar\`                 — January through March
   
-  **Multi-Currency Totals (NEW):**
-  • \`entries sum\` — Shows breakdown by currency: "Total USD: $123.45, Total THB: ฿5,678.90"
-  • \`entries USD sum\` — Single currency total: "Total: $123.45"
-  • \`entries --business Personal sum\` — Personal totals by currency
-  • \`entries aug sum\` — August totals by currency
+  **🔧 Advanced Combinations:**
+  • \`entries -b Personal -v coffee -s\`  — Personal coffee expenses with totals
+  • \`entries -c USD -m aug -n\`          — Count USD entries in August
+  • \`entries -r 2025-01 2025-06 -b MyBrick -s\` — MyBrick entries Jan-Jun with totals
   
-  **Account Filtering Examples:**
-  • \`entries --account Coffee\` — Any account containing "Coffee"
-  • \`entries --account Expenses:Personal:Food\` — Specific account hierarchy
-  • \`entries --account Assets\` — All asset accounts
-  • \`entries --account Liabilities\` — All liability accounts
+  **📱 Mobile-Friendly Short Flags:**
+  Use short flags for quick typing on mobile:
+  • \`-b\` instead of \`--business\`
+  • \`-v\` instead of \`--vendor\`
+  • \`-s\` instead of \`--sum\`
+  • \`-n\` instead of \`--count\`
+  • \`-g\` instead of \`--go\`
+  • \`-l\` instead of \`--limit\`
   
-  **Filter Priority:** Range > Day > Month > Year (most specific wins)
-  
-  **Examples:**
-  • \`entries go 330\` — Navigate to entry #330
-  • \`entries today sum\` — Today's entries with multi-currency totals
-  • \`entries aug --business Personal\` — Personal business entries in August
-  • \`entries yesterday --vendor Starbucks\` — Yesterday's Starbucks purchases
-  • \`entries 2025 count\` — Count all 2025 entries
-  • \`entries --business Personal --count --sum\` — Count and total for personal entries
-  • \`entries --range jan mar sum\` — January-March totals by currency
-  • \`entries 2024 --vendor coffee\` — All 2024 coffee purchases
-  • \`entries created desc 10 --business Channel60\` — Latest 10 Channel60 entries
-  • \`entries --account Coffee --business Personal sum\` — Personal coffee expenses total
-  • \`entries --account Assets:Cash today\` — Today's cash transactions
-  • \`entries USD --business Personal\` — **NEW:** Personal USD entries only
-  • \`entries THB --vendor 7-Eleven sum\` — **NEW:** Thai 7-Eleven purchases total
-  • \`entries --currency EUR --business MyBrick\` — **NEW:** MyBrick Euro transactions`,
+  **🔄 Backward Compatibility:**
+  • Numeric limits without \`--limit\` still work: \`entries 50\`
+  • Date aliases still work: \`entries today\`, \`entries 2025\`
+  • Currency codes still work: \`entries USD\``,
   },
   ent: {
     description:
@@ -203,82 +194,100 @@ export const commandRegistry: Record<string, CommandMeta> = {
       cmds?: Record<string, CommandMeta>,
       user?: User | null
     ) => entriesListCommand(arg || "", pageCtx || "", cmds || {}, user || null),
-    usage: `ent [limit] [date|created] [asc|desc] [options]
+    usage: `ent [options]
   
-  **Quick Date Access:**
-  • \`ent\` — Recent entries (10 most recent)
-  • \`ent today\` — Today's entries
-  • \`ent yesterday\` — Yesterday's entries
-  • \`ent 2025\` — All 2025 entries
-  • \`ent aug\` — August entries (current year)
-  • \`ent jan\`, \`ent feb\`, etc. — Any month name
+  **📋 Quick Reference - All Available Flags:**
   
-  **Currency Filtering (NEW):**
-  • \`ent USD\` — **NEW:** Show only USD entries
-  • \`ent THB\` — **NEW:** Show only Thai Baht entries
-  • \`ent EUR\` — **NEW:** Show only Euro entries
-  • \`ent --currency USD\` — **NEW:** Explicit currency flag
+  **Filtering:**
+  • \`--business <name>\` / \`-b <name>\`     — Filter by business account
+  • \`--vendor <name>\` / \`-v <name>\`       — Filter by vendor/description
+  • \`--account <pattern>\` / \`-A <pattern>\` — Filter by account name
+  • \`--currency <code>\` / \`-c <code>\`     — Filter by currency (USD, THB, EUR)
   
-  **Navigation & Search:**
-  • \`ent go 330\` — Navigate to entry #330
-  • \`ent count\` — Total entry count
-  • \`ent --business Personal\` — Personal business entries
-  • \`ent --vendor coffee\` — Find coffee purchases
-  • \`ent --account Coffee\` — All coffee-related accounts
-  • \`ent --account Assets:Cash\` — Cash transactions only
+  **Date Filtering:**
+  • \`--month <YYYY-MM|name>\` / \`-m <YYYY-MM|name>\` — Filter by month
+  • \`--day <YYYY-MM-DD>\` / \`-D <YYYY-MM-DD>\`       — Filter by specific day
+  • \`--year <YYYY>\` / \`-y <YYYY>\`                   — Filter by year
+  • \`--range <start> <end>\` / \`-r <start> <end>\`   — Filter by date range
   
-  **Date Ranges:**
-  • \`ent --range 2025-01 2025-06\` — January through June
-  • \`ent --range today yesterday\` — Yesterday and today
-  • \`ent --range jan mar\` — January through March
+  **Output & Navigation:**
+  • \`--sum\` / \`-s\`                    — Show totals with multi-currency breakdown
+  • \`--count\` / \`-n\`                  — Show count only, no entries listed
+  • \`--go <id>\` / \`-g <id>\`           — Navigate to specific entry by ID
   
-  **Multi-Currency Totals & Counting (ENHANCED):**
-  • \`ent today sum\` — **ENHANCED:** Today's totals by currency
-  • \`ent aug --sum\` — **ENHANCED:** August totals by currency  
-  • \`ent 2025 --count\` — Count this year's entries
-  • \`ent --business Personal --count --sum\` — **ENHANCED:** Personal count and multi-currency totals
-  • \`ent --account Coffee --sum\` — **ENHANCED:** Coffee expenses by currency
-  • \`ent USD sum\` — **NEW:** USD-only total
-  • \`ent THB count\` — **NEW:** Count Thai Baht entries
+  **Sorting & Limits:**
+  • \`--sort <date|created>\` / \`-D <date|created>\` — Sort by date or creation time
+  • \`--dir <asc|desc>\` / \`-d <asc|desc>\`           — Sort direction
+  • \`--limit <number>\` / \`-l <number>\`             — Limit number of results
   
-  **Smart Examples:**
-  • \`ent yesterday --vendor Starbucks\` — Yesterday's Starbucks purchases
-  • \`ent aug --business Channel60 sum\` — **ENHANCED:** August Channel60 totals by currency
-  • \`ent 2024 --vendor coffee count\` — Count 2024 coffee purchases
-  • \`ent --range jan today --business Personal\` — Personal entries this year
-  • \`ent --account Expenses:Food --business Personal\` — Personal food expenses
-  • \`ent --account Assets --vendor ATM\` — ATM withdrawals from asset accounts
-  • \`ent USD --business Personal\` — **NEW:** Personal USD entries only
-  • \`ent THB --vendor 7-Eleven\` — **NEW:** Thai 7-Eleven purchases
-  • \`ent --currency EUR today sum\` — **NEW:** Today's Euro transactions total
+  **🚀 Smart Date Aliases (No Flags Needed):**
+  • \`ent today\`      — Today's entries
+  • \`ent yesterday\`  — Yesterday's entries
+  • \`ent 2025\`       — All 2025 entries
+  • \`ent aug\`        — August entries (current year)
   
-  **All Features:**
-  • **Date aliases:** today, yesterday, year (2025), month names (jan, feb, etc.)
-  • **Ranges:** \`--range start end\` with dates, months, or aliases
-  • **Navigation:** \`go <id>\` to jump to specific entry
-  • **Filtering:** \`--business\`, \`--vendor\`, \`--account\`, \`--currency\` with flexible matching
-  • **Multi-Currency:** \`USD\`, \`THB\`, \`EUR\` as standalone filters
-  • **Enhanced Totals:** \`--count\`, \`--sum\` with multi-currency breakdown
-  • **Sorting:** \`date\`/\`created\` + \`asc\`/\`desc\`
+  **💡 Quick Examples:**
+  • \`ent\`                           — Recent entries (10 most recent)
+  • \`ent -l 50\`                     — 50 most recent entries
+  • \`ent -s\`                        — With totals
+  • \`ent -n\`                        — Count only
+  • \`ent -b Personal\`                — Personal business entries
+  • \`ent -v Starbucks\`               — Starbucks purchases
+  • \`ent -A Coffee\`                  — Coffee-related accounts
+  • \`ent -c USD\`                     — USD entries only
+  • \`ent -g 330\`                     — Navigate to entry #330
+  • \`ent today -s\`                   — Today with totals
+  • \`ent aug -b Personal\`            — August personal entries
+  • \`ent -m 2025-01 -s\`              — January 2025 with totals
+  • \`ent -r jan mar\`                 — January through March
   
-  **Account Filtering:**
-  • \`--account Coffee\` — Partial matching (any account with "Coffee")
-  • \`--account Expenses:Personal:Food\` — Hierarchical matching
-  • \`--account Assets\` — All asset accounts
-  • \`--account Liabilities:CreditCard\` — Specific liability account
+  **🔧 Advanced Combinations:**
+  • \`ent -b Personal -v coffee -s\`  — Personal coffee expenses with totals
+  • \`ent -c USD -m aug -n\`          — Count USD entries in August
+  • \`ent -r 2025-01 2025-06 -b MyBrick -s\` — MyBrick entries Jan-Jun with totals
   
-  **Currency Filtering:**
-  • \`USD\`, \`THB\`, \`EUR\` — **NEW:** Direct currency codes
-  • \`--currency USD\` — **NEW:** Explicit flag syntax
-  • Works with all other filters and date ranges
+  **📱 Mobile-Friendly Short Flags:**
+  Use short flags for quick typing on mobile:
+  • \`-b\` instead of \`--business\`
+  • \`-v\` instead of \`--vendor\`
+  • \`-s\` instead of \`--sum\`
+  • \`-n\` instead of \`--count\`
+  • \`-g\` instead of \`--go\`
+  • \`-l\` instead of \`--limit\`
   
-  See \`help entries\` for full documentation.`,
+  **🔄 Backward Compatibility:**
+  • Numeric limits without \`--limit\` still work: \`ent 50\`
+  • Date aliases still work: \`ent today\`, \`ent 2025\`
+  • Currency codes still work: \`ent USD\``,
   },
   e: {
-    description: "Alias for entries - list and filter ledger entries",
+    description:
+      "Short alias for entries - list and filter ledger entries with all the same features",
     content: (arg, pageCtx, cmds, user) =>
       entriesListCommand(arg, pageCtx, cmds, user),
-    usage: "e [options] - see 'help entries' for full usage",
+    usage: `e [options] - Quick reference for common flags:
+
+  **📱 Quick Flags (Mobile-Friendly):**
+  • \`-b <name>\`     — Business filter
+  • \`-v <name>\`     — Vendor filter  
+  • \`-A <pattern>\`  — Account filter
+  • \`-c <code>\`     — Currency filter
+  • \`-s\`            — Show totals
+  • \`-n\`            — Count only
+  • \`-g <id>\`       — Go to entry
+  • \`-l <number>\`   — Limit results
+  
+  **🚀 Smart Aliases:**
+  • \`e today\`       — Today's entries
+  • \`e 2025\`        — All 2025 entries
+  • \`e aug\`         — August entries
+  
+  **💡 Examples:**
+  • \`e -b Personal -s\`     — Personal entries with totals
+  • \`e today -n\`            — Count today's entries
+  • \`e -v Starbucks\`        — Starbucks purchases
+  
+  See \`help entries\` for full documentation and all options.`,
   },
 
   "edit-entry": {
@@ -349,7 +358,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
 
   ledger: {
     description:
-      "Execute actual Ledger CLI commands against the synced .ledger file. Available in development mode only. Automatically syncs database to file before execution.",
+      "Execute actual Ledger CLI commands against the synced .ledger file. Available in development mode only. Automatically syncs database to file before execution. Enhanced with security features including command whitelisting and argument validation.",
     content: (
       arg?: string,
       pageCtx?: string,
@@ -358,34 +367,70 @@ export const commandRegistry: Record<string, CommandMeta> = {
     ) => ledgerCliCommand(arg || "", pageCtx || "", cmds || {}, user || null),
     usage: `ledger <command> [args...]
   
-  **Common Commands:**
-  • \`ledger balance\` — Show account balances
-  • \`ledger register\` — Show all transactions in register format
-  • \`ledger bal Expenses\` — Balance for Expenses accounts only
-  • \`ledger reg coffee\` — Register entries containing "coffee"
-  • \`ledger accounts\` — List all account names
-  • \`ledger payees\` — List all payees/vendors
-  • \`ledger stats\` — Show ledger statistics
+  **🔒 Security Features:**
+  • **Command Whitelisting** — Only safe Ledger CLI commands allowed
+  • **Argument Validation** — Dangerous patterns are blocked
+  • **Input Sanitization** — Shell injection attempts are prevented
+  • **User Authentication** — Requires login to execute commands
+  • **Security Logging** — All commands are logged for monitoring
   
-  **Advanced Examples:**
-  • \`ledger bal --monthly\` — Monthly balance report
-  • \`ledger reg --period "last 30 days"\` — Recent transactions
+  **✅ Safe Commands (Whitelisted):**
+  
+  **Balance & Reports:**
+  • \`balance\`, \`bal\` — Show account balances
+  • \`equity\` — Show equity report
+  • \`cleared\` — Show cleared transactions
+  
+  **Transactions & Register:**
+  • \`register\`, \`reg\` — Show transaction register
+  • \`print\` — Print transactions
+  • \`xact\` — Show specific transaction
+  
+  **Accounts & Metadata:**
+  • \`accounts\` — List all account names
+  • \`payees\` — List all payees/vendors
+  • \`stats\` — Show ledger statistics
+  • \`files\` — List source files
+  
+  **Reports & Queries:**
+  • \`report\` — Generate custom reports
+  • \`budget\` — Show budget information
+  • \`activity\` — Show account activity
+  • \`query\` — Run custom queries
+  • \`calc\` — Perform calculations
+  
+  **💡 Common Usage Examples:**
+  • \`ledger balance\` — Show all account balances
+  • \`ledger register coffee\` — Register entries containing "coffee"
+  • \`ledger bal Expenses\` — Balance for Expenses accounts only
+  • \`ledger reg --monthly\` — Monthly register report
   • \`ledger bal Expenses:Personal\` — Personal expenses only
   • \`ledger reg --begin 2025-08-01\` — Transactions since August 1st
   • \`ledger bal --depth 2\` — Balance to depth 2 accounts
   
-  **Business Filtering:**
+  **🏢 Business Filtering:**
   • \`ledger bal Expenses:MyBrick\` — MyBrick business expenses
   • \`ledger reg Expenses:Personal:Food\` — Personal food expenses
   • \`ledger bal Liabilities\` — All liabilities (credit cards, etc.)
   
-  **Features:**
+  **🚫 Blocked for Security:**
+  • Shell command separators (\`;\`, \`&\`, \`|\`, \`\`\`, \`$\`)
+  • Directory traversal attempts (\`../\`)
+  • File manipulation flags (\`--file\`, \`--output\`)
+  • Unauthorized commands not in whitelist
+  
+  **🔧 Features:**
   • Auto-syncs database to \`.ledger\` file before execution
-  • Full Ledger CLI power with your data
+  • Full Ledger CLI power with your data (safe commands only)
   • Development mode only for security
   • Formatted output with syntax highlighting
+  • Security logging and monitoring
   
-  **Note:** Requires Ledger CLI installed and available in PATH`,
+  **⚠️ Security Notes:**
+  • Commands are validated and sanitized before execution
+  • All executions are logged for security monitoring
+  • Requires Ledger CLI installed and available in PATH
+  • Restricted to authenticated users only`,
   },
 
   // You might also want shorter aliases:
@@ -637,48 +682,93 @@ export const commandRegistry: Record<string, CommandMeta> = {
   new: {
     content: "__LEDGER_NEW_ENTRY__",
     description:
-      "Create a new double-entry ledger transaction from natural language. Uses intuitive @ syntax for vendors and --flags for options. Automatically categorizes expenses and supports multiple businesses.",
+      "Create a new double-entry ledger transaction from natural language. Uses intuitive @ syntax for vendors and --flags for options. Automatically categorizes expenses and supports multiple businesses with AI-powered categorization.",
     usage: `new [business:]<items> [@ vendor] [--options]
   
-  **Syntax:**
-  • **Items:** \`<description> <amount>[, <description> <amount>...]\`
-  • **Vendor:** \`@ VendorName\` (like email addresses)
-  • **Business:** \`BusinessName:\` (prefix) or \`--business BusinessName\`
-  • **Options:** \`--payment\`, \`--memo\`, \`--date\`
+  **📋 Quick Reference - All Available Flags:**
   
-  **Basic Examples:**
-  • \`new coffee 150\` — Simple expense (defaults to Personal business)
-  • \`new coffee 150 @ Starbucks\` — With vendor
-  • \`new coffee $6, pastry $4 @ Starbucks\` — Multiple items
-  • \`new supplies 500 @ HomeDepot --payment cash\` — With payment method
+  **Core Options:**
+  • \`--business <name>\` / \`-b <name>\`     — Set business context
+  • \`--payment <method>\` / \`-p <method>\`   — Payment method (cash, credit card, etc.)
+  • \`--memo <text>\` / \`-m <text>\`          — Add memo/note
+  • \`--date <date>\` / \`-d <date>\`          — Set transaction date
+  • \`--image <url>\` / \`-i <url>\`            — Attach image URL
   
-  **Business Context:**
-  • \`new MyBrick: supplies 300 @ supplier\` — Prefix syntax
-  • \`new coffee 150 @ Starbucks --business MyOnline\` — Flag syntax
-  • No business specified defaults to "Personal"
+  **AI Categorization:**
+  • \`--use-ai\` / \`-u\`                      — Force AI categorization (default)
+  • \`--no-ai\` / \`-n\`                       — Disable AI, use rule-based mapping
   
-  **Payment Methods:**
+  **🚀 Smart Syntax (No Flags Needed):**
+  • \`new coffee 150\`                         — Simple expense (Personal business)
+  • \`new MyBrick: supplies 500\`              — Business prefix syntax
+  • \`new coffee 150 @ Starbucks\`             — With vendor using @ syntax
+  • \`new coffee $6, pastry $4 @ Starbucks\`  — Multiple items with vendor
+  
+  **💡 Quick Examples with Short Flags:**
+  • \`new coffee 150 -b Personal\`             — Personal business coffee
+  • \`new supplies 500 -p cash\`               — Cash payment for supplies
+  • \`new lunch 200 -m "client meeting"\`      — Lunch with memo
+  • \`new coffee 150 -d yesterday\`            — Yesterday's coffee
+  • \`new supplies 300 -i "https://..."\`      — Supplies with image
+  
+  **🔧 Advanced Combinations:**
+  • \`new coffee $6, lunch $12 @ Cafe -b Personal -p "credit card" -m "client meeting"\`
+  • \`new Channel60: marketing 1000 @ Agency -p cash -d yesterday\`
+  • \`new subscription 50 @ Netflix -b Personal -m "monthly" -d 2025-08-10\`
+  • \`new supplies 500 @ HomeDepot -b MyBrick -p cash -m "office supplies"\`
+  
+  **📱 Mobile-Friendly Short Flags:**
+  Use short flags for quick typing on mobile:
+  • \`-b\` instead of \`--business\`
+  • \`-p\` instead of \`--payment\`
+  • \`-m\` instead of \`--memo\`
+  • \`-d\` instead of \`--date\`
+  • \`-i\` instead of \`--image\`
+  • \`-u\` instead of \`--use-ai\`
+  • \`-n\` instead of \`--no-ai\`
+  
+  **🏢 Business Context Options:**
+  • **Prefix syntax:** \`MyBrick: items...\` (quick and intuitive)
+  • **Flag syntax:** \`--business MyBrick\` (explicit and clear)
+  • **Default:** Personal business if none specified
+  
+  **💳 Payment Methods:**
   • \`--payment cash\` → Assets:Cash (default)
   • \`--payment "credit card"\` → Liabilities:CreditCard
   • \`--payment paypal\` → Assets:PayPal
   • \`--payment "bank card"\` → Assets:Bank:Checking
   
-  **Date & Other Options:**
-  • \`--date yesterday\` — Use yesterday's date
-  • \`--date 2025-08-10\` — Use specific date (YYYY-MM-DD format)
-  • \`--date 2025/08/10\` — Alternative date format (YYYY/MM/DD)
-  • \`--memo "client meeting"\` — Add memo/note
-  • Currency auto-detected: \`$\` = USD, \`฿\` = THB
+  **📅 Date Formats:**
+  • \`--date yesterday\` — Relative date
+  • \`--date 2025-08-10\` — YYYY-MM-DD format
+  • \`--date 2025/08/10\` — YYYY/MM/DD format
+  • **Default:** Today's date if none specified
   
-  **Full Examples:**
-  • \`new coffee $6, lunch $12 @ Cafe --business Personal --payment "credit card" --memo "client meeting"\`
-  • \`new Channel60: marketing 1000 @ Agency --payment cash --date yesterday\`
-  • \`new subscription 50 @ Netflix --business Personal --memo "monthly" --date 2025-08-10\`
+  **🤖 AI Categorization:**
+  • **Default:** AI-enabled for smart categorization
+  • \`--use-ai\` / \`-u\` — Force AI categorization
+  • \`--no-ai\` / \`-n\` — Use rule-based fallback
+  • **Fallback:** If AI fails, automatically retries with rules
   
-  **Account Mapping:**
-  • Personal: \`Expenses:Personal:Food:Coffee\`
-  • MyBrick: \`Expenses:MyBrick:Supplies:General\`  
-  • MyOnline: \`Expenses:MyOnline:Subscription:Software\``,
+  **💰 Currency Detection:**
+  • **Auto-detected:** \`$\` = USD, \`฿\` = THB
+  • **Default:** THB (Thai Baht) if no currency symbols found
+  
+  **📊 Account Mapping Examples:**
+  • **Personal:** \`Expenses:Personal:Food:Coffee\`
+  • **MyBrick:** \`Expenses:MyBrick:Supplies:General\`  
+  • **MyOnline:** \`Expenses:MyOnline:Subscription:Software\`
+  
+  **🔄 Backward Compatibility:**
+  • Business prefix syntax still works: \`MyBrick: items...\`
+  • @ vendor syntax still works: \`@ Starbucks\`
+  • All existing long flags continue to work
+  
+  **💡 Pro Tips:**
+  • Use business prefix for quick context: \`MyBrick: supplies 500\`
+  • Combine multiple flags: \`-b Personal -p cash -m "note"\`
+  • AI automatically categorizes items based on description and vendor
+  • Payment methods map to standard ledger accounts automatically`,
   },
   // Contact Messages
   // In your commandRegistry, under messages:

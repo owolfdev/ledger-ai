@@ -1,6 +1,6 @@
 // ================================================
 // FILE: src/commands/smart/entries/parser.ts
-// FIXED VERSION - Month parsing corrected
+// REFACTORED VERSION - Standardized flag syntax with -- prefix
 // ================================================
 import type { Dir, EntriesArgs, SortKey } from "./types";
 
@@ -169,53 +169,62 @@ export function parseArgs(raw?: string): EntriesArgs {
   for (let i = 0; i < parts.length; i++) {
     const t = parts[i].toLowerCase();
 
-    // Basic parsing - keep only what works
-    if (t === "date" || t === "created") {
-      sort = t as SortKey;
+    // REFACTORED: All flags now use -- prefix for consistency
+    // Also support short flags for better UX
+    if (t === "--date" || t === "--created" || t === "-D" || t === "-C") {
+      sort = t === "--created" || t === "-C" ? "created" : "date";
       continue;
     }
-    if (t === "asc") {
-      dir = "asc";
+    if (t === "--sort" && i + 1 < parts.length) {
+      const sortArg = parts[i + 1].toLowerCase();
+      if (sortArg === "date" || sortArg === "created") {
+        sort = sortArg as SortKey;
+      }
+      i++;
       continue;
     }
-    if (t === "desc") {
-      dir = "desc";
+    if (t === "--dir" && i + 1 < parts.length) {
+      const dirArg = parts[i + 1].toLowerCase();
+      if (dirArg === "asc" || dirArg === "desc") {
+        dir = dirArg as Dir;
+      }
+      i++;
       continue;
     }
-    if (t === "sum" || t === "--sum") {
+    if (t === "--sum" || t === "-s") {
       sum = true;
       continue;
     }
-    if (t === "count" || t === "--count") {
+    if (t === "--count" || t === "-n") {
       count = true;
       continue;
     }
-    if (t === "--vendor" && i + 1 < parts.length) {
+    if ((t === "--vendor" || t === "-v") && i + 1 < parts.length) {
       vendor = parts[i + 1];
       i++;
       continue;
     }
-    if (t === "--business" && i + 1 < parts.length) {
+    if ((t === "--business" || t === "-b") && i + 1 < parts.length) {
       business = parts[i + 1];
       i++;
       continue;
     }
-    if (t === "--account" && i + 1 < parts.length) {
+    if ((t === "--account" || t === "-A") && i + 1 < parts.length) {
       account = parts[i + 1];
       i++;
       continue;
     }
-    if (t === "--currency" && i + 1 < parts.length) {
+    if ((t === "--currency" || t === "-c") && i + 1 < parts.length) {
       currency = parts[i + 1].toUpperCase();
       i++;
       continue;
     }
-    if (t === "go" && i + 1 < parts.length) {
+    if ((t === "--go" || t === "-g") && i + 1 < parts.length) {
       go = parts[i + 1];
       i++;
       continue;
     }
-    if (t === "--range" && i + 2 < parts.length) {
+    if ((t === "--range" || t === "-r") && i + 2 < parts.length) {
       try {
         range = parseRangeArguments([parts[i + 1], parts[i + 2]]);
         i += 2;
@@ -223,14 +232,14 @@ export function parseArgs(raw?: string): EntriesArgs {
       } catch (error) {
         throw new Error(
           `Range parsing error: ${
-            error instanceof Error ? error.message : error
+            error instanceof Error ? error.message : String(error)
           }`
         );
       }
     }
 
     // FIXED: Month parsing now handles both formats correctly
-    if (t === "--month" && i + 1 < parts.length) {
+    if ((t === "--month" || t === "-m") && i + 1 < parts.length) {
       const monthArg = parts[i + 1];
 
       // Check if it's already in YYYY-MM format
@@ -252,17 +261,38 @@ export function parseArgs(raw?: string): EntriesArgs {
       continue;
     }
 
-    if (t === "--day" && i + 1 < parts.length) {
+    if ((t === "--day" || t === "-D") && i + 1 < parts.length) {
       day = parts[i + 1];
       i++;
       continue;
     }
-    if (t === "--year" && i + 1 < parts.length) {
+    if ((t === "--year" || t === "-y") && i + 1 < parts.length) {
       year = parts[i + 1];
       i++;
       continue;
     }
-    if (/^\d+$/.test(t)) {
+    if ((t === "--limit" || t === "-l") && i + 1 < parts.length) {
+      const limitArg = parts[i + 1];
+      if (/^\d+$/.test(limitArg)) {
+        limit = Math.max(1, Math.min(200, parseInt(limitArg, 10)));
+        hasExplicitLimit = true;
+      }
+      i++;
+      continue;
+    }
+
+    // Handle direction flags AFTER account flag to avoid -A conflict
+    if (t === "--asc" || t === "-a") {
+      dir = "asc";
+      continue;
+    }
+    if (t === "--desc" || t === "-d") {
+      dir = "desc";
+      continue;
+    }
+
+    // Legacy support: Allow numeric limit without --limit flag for backward compatibility
+    if (/^\d+$/.test(t) && !hasExplicitLimit) {
       limit = Math.max(1, Math.min(200, parseInt(t, 10)));
       hasExplicitLimit = true;
       continue;
@@ -281,6 +311,12 @@ export function parseArgs(raw?: string): EntriesArgs {
       } catch (error) {
         // Ignore parsing errors for unrecognized tokens
       }
+    }
+
+    // Support month names as standalone arguments (jan, feb, etc.)
+    if (!month && !day && !year && !range && MONTH_NAMES[t]) {
+      month = parseMonthAlias(parts[i]);
+      continue;
     }
 
     // Support currency codes as standalone arguments (USD, EUR, etc.)
