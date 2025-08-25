@@ -623,7 +623,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
           "",
           meta.description || "(no description)",
           "",
-          meta.usage ? `\n\n**Usage:**\n\n\`${meta.usage}\`` : "",
+          meta.usage ? `\n\n**Usage:**\n\n${meta.usage}` : "",
         ]
           .filter(Boolean)
           .join("\n");
