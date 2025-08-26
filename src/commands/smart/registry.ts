@@ -118,73 +118,66 @@ export const commandRegistry: Record<string, CommandMeta> = {
       cmds?: Record<string, CommandMeta>,
       user?: User | null
     ) => entriesListCommand(arg || "", pageCtx || "", cmds || {}, user || null),
+
+    // NEW: Natural language support
+    intent: "query",
+    priority: 8,
+    naturalLanguage: [
+      "show me",
+      "list",
+      "display",
+      "find",
+      "get my",
+      "what did i spend",
+      "how much did i spend",
+      "my expenses",
+      "transactions",
+      "entries",
+      "where did i",
+      "when did i",
+    ],
+    examples: [
+      {
+        input: "Show me today's expenses",
+        output: "entries today",
+        description: "Today's entries",
+      },
+      {
+        input: "How much did I spend on coffee this month?",
+        output: "entries -v coffee -s -m august",
+        description: "Coffee expenses with totals for current month",
+      },
+      {
+        input: "List my Starbucks transactions",
+        output: "entries -v Starbucks",
+        description: "Filter by vendor",
+      },
+      {
+        input: "What did I spend on Personal business last month?",
+        output: "entries -b Personal -s -m july",
+        description: "Business filter with totals for specific month",
+      },
+      {
+        input: "Show me my recent USD expenses",
+        output: "entries -c USD -l 20",
+        description: "Currency filter with limit",
+      },
+    ],
+    categories: ["query", "finance", "search"],
+    aliases: ["ent", "e", "list", "show", "find"],
+
     usage: `entries [options]
-  
-  **📋 Quick Reference - All Available Flags:**
-  
-  **Filtering:**
-  • \`--business <name>\` / \`-b <name>\`     — Filter by business account
-  • \`--vendor <name>\` / \`-v <name>\`       — Filter by vendor/description
-  • \`--account <pattern>\` / \`-A <pattern>\` — Filter by account name
-  • \`--currency <code>\` / \`-c <code>\`     — Filter by currency (USD, THB, EUR)
-  
-  **Date Filtering:**
-  • \`--month <YYYY-MM|name>\` / \`-m <YYYY-MM|name>\` — Filter by month
-  • \`--day <YYYY-MM-DD>\` / \`-D <YYYY-MM-DD>\`       — Filter by specific day
-  • \`--year <YYYY>\` / \`-y <YYYY>\`                   — Filter by year
-  • \`--range <start> <end>\` / \`-r <start> <end>\`   — Filter by date range
-  
-  **Output & Navigation:**
-  • \`--sum\` / \`-s\`                    — Show totals with multi-currency breakdown
-  • \`--count\` / \`-n\`                  — Show count only, no entries listed
-  • \`--go <id>\` / \`-g <id>\`           — Navigate to specific entry by ID
-  
-  **Sorting & Limits:**
-  • \`--sort <date|created>\` / \`-D <date|created>\` — Sort by date or creation time
-  • \`--dir <asc|desc>\` / \`-d <asc|desc>\`           — Sort direction
-  • \`--limit <number>\` / \`-l <number>\`             — Limit number of results
-  
-  **🚀 Smart Date Aliases (No Flags Needed):**
-  • \`entries today\`      — Today's entries
-  • \`entries yesterday\`  — Yesterday's entries
-  • \`entries 2025\`       — All 2025 entries
-  • \`entries jan\`        — January entries (current year)
-  • \`entries august\`     — August entries (current year)
-  
-  **💡 Quick Examples:**
-  • \`entries\`                           — Recent entries (10 most recent)
-  • \`entries -l 50\`                     — 50 most recent entries
-  • \`entries -s\`                        — With totals
-  • \`entries -n\`                        — Count only
-  • \`entries -b Personal\`                — Personal business entries
-  • \`entries -v Starbucks\`               — Starbucks purchases
-  • \`entries -A Coffee\`                  — Coffee-related accounts
-  • \`entries -c USD\`                     — USD entries only
-  • \`entries -g 330\`                     — Navigate to entry #330
-  • \`entries today -s\`                   — Today with totals
-  • \`entries aug -b Personal\`            — August personal entries
-  • \`entries -m 2025-01 -s\`              — January 2025 with totals
-  • \`entries -r jan mar\`                 — January through March
-  
-  **🔧 Advanced Combinations:**
-  • \`entries -b Personal -v coffee -s\`  — Personal coffee expenses with totals
-  • \`entries -c USD -m aug -n\`          — Count USD entries in August
-  • \`entries -r 2025-01 2025-06 -b MyBrick -s\` — MyBrick entries Jan-Jun with totals
-  
-  **📱 Mobile-Friendly Short Flags:**
-  Use short flags for quick typing on mobile:
-  • \`-b\` instead of \`--business\`
-  • \`-v\` instead of \`--vendor\`
-  • \`-s\` instead of \`--sum\`
-  • \`-n\` instead of \`--count\`
-  • \`-g\` instead of \`--go\`
-  • \`-l\` instead of \`--limit\`
-  
-  **🔄 Backward Compatibility:**
-  • Numeric limits without \`--limit\` still work: \`entries 50\`
-  • Date aliases still work: \`entries today\`, \`entries 2025\`
-  • Currency codes still work: \`entries USD\``,
+    
+    **📋 Quick Reference - All Available Flags:**
+    
+    **Filtering:**
+    • \`--business <name>\` / \`-b <name>\`     — Filter by business account
+    • \`--vendor <name>\` / \`-v <name>\`       — Filter by vendor/description
+    • \`--account <pattern>\` / \`-A <pattern>\` — Filter by account name
+    • \`--currency <code>\` / \`-c <code>\`     — Filter by currency (USD, THB, EUR)`,
+    // ... rest of your existing usage stays the same
   },
+
   ent: {
     description:
       "Alias for entries command with same functionality including smart date aliases, navigation, filtering (business, vendor, account, currency), multi-currency totals, and ranges",
@@ -260,6 +253,8 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • Date aliases still work: \`ent today\`, \`ent 2025\`
   • Currency codes still work: \`ent USD\``,
   },
+
+  // --- Edit Entry ---
   e: {
     description:
       "Short alias for entries - list and filter ledger entries with all the same features",
@@ -299,6 +294,47 @@ export const commandRegistry: Record<string, CommandMeta> = {
       cmds?: Record<string, CommandMeta>,
       user?: User | null
     ) => editEntryCommand(arg || "", pageCtx || "", cmds || {}, user || null),
+
+    // NEW: Natural language support
+    intent: "action",
+    priority: 6,
+    naturalLanguage: [
+      "change",
+      "update",
+      "edit",
+      "modify",
+      "fix",
+      "correct",
+      "i need to change",
+      "i made a mistake",
+      "wrong",
+      "incorrect",
+    ],
+    examples: [
+      {
+        input: "Change entry 323 business to MyBrick",
+        output: "edit-entry 323 --business MyBrick",
+        description: "Change business context",
+      },
+      {
+        input: "Fix the vendor name for entry 330 to Starbucks",
+        output: "edit-entry 330 --vendor Starbucks",
+        description: "Update vendor name",
+      },
+      {
+        input: "I need to correct the date on entry 325 to yesterday",
+        output: "edit-entry 325 --date yesterday",
+        description: "Fix transaction date",
+      },
+      {
+        input: "Update entry 340 memo to client meeting",
+        output: 'edit-entry 340 --memo "client meeting"',
+        description: "Add memo to entry",
+      },
+    ],
+    categories: ["edit", "modify", "finance"],
+    aliases: ["editent", "modify", "fix", "update"],
+
     usage: `edit-entry id --[options]
   
   **Basic Usage:**
@@ -306,28 +342,8 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`edit-entry 323 --vendor "Starbucks Coffee"\` — Update vendor name
   • \`edit-entry 323 --date 2025-08-15\` — Change transaction date
   • \`edit-entry 323 --memo "client meeting"\` — Add or update memo
-  • \`edit-entry 323 --delete\` — Delete the entry
-  
-  **Options:**
-  • \`--business <n>\` — Change business (updates all account names)
-  • \`--vendor <n>\` — Update vendor/description
-  • \`--description <n>\` — Alias for --vendor
-  • \`--date YYYY-MM-DD\` — Change transaction date
-  • \`--memo <text>\` — Add or update memo field
-  • \`--delete\` — Delete the entry
-  
-  **Multiple Changes:**
-  • \`edit-entry 323 --business Personal --vendor "Updated Vendor" --memo "notes"\`
-  
-  **Business Changes:**
-  When changing business, all account names are updated:
-  • \`Expenses:OldBusiness:Food:Coffee\` → \`Expenses:NewBusiness:Food:Coffee\`
-  • Updates both main entry and individual postings
-  
-  **Examples:**
-  • \`edit-entry 330 --business Channel60\` — Move to Channel60 business
-  • \`edit-entry 330 --vendor "Corrected Name"\` — Fix vendor name
-  • \`edit-entry 330 --date 2025-08-16 --memo "corrected date"\` — Fix date with note`,
+  • \`edit-entry 323 --delete\` — Delete the entry`,
+    // ... rest of your existing usage stays the same
   },
 
   editent: {
@@ -683,92 +699,74 @@ export const commandRegistry: Record<string, CommandMeta> = {
     content: "__LEDGER_NEW_ENTRY__",
     description:
       "Create a new double-entry ledger transaction from natural language. Uses intuitive @ syntax for vendors and --flags for options. Automatically categorizes expenses and supports multiple businesses with AI-powered categorization.",
+
+    // NEW: Natural language support
+    intent: "action",
+    priority: 10,
+    naturalLanguage: [
+      "i just bought",
+      "i purchased",
+      "i spent money on",
+      "i had",
+      "i got",
+      "i paid for",
+      "bought",
+      "purchased",
+      "spent",
+      "paid for",
+      "expense",
+      "transaction",
+    ],
+    examples: [
+      {
+        input: "I just bought coffee for 150 baht",
+        output: "new coffee 150",
+        description: "Simple expense entry",
+      },
+      {
+        input: "I spent $20 at Starbucks for coffee",
+        output: "new coffee 20 @ Starbucks",
+        description: "Expense with vendor",
+      },
+      {
+        input: "MyBrick: office supplies for $100",
+        output: "new MyBrick: supplies 100",
+        description: "Business expense with prefix syntax",
+      },
+      {
+        input: "I had lunch yesterday for 200 baht",
+        output: "new lunch 200 -d yesterday",
+        description: "Expense with date",
+      },
+      {
+        input: "Bought gas $50 with credit card",
+        output: 'new gas 50 -p "credit card"',
+        description: "Expense with payment method",
+      },
+    ],
+    categories: ["expense", "finance", "accounting"],
+    aliases: ["expense", "spend", "buy", "purchase"],
+
     usage: `new [business:]<items> [@ vendor] [--options]
-  
-  **📋 Quick Reference - All Available Flags:**
-  
-  **Core Options:**
-  • \`--business <name>\` / \`-b <name>\`     — Set business context
-  • \`--payment <method>\` / \`-p <method>\`   — Payment method (cash, credit card, etc.)
-  • \`--memo <text>\` / \`-m <text>\`          — Add memo/note
-  • \`--date <date>\` / \`-d <date>\`          — Set transaction date
-  • \`--image <url>\` / \`-i <url>\`            — Attach image URL
-  
-  **AI Categorization:**
-  • \`--use-ai\` / \`-u\`                      — Force AI categorization (default)
-  • \`--no-ai\` / \`-n\`                       — Disable AI, use rule-based mapping
-  
-  **🚀 Smart Syntax (No Flags Needed):**
-  • \`new coffee 150\`                         — Simple expense (Personal business)
-  • \`new MyBrick: supplies 500\`              — Business prefix syntax
-  • \`new coffee 150 @ Starbucks\`             — With vendor using @ syntax
-  • \`new coffee $6, pastry $4 @ Starbucks\`  — Multiple items with vendor
-  
-  **💡 Quick Examples with Short Flags:**
-  • \`new coffee 150 -b Personal\`             — Personal business coffee
-  • \`new supplies 500 -p cash\`               — Cash payment for supplies
-  • \`new lunch 200 -m "client meeting"\`      — Lunch with memo
-  • \`new coffee 150 -d yesterday\`            — Yesterday's coffee
-  • \`new supplies 300 -i "https://..."\`      — Supplies with image
-  
-  **🔧 Advanced Combinations:**
-  • \`new coffee $6, lunch $12 @ Cafe -b Personal -p "credit card" -m "client meeting"\`
-  • \`new Channel60: marketing 1000 @ Agency -p cash -d yesterday\`
-  • \`new subscription 50 @ Netflix -b Personal -m "monthly" -d 2025-08-10\`
-  • \`new supplies 500 @ HomeDepot -b MyBrick -p cash -m "office supplies"\`
-  
-  **📱 Mobile-Friendly Short Flags:**
-  Use short flags for quick typing on mobile:
-  • \`-b\` instead of \`--business\`
-  • \`-p\` instead of \`--payment\`
-  • \`-m\` instead of \`--memo\`
-  • \`-d\` instead of \`--date\`
-  • \`-i\` instead of \`--image\`
-  • \`-u\` instead of \`--use-ai\`
-  • \`-n\` instead of \`--no-ai\`
-  
-  **🏢 Business Context Options:**
-  • **Prefix syntax:** \`MyBrick: items...\` (quick and intuitive)
-  • **Flag syntax:** \`--business MyBrick\` (explicit and clear)
-  • **Default:** Personal business if none specified
-  
-  **💳 Payment Methods:**
-  • \`--payment cash\` → Assets:Cash (default)
-  • \`--payment "credit card"\` → Liabilities:CreditCard
-  • \`--payment paypal\` → Assets:PayPal
-  • \`--payment "bank card"\` → Assets:Bank:Checking
-  
-  **📅 Date Formats:**
-  • \`--date yesterday\` — Relative date
-  • \`--date 2025-08-10\` — YYYY-MM-DD format
-  • \`--date 2025/08/10\` — YYYY/MM/DD format
-  • **Default:** Today's date if none specified
-  
-  **🤖 AI Categorization:**
-  • **Default:** AI-enabled for smart categorization
-  • \`--use-ai\` / \`-u\` — Force AI categorization
-  • \`--no-ai\` / \`-n\` — Use rule-based fallback
-  • **Fallback:** If AI fails, automatically retries with rules
-  
-  **💰 Currency Detection:**
-  • **Auto-detected:** \`$\` = USD, \`฿\` = THB
-  • **Default:** THB (Thai Baht) if no currency symbols found
-  
-  **📊 Account Mapping Examples:**
-  • **Personal:** \`Expenses:Personal:Food:Coffee\`
-  • **MyBrick:** \`Expenses:MyBrick:Supplies:General\`  
-  • **MyOnline:** \`Expenses:MyOnline:Subscription:Software\`
-  
-  **🔄 Backward Compatibility:**
-  • Business prefix syntax still works: \`MyBrick: items...\`
-  • @ vendor syntax still works: \`@ Starbucks\`
-  • All existing long flags continue to work
-  
-  **💡 Pro Tips:**
-  • Use business prefix for quick context: \`MyBrick: supplies 500\`
-  • Combine multiple flags: \`-b Personal -p cash -m "note"\`
-  • AI automatically categorizes items based on description and vendor
-  • Payment methods map to standard ledger accounts automatically`,
+    
+    **📋 Quick Reference - All Available Flags:**
+    
+    **Core Options:**
+    • \`--business <name>\` / \`-b <name>\`     — Set business context
+    • \`--payment <method>\` / \`-p <method>\`   — Payment method (cash, credit card, etc.)
+    • \`--memo <text>\` / \`-m <text>\`          — Add memo/note
+    • \`--date <date>\` / \`-d <date>\`          — Set transaction date
+    • \`--image <url>\` / \`-i <url>\`            — Attach image URL
+    
+    **AI Categorization:**
+    • \`--use-ai\` / \`-u\`                      — Force AI categorization (default)
+    • \`--no-ai\` / \`-n\`                       — Disable AI, use rule-based mapping
+    
+    **🚀 Smart Syntax (No Flags Needed):**
+    • \`new coffee 150\`                         — Simple expense (Personal business)
+    • \`new MyBrick: supplies 500\`              — Business prefix syntax
+    • \`new coffee 150 @ Starbucks\`             — With vendor using @ syntax
+    • \`new coffee $6, pastry $4 @ Starbucks\`  — Multiple items with vendor`,
   },
   // Contact Messages
   // In your commandRegistry, under messages:

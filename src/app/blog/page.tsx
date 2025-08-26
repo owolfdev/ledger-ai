@@ -1,10 +1,29 @@
 // src/app/blog/page.tsx
-
+"use client";
+import { useState, useEffect } from "react";
 import SmartTerminal from "@/components/terminal/smart-terminal";
 
-export default async function BlogPage() {
-  const mdxModule = await import("@/content/pages/blog.mdx");
-  const MdxContent = mdxModule.default;
+export default function BlogPage() {
+  const [terminalInput, setTerminalInput] = useState("");
+  const [MdxContent, setMdxContent] = useState<React.ComponentType | null>(
+    null
+  );
+
+  const handlePopulateInput = (cmd: string) => {
+    console.log("Blog page: Populating input with:", cmd);
+    setTerminalInput(cmd);
+  };
+
+  // Dynamic import for MDX rendering
+  useEffect(() => {
+    import("@/content/pages/blog.mdx").then((module) => {
+      setMdxContent(() => module.default);
+    });
+  }, []);
+
+  if (!MdxContent) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -18,7 +37,8 @@ export default async function BlogPage() {
             storageKey="ledger_ai_terminal_key_blog"
             commandSet="blog"
             contextKey="pages/blog"
-            postType="blog" // 👈 add this
+            postType="blog"
+            onPopulateInput={handlePopulateInput}
           />
         </div>
       </div>

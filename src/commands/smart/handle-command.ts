@@ -18,6 +18,8 @@ import { LEDGER_TIMEZONE } from "@/lib/ledger-config";
 // } from "@/lib/ledger/auto-balance-ledger-entry";
 import { handleNew } from "@/commands/smart/new-command-handler";
 import { entriesListCommand } from "@/commands/smart/entries-command";
+import { IntentDetector } from "./intent-detector";
+import { CommandGenerator } from "./command-generator";
 
 type CommandMap = Record<string, CommandMeta>;
 type PageEntry = { title: string; slug: string; route: string };
@@ -123,24 +125,6 @@ function matchTerm(post: CachedBlogPost, term: string): boolean {
   );
 }
 
-// function hasCategory(post: unknown): post is { category: string } {
-//   return (
-//     typeof post === "object" &&
-//     post !== null &&
-//     "category" in post &&
-//     typeof (post as { category?: unknown }).category === "string"
-//   );
-// }
-
-// function hasCategories(post: unknown): post is { categories: string[] } {
-//   return (
-//     typeof post === "object" &&
-//     post !== null &&
-//     "categories" in post &&
-//     Array.isArray((post as { categories?: unknown }).categories)
-//   );
-// }
-
 // --- AI fallback utility ---
 async function processAiPrompt(
   cmd: string,
@@ -222,7 +206,7 @@ ${Object.entries(commands)
       {
         type: "output",
         content: `<custom-alert message="${
-          data.error || "You’ve reached the limit. Try again later."
+          data.error || "You've reached the limit. Try again later."
         }" />`,
         format: "markdown",
       },
@@ -287,13 +271,48 @@ ${Object.entries(commands)
   }
 }
 
+// Helper function for command suggestions
+function createCommandSuggestion(
+  command: string,
+  confidence: number,
+  reasoning: string,
+  intentReasoning: string
+): string {
+  const confidenceLevel =
+    confidence > 0.8 ? "High" : confidence > 0.6 ? "Medium" : "Low";
+  const confidenceIcon = confidence > 0.8 ? "✓" : confidence > 0.6 ? "~" : "!";
+
+  return `
+### ${confidenceIcon} AI Command Suggestion
+
+**Generated Command:**
+\`\`\`
+${command}
+\`\`\`
+
+**Confidence:** ${confidenceLevel} (${Math.round(confidence * 100)}%)
+
+**Analysis:**
+- **Intent Detection:** ${intentReasoning}  
+- **Command Generation:** ${reasoning}
+
+**Next Steps:**
+1. **Review** the suggested command above
+2. **Edit** if needed (the command is now in your input field)
+3. **Submit** to execute the command
+
+*The command has been populated in your terminal input for review and manual execution.*
+  `.trim();
+}
+
 export function createHandleCommand(
   commands: CommandMap,
   routes: Record<string, string> = {},
   pageContext?: string,
   pagesList: PageEntry[] = [],
   currentSlug?: string,
-  postType?: "blog" | "project"
+  postType?: "blog" | "project",
+  onPopulateInput?: (cmd: string) => void // ✅ Make sure this parameter exists
 ) {
   return async function handleCommand(
     cmd: string,
@@ -301,7 +320,7 @@ export function createHandleCommand(
       React.SetStateAction<TerminalOutputRendererProps[]>
     >,
     router: { push: (route: string) => void },
-    user?: User | null, // <--- accept full user, not just ID
+    user?: User | null,
     history?: TerminalOutputRendererProps[]
   ): Promise<boolean> {
     const trimmed = cmd.trim();
@@ -933,7 +952,67 @@ export function createHandleCommand(
       return true;
     }
 
-    // ----------- AI Fallback: unknown or not allowed ----------- //
+    // ==========================================
+    // NEW: TIER 2 - NATURAL LANGUAGE COMMAND GENERATION
+    // ==========================================
+    // Insert this BEFORE the AI fallback section
+    try {
+      const intentDetector = new IntentDetector(commands);
+      const intentResult = await intentDetector.detectIntent(trimmed);
+
+      if (intentResult.shouldGenerateCommand && intentResult.confidence > 0.5) {
+        const commandGenerator = new CommandGenerator(commands);
+        const generationResult = await commandGenerator.generateCommand(
+          trimmed,
+          intentResult.potentialCommands
+        );
+
+        if (generationResult.success && generationResult.command) {
+          // Create command suggestion output
+          const suggestionOutput = createCommandSuggestion(
+            generationResult.command,
+            generationResult.confidence,
+            generationResult.reasoning,
+            intentResult.reasoning
+          );
+
+          setHistory([
+            ...(history ?? []),
+            { type: "input", content: cmd },
+            {
+              type: "output",
+              content: suggestionOutput,
+              format: "markdown",
+            },
+          ]);
+
+          // ✅ FIX: Use the terminal's local populateInput function (same as OCR flow)
+          if (
+            typeof window !== "undefined" &&
+            (window as unknown as Record<string, unknown>).terminalPopulateInput
+          ) {
+            console.log("Populating input with:", generationResult.command); // DEBUG
+            (
+              (window as unknown as Record<string, unknown>)
+                .terminalPopulateInput as (cmd: string) => void
+            )(generationResult.command);
+          } else {
+            console.warn("No populateInput function available"); // DEBUG
+          }
+
+          return true;
+        } else {
+          // Command generation failed but intent was detected
+          // Log for debugging but continue to AI fallback
+          console.log("Command generation failed:", generationResult.error);
+        }
+      }
+    } catch (error) {
+      // Natural language processing error - log but continue to AI fallback
+      console.error("Natural language processing error:", error);
+    }
+
+    // ----------- AI Fallback: unknown or not allowed (EXISTING CODE) ----------- //
     await processAiPrompt(
       cmd,
       setHistory,

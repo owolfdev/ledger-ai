@@ -1,4 +1,4 @@
-// utils/rate-limit.ts
+// src/utils/openai/rate-limit.ts
 
 // A simple in-memory store, use Redis/Upstash in production!
 const rateLimitStore: Record<string, { count: number; reset: number }> = {};

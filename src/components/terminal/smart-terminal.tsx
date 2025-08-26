@@ -150,7 +150,8 @@ export default function SmartTerminal({
           pageContext,
           pagesList,
           currentSlug,
-          postType
+          postType,
+          onPopulateInput
         )
       : null;
 

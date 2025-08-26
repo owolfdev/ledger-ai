@@ -176,6 +176,8 @@ export default function Terminal({
 
   // All useCallback hooks at top level
   const populateInput = useCallback((cmd: string) => {
+    console.log("populateInput called with:", cmd); // DEBUG
+
     setInput(cmd);
     setTimeout(() => {
       inputRef.current?.focus();
@@ -185,6 +187,20 @@ export default function Terminal({
       });
     }, 100);
   }, []);
+
+  // Always set up window.terminalPopulateInput for AI command generation
+  useEffect(() => {
+    console.log("Setting up window.terminalPopulateInput"); // DEBUG
+    Object.defineProperty(window, "terminalPopulateInput", {
+      value: populateInput,
+      configurable: true,
+    });
+    return () => {
+      console.log("Cleaning up window.terminalPopulateInput"); // DEBUG
+      delete (window as unknown as Record<string, unknown>)
+        .terminalPopulateInput;
+    };
+  }, [populateInput]);
 
   const clearInput = useCallback(() => {
     setInput("");
@@ -403,9 +419,7 @@ export default function Terminal({
                     </button>
                   </div>
                 ) : (
-                  <TerminalImageUpload
-                    onPopulateInput={onPopulateInput || populateInput}
-                  />
+                  <TerminalImageUpload onPopulateInput={populateInput} />
                 )}
               </div>
             </>

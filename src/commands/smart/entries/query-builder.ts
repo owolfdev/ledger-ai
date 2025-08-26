@@ -45,7 +45,6 @@ export class QueryBuilder {
     return query;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private applyCommonFilters(query: any, args: EntriesArgs, user: User | null) {
     // User filter
     if (user?.id) {

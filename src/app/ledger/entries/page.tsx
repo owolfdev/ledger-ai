@@ -1,23 +1,15 @@
-// src/app/page.tsx
+// src/app/ledger/entries/page.tsx
+"use client";
+import { useState } from "react";
 import SmartTerminal from "@/components/terminal/smart-terminal";
 
-// Optionally: If you want dynamic SEO meta for Home, add this:
-export async function generateMetadata() {
-  const mdxModule = (await import("@/content/pages/home.mdx")) as {
-    default: React.ComponentType;
-    metadata?: { title?: string; description?: string; [key: string]: unknown };
-  };
-  const { metadata } = mdxModule;
-  return {
-    title: metadata?.title || "Ledger AI",
-    description:
-      metadata?.description ||
-      "Ledger AI a simple app that allows you to create and manage your ledger with the aid of artificial intelligence.",
-  };
-}
+export default function Entries() {
+  const [terminalInput, setTerminalInput] = useState("");
 
-export default async function Entries() {
-  // Static import for MDX rendering (SEO, page content)
+  const handlePopulateInput = (cmd: string) => {
+    console.log("Entries page: Populating input with:", cmd);
+    setTerminalInput(cmd);
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -28,6 +20,7 @@ export default async function Entries() {
             storageKey="ledger_ai_terminal_key_entries"
             commandSet="home"
             contextKey="pages/home"
+            onPopulateInput={handlePopulateInput}
           />
         </div>
       </div>
