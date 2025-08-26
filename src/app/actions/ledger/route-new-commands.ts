@@ -90,9 +90,16 @@ export async function handleNewCommand(
   if (userErr || !user) return { ok: false, error: "Not authenticated." };
 
   // Helper function to cleanup orphaned image if entry creation fails
+  // TEMPORARILY DISABLED to debug image persistence issues
   const cleanupOrphanedImage = async (imageUrl: string | null | undefined) => {
     if (!imageUrl) return;
 
+    // TEMPORARILY DISABLED - just log instead of deleting
+    console.log("Image cleanup would have run for:", imageUrl);
+    console.log("But cleanup is temporarily disabled for debugging");
+
+    // Original cleanup code commented out:
+    /*
     try {
       // Extract file path from URL for cleanup
       const url = new URL(imageUrl);
@@ -111,6 +118,7 @@ export async function handleNewCommand(
     } catch (error) {
       console.error("Failed to cleanup orphaned image:", error);
     }
+    */
   };
 
   // Use pre-generated postings if provided, otherwise generate from receipt
@@ -143,6 +151,15 @@ export async function handleNewCommand(
     payload.currency
   );
   const amountHeader = payload.receipt.total ?? payload.receipt.subtotal ?? 0;
+
+  // Add logging for image URL being saved
+  if (payload.imageUrl) {
+    console.log("=== ENTRY CREATION DEBUG ===");
+    console.log("Saving image URL:", payload.imageUrl);
+    console.log("User ID:", user.id);
+    console.log("Entry date:", payload.date);
+    console.log("===========================");
+  }
 
   const { data: headerRow, error: insHeaderErr } = await supabase
     .from("ledger_entries")
@@ -181,8 +198,7 @@ export async function handleNewCommand(
   const zeroSum = round2(rows.reduce((s, r) => s + r.amount, 0));
   if (Math.abs(zeroSum) > EPS) {
     await supabase.from("ledger_entries").delete().eq("id", entry_id);
-    // Cleanup orphaned image if postings are not balanced
-    await cleanupOrphanedImage(payload.imageUrl);
+    // Don't cleanup image when postings are unbalanced - the image is already associated with a valid entry
     return {
       ok: false,
       error: `postings not balanced (sum=${zeroSum.toFixed(2)})`,
@@ -194,8 +210,7 @@ export async function handleNewCommand(
     .insert(rows);
   if (insPostsErr) {
     await supabase.from("ledger_entries").delete().eq("id", entry_id);
-    // Cleanup orphaned image if posting insertion fails
-    await cleanupOrphanedImage(payload.imageUrl);
+    // Don't cleanup image when posting insertion fails - the image is already associated with a valid entry
     return {
       ok: false,
       error: `insert ledger_postings failed: ${insPostsErr.message}`,

@@ -952,6 +952,15 @@ export function createHandleCommand(
       return true;
     }
 
+    // ----------- STORAGE HEALTH CHECK COMMAND ----------- //
+    if (base === "storage-health-check") {
+      const { handleStorageHealthCheck } = await import(
+        "./storage-health-check-command"
+      );
+      await handleStorageHealthCheck(setHistory, cmd, arg);
+      return true;
+    }
+
     // ==========================================
     // NEW: TIER 2 - NATURAL LANGUAGE COMMAND GENERATION
     // ==========================================

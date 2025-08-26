@@ -35,7 +35,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
     const stamp = Date.now();
-    const path = `${user.id}/${stamp}-${file.name.replace(/\s+/g, "_")}.jpg`;
+    // Use main bucket folder - much simpler and more reliable
+    const path = `${stamp}-${file.name.replace(/\s+/g, "_")}.jpg`;
 
     const { error: upErr } = await supabase.storage
       .from(BUCKET)

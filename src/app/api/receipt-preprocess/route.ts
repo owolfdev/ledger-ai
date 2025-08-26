@@ -53,10 +53,8 @@ export async function POST(req: Request) {
     }
 
     const fileName = stampName("receipt.jpg");
-    const filePath = `${user.id}/${new Date()
-      .toISOString()
-      .slice(0, 10)
-      .replace(/-/g, "/")}/${fileName}`;
+    // Use main bucket folder - much simpler and more reliable
+    const filePath = fileName;
 
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
@@ -75,10 +73,20 @@ export async function POST(req: Request) {
       .getPublicUrl(filePath);
 
     const cacheBuster = Date.now();
+    const finalUrl = `${publicData.publicUrl}?cb=${cacheBuster}`;
+
+    // Add detailed logging for debugging
+    console.log("=== IMAGE UPLOAD DEBUG ===");
+    console.log("File path:", filePath);
+    console.log("Public URL:", publicData.publicUrl);
+    console.log("Final URL:", finalUrl);
+    console.log("User ID:", user.id);
+    console.log("Bucket:", BUCKET);
+    console.log("==========================");
 
     return NextResponse.json({
       ok: true,
-      url: `${publicData.publicUrl}?cb=${cacheBuster}`,
+      url: finalUrl,
       mime: "image/jpeg",
       width: 1200,
     });

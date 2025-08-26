@@ -107,6 +107,14 @@ export const commandRegistry: Record<string, CommandMeta> = {
     usage: "cleanup-orphaned-images [--force]",
   },
 
+  "storage-health-check": {
+    content:
+      "`storage-health-check` - Check the health and accessibility of your storage bucket",
+    description:
+      "Debug storage issues by showing all files in your receipts bucket, their URLs, and testing accessibility. Useful for troubleshooting image persistence problems.",
+    usage: "storage-health-check",
+  },
+
   // Ledger CLI
 
   entries: {
