@@ -51,7 +51,7 @@ export default async function LedgerEntryPage({ params }: PageProps) {
           <EditableLedgerEntry entry={entry} postings={postings || []} />
         </div>
       </div>
-      <div className="mx-auto max-w-4xl p-4 space-y-6 w-full">
+      <div className="mx-auto max-w-4xl p-4 sm:pl-20 space-y-6 w-full">
         <SmartTerminal
           commandSet="ledger"
           contextKey="entry"
