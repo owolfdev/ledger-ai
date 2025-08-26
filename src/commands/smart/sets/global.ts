@@ -29,6 +29,7 @@ export const globalCommandKeys = [
   "e",
   "edit-entry", // NEW
   "editent", // NEW
+  "ee", // NEW
   "ledger",
   "bal",
   "reg",

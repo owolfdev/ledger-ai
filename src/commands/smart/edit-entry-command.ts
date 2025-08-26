@@ -67,7 +67,7 @@ function parseArgs(raw?: string): EditEntryArgs | null {
       continue;
     }
     // ✅ NEW: Delete flag parsing
-    if (flag === "--delete") {
+    if (flag === "--delete" || flag === "-d") {
       deleteFlag = true;
       i++;
       continue;
@@ -77,7 +77,7 @@ function parseArgs(raw?: string): EditEntryArgs | null {
   // ✅ UPDATED: Delete flag is valid on its own
   if (!deleteFlag && !business && !vendor && !description && !date && !memo) {
     throw new Error(
-      "At least one field must be specified to edit (--business, --vendor, --date, --memo) or use --delete to remove entry"
+      "At least one field must be specified to edit (--business, --vendor, --date, --memo) or use --delete/-d to remove entry"
     );
   }
 

@@ -342,7 +342,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`edit-entry 323 --vendor "Starbucks Coffee"\` — Update vendor name
   • \`edit-entry 323 --date 2025-08-15\` — Change transaction date
   • \`edit-entry 323 --memo "client meeting"\` — Add or update memo
-  • \`edit-entry 323 --delete\` — Delete the entry`,
+  • \`edit-entry 323 --delete\` or \`edit-entry 323 -d\` — Delete the entry`,
     // ... rest of your existing usage stays the same
   },
 
@@ -362,10 +362,34 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`editent 323 --vendor "Starbucks"\` — Update vendor
   • \`editent 323 --date 2025-08-15\` — Change date
   • \`editent 323 --memo "note"\` — Add memo
-  • \`editent 323 --delete\` — Delete the entry
+  • \`editent 323 --delete\` or \`editent 323 -d\` — Delete the entry
   
   **Multiple changes:**
   • \`editent 323 --business Personal --vendor "Coffee Shop" --memo "team meeting"\`
+  
+  See \`help edit-entry\` for full documentation.`,
+  },
+
+  ee: {
+    description:
+      "Short alias for edit-entry - edit a single ledger entry (business, vendor, date, memo)",
+    content: (
+      arg?: string,
+      pageCtx?: string,
+      cmds?: Record<string, CommandMeta>,
+      user?: User | null
+    ) => editEntryCommand(arg || "", pageCtx || "", cmds || {}, user || null),
+    usage: `ee id --[options]
+  
+  **Quick Examples:**
+  • \`ee 323 --business MyBrick\` — Change business
+  • \`ee 323 --vendor "Starbucks"\` — Update vendor
+  • \`ee 323 --date 2025-08-15\` — Change date
+  • \`ee 323 --memo "note"\` — Add memo
+  • \`ee 323 --delete\` or \`ee 323 -d\` — Delete the entry
+  
+  **Multiple changes:**
+  • \`ee 323 --business Personal --vendor "Coffee Shop" --memo "team meeting"\`
   
   See \`help edit-entry\` for full documentation.`,
   },
