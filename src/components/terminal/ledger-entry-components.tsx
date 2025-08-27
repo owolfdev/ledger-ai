@@ -2,6 +2,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
+import { formatCurrencyWithSymbol } from "@/lib/utils/currency-format";
 
 interface EntryCardProps {
   id: number | string;
@@ -15,13 +16,6 @@ interface EntryCardProps {
 
 type EntryListItemProps = EntryCardProps;
 
-function currencySymbol(currency: string): string {
-  if (currency === "THB") return "฿";
-  if (currency === "USD") return "$";
-  if (currency === "EUR") return "€";
-  return currency;
-}
-
 // Mobile Card Component
 export function EntryCard({
   id,
@@ -32,8 +26,6 @@ export function EntryCard({
   business,
   isCleared,
 }: EntryCardProps) {
-  const symbol = currencySymbol(currency);
-
   // Convert props to proper types (MDX passes everything as strings)
   const numericAmount =
     typeof amount === "string" ? parseFloat(amount) : amount;
@@ -53,8 +45,7 @@ export function EntryCard({
           {date}
         </div>
         <div className="text-lg font-mono font-semibold">
-          {symbol}
-          {numericAmount.toFixed(2)}
+          {formatCurrencyWithSymbol(numericAmount, currency)}
         </div>
       </div>
 
@@ -88,7 +79,6 @@ export function EntryListItem({
   business,
   isCleared,
 }: EntryListItemProps) {
-  const symbol = currencySymbol(currency);
   const numericAmount =
     typeof amount === "string" ? parseFloat(amount) : amount;
   const booleanCleared =
@@ -101,10 +91,7 @@ export function EntryListItem({
     <div className="hidden sm:block mb-1">
       {date} • <strong>{description}</strong>
       {businessTag} —{" "}
-      <strong>
-        {symbol}
-        {numericAmount.toFixed(2)}
-      </strong>
+      <strong>{formatCurrencyWithSymbol(numericAmount, currency)}</strong>
       {status} →{" "}
       <Link
         href={`/ledger/entry/${numericId}`}

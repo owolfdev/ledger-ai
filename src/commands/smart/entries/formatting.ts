@@ -3,7 +3,7 @@
 // REFACTORED - Pure HTML with business logic separation
 // ================================================
 import type { LedgerEntryData } from "./types";
-import { currencySymbol } from "./currency";
+import { formatCurrencyWithSymbol } from "@/lib/utils/currency-format";
 
 /**
  * Extracts business name from ledger entry_text using account hierarchy pattern
@@ -59,7 +59,6 @@ function normalizeEntryProps(entry: LedgerEntryData) {
 export function formatEntryLine(entry: LedgerEntryData): string {
   const amt = Number(entry.amount) || 0;
   const entryId = Number(entry.id) || 0;
-  const sym = currencySymbol(entry.currency);
   const status = entry.is_cleared ? " ✅" : " ⏳";
   const businessName = extractBusinessName(entry.entry_text);
 
@@ -69,7 +68,10 @@ export function formatEntryLine(entry: LedgerEntryData): string {
       <div class="font-medium text-base flex-1 pr-2"> <a href="/ledger/entry/${entryId}">${sanitizeForAttribute(
     entry.description
   )}</a></div>
-      <div class="font-mono text-base">${sym}${amt.toFixed(2)}</div>
+      <div class="font-mono text-base">${formatCurrencyWithSymbol(
+        amt,
+        entry.currency || "USD"
+      )}</div>
     </div>
   </div>`;
 
@@ -85,7 +87,10 @@ export function formatEntryLine(entry: LedgerEntryData): string {
     )}</strong>
     ${businessTag}
     <span class="text-foreground"> — </span>
-    <strong class="font-bold text-accent">${sym}${amt.toFixed(2)}</strong>
+    <strong class="font-bold text-accent">${formatCurrencyWithSymbol(
+      amt,
+      entry.currency || "USD"
+    )}</strong>
     <span class="text-foreground">${status} → </span>
     <a href="/ledger/entry/${entryId}" class="text-blue-600 dark:text-blue-400 hover:underline">#${entryId}</a>
   </div>`;

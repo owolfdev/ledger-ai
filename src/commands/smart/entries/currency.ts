@@ -3,13 +3,13 @@
 // Enhanced with multi-currency totals
 // ================================================
 import type { LedgerEntryData } from "./types";
+import {
+  formatCurrencyWithSymbol,
+  getCurrencySymbol,
+} from "@/lib/utils/currency-format";
 
 export function currencySymbol(currency?: string | null) {
-  if (!currency || currency === "") return "฿";
-  if (currency === "THB") return "฿";
-  if (currency === "USD") return "$";
-  if (currency === "EUR") return "€";
-  return currency;
+  return getCurrencySymbol(currency || "");
 }
 
 // NEW: Currency grouping for totals
@@ -52,16 +52,17 @@ export function formatTotals(currencyTotals: CurrencyTotal[]): string {
 
   if (currencyTotals.length === 1) {
     const total = currencyTotals[0];
-    const sym = currencySymbol(total.currency);
-    return `\n\n**Total:** ${sym}${total.amount.toFixed(2)}`;
+    return `\n\n**Total:** ${formatCurrencyWithSymbol(
+      total.amount,
+      total.currency
+    )}`;
   }
 
   // Multiple currencies - show breakdown
   const lines = currencyTotals.map((total) => {
-    const sym = currencySymbol(total.currency);
-    return `  - ${sym}${total.amount.toFixed(2)} ${total.currency} (${
-      total.count
-    } entries)`;
+    return `  - ${formatCurrencyWithSymbol(total.amount, total.currency)} ${
+      total.currency
+    } (${total.count} entries)`;
   });
 
   return `\n\n**Totals by Currency:**\n${lines.join("\n")}`;

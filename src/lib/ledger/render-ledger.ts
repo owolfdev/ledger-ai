@@ -1,6 +1,8 @@
 // /lib/ledger/render-ledger.ts
 // Render Ledger CLI text from header + postings (deterministic, balanced).
 
+import { formatCurrencyWithSymbol } from "../utils/currency-format";
+
 export type Posting = { account: string; amount: number; currency?: string };
 
 export function renderLedger(
@@ -11,19 +13,9 @@ export function renderLedger(
 ): string {
   const ymd = date.replace(/-/g, "/");
 
-  // Currency symbol mapping
-  const currencySymbol = (curr: string) => {
-    if (curr === "THB") return "฿";
-    if (curr === "USD") return "$";
-    if (curr === "EUR") return "€";
-    return curr; // fallback
-  };
-
   const pad = (amount: number, curr: string) => {
-    const symbol = currencySymbol(curr);
-    return amount >= 0
-      ? ` ${symbol}${amount.toFixed(2)}`
-      : `${symbol}${amount.toFixed(2)}`;
+    const formatted = formatCurrencyWithSymbol(amount, curr);
+    return amount >= 0 ? ` ${formatted}` : `${formatted}`;
   };
 
   const lines = [

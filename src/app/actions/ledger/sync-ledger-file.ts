@@ -4,6 +4,7 @@ import fs from "fs/promises";
 import path from "path";
 import { createClient } from "@/utils/supabase/server";
 import { isLocalLedgerWriteEnabled } from "@/lib/ledger/is-local-write-enabled";
+import { formatCurrencyWithSymbol } from "@/lib/utils/currency-format";
 
 const LEDGER_FILE_PATH = path.resolve(
   process.cwd(),
@@ -29,14 +30,6 @@ export async function syncLedgerFile() {
 
   if (error) throw error;
 
-  function currencySymbol(currency?: string) {
-    if (!currency || currency === "") return "฿"; // fallback for legacy
-    if (currency === "THB") return "฿";
-    if (currency === "USD") return "$";
-    if (currency === "EUR") return "€";
-    return currency; // fallback to whatever is stored
-  }
-
   const content = entries
     .map((entry) => {
       const lines = [
@@ -55,9 +48,12 @@ export async function syncLedgerFile() {
             amount: string;
             account: string;
           }) => {
-            const symbol = currencySymbol(posting.currency);
-            const amount = parseFloat(posting.amount).toFixed(2);
-            lines.push(`    ${posting.account}    ${symbol}${amount}`);
+            const amount = parseFloat(posting.amount);
+            const formatted = formatCurrencyWithSymbol(
+              amount,
+              posting.currency || "THB"
+            );
+            lines.push(`    ${posting.account}    ${formatted}`);
           }
         );
 
@@ -66,7 +62,7 @@ export async function syncLedgerFile() {
     .join("\n\n");
 
   await fs.writeFile(LEDGER_FILE_PATH, content, "utf-8");
-      // console.log("[syncLedgerFile] Wrote ledger to", LEDGER_FILE_PATH);
+  // console.log("[syncLedgerFile] Wrote ledger to", LEDGER_FILE_PATH);
 
   return { success: true };
 }

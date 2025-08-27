@@ -23,6 +23,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { clearAllTerminalHistories } from "@/lib/utils/clear-terminal-histories";
+import { formatCurrencyWithSymbol } from "@/lib/utils/currency-format";
 
 type LedgerEntry = {
   id: number;
@@ -830,7 +831,7 @@ export default function EditableLedgerEntry({
           </div>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2">
             <div className="font-mono text-xl">
-              {Number(entry.amount).toFixed(2)} {entry.currency}
+              {formatCurrencyWithSymbol(Number(entry.amount), entry.currency)}
             </div>
             {entry.is_cleared ? (
               <span className="text-sm text-emerald-600">✅ cleared</span>
@@ -853,7 +854,7 @@ export default function EditableLedgerEntry({
               >
                 <div className="font-mono text-sm break-all">{p.account}</div>
                 <div className="font-mono tabular-nums text-right">
-                  {p.amount.toFixed(2)} {p.currency}
+                  {formatCurrencyWithSymbol(p.amount, p.currency)}
                 </div>
               </div>
             ))}

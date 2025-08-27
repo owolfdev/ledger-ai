@@ -1,6 +1,8 @@
 // src/lib/ledger/ai-receipt-parser.ts
 // IMPROVED: Better Thai handling, currency detection, validation, and command cleanup
 
+import { formatCurrencyWithSymbol } from "../utils/currency-format";
+
 export interface AiReceiptParser {
   parseReceiptText(ocrText: string): Promise<string>;
 }

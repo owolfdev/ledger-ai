@@ -2,6 +2,7 @@
 // Converts OCR receipt data into clean manual command syntax
 
 import type { ReceiptData } from "./parse-receipt-ocr";
+import { formatCurrencyWithSymbol } from "../utils/currency-format";
 
 interface CleanItem {
   description: string;
@@ -35,10 +36,7 @@ function detectCurrencyFromText(ocrText: string): CurrencyConfig {
 }
 
 function formatCurrency(amount: number, currency: CurrencyConfig): string {
-  const formatted = amount.toFixed(2);
-  return currency.position === "before"
-    ? `${currency.symbol}${formatted}`
-    : `${formatted}${currency.symbol}`;
+  return formatCurrencyWithSymbol(amount, currency.code);
 }
 // 👈 END NEW CURRENCY CODE
 
@@ -144,7 +142,7 @@ export function convertOcrToManualCommand(
   const currency = originalOcrText
     ? detectCurrencyFromText(originalOcrText)
     : CURRENCY_CONFIGS.USD;
-      // console.log(`💱 Detected currency: ${currency.code} (${currency.symbol})`);
+  // console.log(`💱 Detected currency: ${currency.code} (${currency.symbol})`);
 
   const cleanItems = extractCleanItems(receiptData);
 
