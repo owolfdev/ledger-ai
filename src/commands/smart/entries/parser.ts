@@ -331,6 +331,13 @@ export function parseArgs(raw?: string): EntriesArgs {
     limit = 200;
   }
 
+  // Smart limit logic: Increase limit for specific filters to show complete results
+  if (!hasExplicitLimit) {
+    if (month || day || business || vendor || account || currency || range) {
+      limit = 200;
+    }
+  }
+
   return {
     sort,
     dir,

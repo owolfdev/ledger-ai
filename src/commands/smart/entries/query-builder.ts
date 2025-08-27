@@ -51,9 +51,9 @@ export class QueryBuilder {
       query = query.eq("user_id", user.id);
     }
 
-    // Business filter
+    // Business filter - Allow partial matching for better UX
     if (args.business) {
-      query = query.like("entry_text", `%Expenses:${args.business}:%`);
+      query = query.ilike("entry_text", `%Expenses:%${args.business}%`);
     }
 
     // Account filter - FIXED: Now case-insensitive
@@ -63,7 +63,7 @@ export class QueryBuilder {
 
     // Currency filter
     if (args.currency) {
-      query = query.eq("currency", args.currency);
+      query = query.ilike("currency", args.currency);
     }
 
     // Vendor filter
