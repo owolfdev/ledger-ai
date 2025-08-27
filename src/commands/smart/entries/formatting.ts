@@ -63,15 +63,21 @@ export function formatEntryLine(entry: LedgerEntryData): string {
   const businessName = extractBusinessName(entry.entry_text);
 
   // Mobile card component
-  const mobileCard = `<div class="block sm:hidden">
-    <div class="flex items-start justify-between mb-2">
+  const mobileCard = `<div class="block sm:hidden mb-2">
+    <div class="flex items-start justify-between mb-1">
       <div class="font-medium text-base flex-1 pr-2"> <a href="/ledger/entry/${entryId}">${sanitizeForAttribute(
     entry.description
   )}</a></div>
-      <div class="font-mono text-base">${formatCurrencyWithSymbol(
+      <div class="font-semibold text-base text-accent">${formatCurrencyWithSymbol(
         amt,
         entry.currency || "USD"
       )}</div>
+    </div>
+    <div class="text-sm text-muted-foreground flex items-center gap-2">
+      <span>${entry.entry_date}</span>
+      <span>•</span>
+      <span>#${entryId}</span>
+      ${businessName ? `<span>•</span><span>${businessName}</span>` : ""}
     </div>
   </div>`;
 

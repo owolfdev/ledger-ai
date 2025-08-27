@@ -22,7 +22,7 @@ export default function BlogPage() {
   }, []);
 
   if (!MdxContent) {
-    return <div>Loading...</div>;
+    return <div className="px-4 pb-4 text-muted-foreground">Loading...</div>;
   }
 
   return (
