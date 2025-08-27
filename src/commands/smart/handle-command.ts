@@ -461,6 +461,15 @@ export function createHandleCommand(
     // Scroll to top
     if (base === "top") {
       window.scrollTo({ top: 0, behavior: "smooth" });
+      // Focus terminal input after scroll animation completes
+      setTimeout(() => {
+        const terminalInput = document.querySelector(
+          'textarea[placeholder="Type a command..."]'
+        ) as HTMLTextAreaElement;
+        if (terminalInput) {
+          terminalInput.focus({ preventScroll: true });
+        }
+      }, 600); // Wait for smooth scroll to complete
       return true;
     }
 
