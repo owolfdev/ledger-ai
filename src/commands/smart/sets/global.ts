@@ -33,4 +33,5 @@ export const globalCommandKeys = [
   "ledger",
   "bal",
   "reg",
+  "accounts",
 ];

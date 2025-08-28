@@ -800,6 +800,78 @@ export const commandRegistry: Record<string, CommandMeta> = {
     • \`new coffee 150 @ Starbucks\`             — With vendor using @ syntax
     • \`new coffee $6, pastry $4 @ Starbucks\`  — Multiple items with vendor`,
   },
+
+  // --- Account Management ---
+  accounts: {
+    content: "__ACCOUNTS_COMMAND__",
+    description:
+      "Manage account mappings for payment methods and ledger accounts.",
+    usage: `accounts <subcommand> [options]
+
+**📋 Subcommands:**
+• \`accounts list\` / \`accounts ls\`           — List all account mappings
+• \`accounts show <alias>\`                    — Show details for a specific account
+• \`accounts add <alias> <accountPath>\`       — Add a new account mapping
+• \`accounts edit <alias> <accountPath>\`      — Edit an existing account mapping
+• \`accounts delete <alias>\` / \`accounts del\` — Delete an account mapping
+• \`accounts set-default <alias>\`             — Set an account as the default
+• \`accounts help\`                            — Show detailed help
+
+**💡 Examples:**
+• \`accounts list\`                            — View all mappings
+• \`accounts show kasikorn\`                   — View Kasikorn account details
+• \`accounts add scb "Assets:Bank:SCB:Savings"\` — Add SCB account
+• \`accounts edit kasikorn "Assets:Bank:Kasikorn:Checking"\` — Change account path
+• \`accounts set-default kasikorn\`            — Make Kasikorn the default
+
+**🔧 Account Types:**
+• \`asset\` — What you own (bank accounts, cash, investments)
+• \`liability\` — What you owe (credit cards, loans)
+• \`equity\` — Net worth
+• \`income\` — Money coming in
+• \`expense\` — Money going out`,
+
+    // Natural language support
+    intent: "utility",
+    priority: 5,
+    naturalLanguage: [
+      "accounts",
+      "account",
+      "payment methods",
+      "bank accounts",
+      "manage accounts",
+      "show accounts",
+      "list accounts",
+      "add account",
+      "edit account",
+      "delete account",
+    ],
+    examples: [
+      {
+        input: "Show me all my accounts",
+        output: "accounts list",
+        description: "List all account mappings",
+      },
+      {
+        input: "Add a new SCB bank account",
+        output: 'accounts add scb "Assets:Bank:SCB:Savings"',
+        description: "Add new bank account mapping",
+      },
+      {
+        input: "What accounts do I have?",
+        output: "accounts list",
+        description: "View account mappings",
+      },
+      {
+        input: "Change my default account to cash",
+        output: "accounts set-default cash",
+        description: "Set default payment method",
+      },
+    ],
+    categories: ["management", "finance", "accounts"],
+    aliases: ["account", "acct", "payments"],
+  },
+
   // Contact Messages
   // In your commandRegistry, under messages:
   messages: {

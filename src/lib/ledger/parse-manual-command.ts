@@ -1,6 +1,10 @@
 // /lib/ledger/parse-manual-command.ts
 
 import { ReceiptShape, ReceiptItem } from "./build-postings-from-receipt";
+import {
+  getDefaultPaymentMethod,
+  getPaymentMethodByAlias,
+} from "./account-mappings";
 
 function normalizeMultiLineCommand(input: string): string {
   let normalized = input
@@ -85,14 +89,13 @@ export const PARSER_GRAMMAR = {
     ],
   },
   payment: {
-    description: "Payment method using --payment flag.",
-    examples: ["--payment cash", '--payment "credit card"', "--payment paypal"],
-    map: {
-      cash: "Assets:Cash",
-      "credit card": "Liabilities:CreditCard",
-      "bank card": "Assets:Bank:Checking",
-      paypal: "Assets:PayPal",
-    },
+    description:
+      "Payment method using --payment flag. Loaded from account-mappings.json",
+    examples: [
+      "--payment kasikorn",
+      '--payment "credit card"',
+      "--payment cash",
+    ],
   },
   memo: {
     description: "Optional memo using --memo flag.",
@@ -236,7 +239,7 @@ function extractFlags(tokens: string[]): {
   payment?: string;
   memo?: string;
   date?: string;
-  imageUrl?: string; // 👈 ADD THIS
+  imageUrl?: string;
   tokens: string[];
 } {
   const updatedTokens: string[] = [];
@@ -244,52 +247,50 @@ function extractFlags(tokens: string[]): {
   let payment: string | undefined;
   let memo: string | undefined;
   let date: string | undefined;
-  let imageUrl: string | undefined; // 👈 ADD THIS
+  let imageUrl: string | undefined;
 
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
 
-    // --business flag (with short flag -b)
-    if ((token === "--business" || token === "-b") && i + 1 < tokens.length) {
-      business = tokens[i + 1];
-      i++; // Skip the value token
-      continue;
-    }
+    // Check if this is a flag
+    if (
+      token.startsWith("--") ||
+      (token.startsWith("-") && token.length === 2)
+    ) {
+      const flagName = token.startsWith("--") ? token.slice(2) : token.slice(1);
 
-    // --payment flag (with short flag -p)
-    if ((token === "--payment" || token === "-p") && i + 1 < tokens.length) {
-      payment = tokens[i + 1];
-      i++; // Skip the value token
-      continue;
-    }
+      // Find the end of this flag's value (next flag or end of tokens)
+      // eslint-disable-next-line prefer-const
+      let flagValue: string[] = [];
+      let j = i + 1;
 
-    // --memo flag (with short flag -m)
-    if ((token === "--memo" || token === "-m") && i + 1 < tokens.length) {
-      const memoValue = tokens[i + 1];
-      // Remove quotes if present
-      memo = memoValue.replace(/^"(.*)"$/, "$1");
-      i++; // Skip the value token
-      continue;
-    }
-
-    // --date flag (with short flag -d)
-    if ((token === "--date" || token === "-d") && i + 1 < tokens.length) {
-      const dateValue = tokens[i + 1];
-      const parsedDate = parseDateToken(dateValue);
-      if (parsedDate) {
-        date = parsedDate;
+      while (j < tokens.length && !tokens[j].startsWith("-")) {
+        flagValue.push(tokens[j]);
+        j++;
       }
-      i++; // Skip the value token
-      continue;
-    }
 
-    // 👈 ADD THIS SECTION
-    // --image flag (with short flag -i)
-    if ((token === "--image" || token === "-i") && i + 1 < tokens.length) {
-      const imageValue = tokens[i + 1];
-      // Remove quotes if present
-      imageUrl = imageValue.replace(/^"(.*)"$/, "$1");
-      i++; // Skip the value token
+      // Process the flag based on its name
+      if (flagName === "business" || flagName === "b") {
+        business = flagValue.join(" ");
+      } else if (flagName === "payment" || flagName === "p") {
+        payment = flagValue.join(" ");
+      } else if (flagName === "memo" || flagName === "m") {
+        // For memo, we still support quotes but they're optional
+        const memoValue = flagValue.join(" ");
+        memo = memoValue.replace(/^"(.*)"$/, "$1");
+      } else if (flagName === "date" || flagName === "d") {
+        const dateValue = flagValue.join(" ");
+        const parsedDate = parseDateToken(dateValue);
+        if (parsedDate) {
+          date = parsedDate;
+        }
+      } else if (flagName === "image" || flagName === "i") {
+        const imageValue = flagValue.join(" ");
+        imageUrl = imageValue.replace(/^"(.*)"$/, "$1");
+      }
+
+      // Skip all the value tokens we just processed
+      i = j - 1;
       continue;
     }
 
@@ -297,7 +298,7 @@ function extractFlags(tokens: string[]): {
     updatedTokens.push(token);
   }
 
-  return { business, payment, memo, date, imageUrl, tokens: updatedTokens }; // 👈 ADD imageUrl TO RETURN
+  return { business, payment, memo, date, imageUrl, tokens: updatedTokens };
 }
 
 function parseItemsAndVendor(tokens: string[]): {
@@ -355,8 +356,8 @@ function parseItemToken(token: string): ParsedItem | null {
 function mapPaymentMethod(method: string): string {
   const lower = method.toLowerCase().replace(/['"]/g, ""); // Remove quotes
 
-  const paymentMap = PARSER_GRAMMAR.payment.map;
-  return paymentMap[lower as keyof typeof paymentMap] || paymentMap.cash;
+  const accountPath = getPaymentMethodByAlias(lower);
+  return accountPath || getDefaultPaymentMethod();
 }
 
 // Enhanced grammar:
@@ -364,7 +365,7 @@ function mapPaymentMethod(method: string): string {
 //
 // Examples:
 // new coffee $6, pastry $4 @ Starbucks
-// new MyBrick: supplies $50 @ HomeDepot --payment cash
+// new MyBrick: supplies $50 @ HomeDepot --payment kasikorn
 // new coffee $6 @ Starbucks --business Personal --memo "meeting"
 // Updated parseManualNewCommand function in /lib/ledger/parse-manual-command.ts
 
@@ -425,7 +426,7 @@ export function parseManualNewCommand(input: string): {
   // 9) Map payment method
   const paymentAccount = payment
     ? mapPaymentMethod(payment)
-    : PARSER_GRAMMAR.payment.map.cash;
+    : getDefaultPaymentMethod();
 
   // 10) Build receipt totals
   const subtotal = normalizedItems.reduce((sum, item) => sum + item.price, 0);

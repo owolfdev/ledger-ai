@@ -121,7 +121,40 @@ Later: sync to .ledger file
 
 ---
 
-## **4. Data Flow Examples**
+## **4. Payment Methods**
+
+The system supports multiple payment methods with automatic account mapping:
+
+### **Available Payment Methods**
+
+- **`kasikorn`** → `Assets:Bank:Kasikorn:Personal` (default)
+- **`kbank`** → `Assets:Bank:Kasikorn:Personal`
+- **`thai bank`** → `Assets:Bank:Kasikorn:Personal`
+- **`bank`** → `Assets:Bank:Kasikorn:Personal`
+- **`cash`** → `Assets:Cash`
+- **`credit card`** → `Liabilities:CreditCard`
+- **`bank card`** → `Assets:Bank:Checking`
+- **`paypal`** → `Assets:PayPal`
+
+### **Usage Examples**
+
+```bash
+# Use default (Kasikorn Bank)
+new coffee ฿1500 @ EmQuartier
+
+# Explicitly specify payment method
+new coffee ฿1500 @ EmQuartier --payment kasikorn
+new coffee ฿1500 @ EmQuartier --payment cash
+new coffee ฿1500 @ EmQuartier --payment credit card
+new coffee ฿1500 @ EmQuartier --payment bkk bank
+new coffee ฿1500 @ EmQuartier --payment "channel 60"
+```
+
+**✨ Smart Flag Parsing:** Multi-word payment methods like `bkk bank` and `credit card` work without quotes! The system automatically groups words until it finds the next flag.
+
+---
+
+## **5. Data Flow Examples**
 
 ### **Manual Entry Example**
 
@@ -187,7 +220,7 @@ User uploads Starbucks receipt image:
 
 ---
 
-## **5. Key Files & Responsibilities**
+## **6. Key Files & Responsibilities**
 
 | File / Path                                        | Purpose                                                                                           |
 | -------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
@@ -221,7 +254,7 @@ User uploads Starbucks receipt image:
 
 ---
 
-## **6. Entry Management Features**
+## **7. Entry Management Features**
 
 ### **Individual Entry Pages (`/ledger/entry/{id}`)**
 
@@ -246,7 +279,7 @@ User uploads Starbucks receipt image:
 
 ---
 
-## **7. Business Context Architecture**
+## **8. Business Context Architecture**
 
 **Account-Based Approach:**
 
@@ -269,7 +302,7 @@ User uploads Starbucks receipt image:
 
 ---
 
-## **8. Terminal Command System**
+## **9. Terminal Command System**
 
 ### **Available Commands**
 
@@ -296,7 +329,7 @@ User uploads Starbucks receipt image:
 
 ---
 
-## **9. Modern Next.js Integration**
+## **10. Modern Next.js Integration**
 
 - **Server Actions** for all data mutations (no API routes needed for internal operations)
 - **TypeScript throughout** with strict type checking and Zod validation
@@ -307,7 +340,7 @@ User uploads Starbucks receipt image:
 
 ---
 
-## **10. Best Practices**
+## **11. Best Practices**
 
 - **Always save to Supabase first**, then sync to local file if enabled
 - **Account-based business context** eliminates need for complex foreign key relationships
@@ -319,10 +352,10 @@ User uploads Starbucks receipt image:
 
 ---
 
-## **11. Extending the System**
+## **12. Extending the System**
 
 - **New Categories**: Add to `account-map.ts` patterns with business-aware mapping
-- **New Payment Methods**: Extend `PARSER_GRAMMAR.paymentMethods.map` in `parse-manual-command.ts`
+- **New Payment Methods**: Extend `PARSER_GRAMMAR.payment.map` in `parse-manual-command.ts`
 - **Alternate Currencies**: Adjust currency detection regex or accept explicit ISO codes
 - **Custom AI Rules**: Modify AI prompt in `/commands/smart/new-command-handler.ts`
 - **Additional Edit Features**: Extend `EditableLedgerEntry` component with new capabilities
@@ -332,7 +365,7 @@ User uploads Starbucks receipt image:
 
 ---
 
-## **12. Development Workflow**
+## **13. Development Workflow**
 
 ### **Local Development**
 

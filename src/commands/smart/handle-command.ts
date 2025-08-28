@@ -18,6 +18,7 @@ import { LEDGER_TIMEZONE } from "@/lib/ledger-config";
 // } from "@/lib/ledger/auto-balance-ledger-entry";
 import { handleNew } from "@/commands/smart/new-command-handler";
 import { entriesListCommand } from "@/commands/smart/entries-command";
+import { handleAccountsCommand } from "@/commands/smart/accounts-command";
 import { IntentDetector } from "./intent-detector";
 import { CommandGenerator } from "./command-generator";
 
@@ -51,6 +52,77 @@ function getLocalDate() {
   }
 
   return `${yearPart.value}-${monthPart.value}-${dayPart.value}`; // e.g., "2025-08-07"
+}
+
+function parseAccountsArgs(arg: string) {
+  const args = arg.split(/\s+/);
+  const result: {
+    subcommand?: string;
+    alias?: string;
+    accountPath?: string;
+    type?: string;
+    category?: string;
+  } = {};
+
+  let i = 0;
+  while (i < args.length) {
+    const word = args[i];
+
+    if (i === 0 && !word.startsWith("-")) {
+      result.subcommand = word;
+    } else if (
+      i === 1 &&
+      !word.startsWith("-") &&
+      result.subcommand === "add"
+    ) {
+      result.alias = word;
+    } else if (
+      i === 2 &&
+      !word.startsWith("-") &&
+      result.subcommand === "add"
+    ) {
+      result.accountPath = word;
+    } else if (
+      i === 1 &&
+      !word.startsWith("-") &&
+      result.subcommand === "show"
+    ) {
+      result.alias = word;
+    } else if (
+      i === 1 &&
+      !word.startsWith("-") &&
+      result.subcommand === "delete"
+    ) {
+      result.alias = word;
+    } else if (
+      i === 1 &&
+      !word.startsWith("-") &&
+      result.subcommand === "set-default"
+    ) {
+      result.alias = word;
+    } else if (
+      i === 1 &&
+      !word.startsWith("-") &&
+      result.subcommand === "edit"
+    ) {
+      result.alias = word;
+    } else if (
+      i === 2 &&
+      !word.startsWith("-") &&
+      result.subcommand === "edit"
+    ) {
+      result.accountPath = word;
+    } else if (word === "--type" && args[i + 1]) {
+      result.type = args[i + 1];
+      i++;
+    } else if (word === "--category" && args[i + 1]) {
+      result.category = args[i + 1];
+      i++;
+    }
+    i++;
+  }
+
+  return result;
 }
 
 function parseFlags(arg: string) {
@@ -894,6 +966,18 @@ export function createHandleCommand(
     if (base === "new" && commands[base]) {
       // console.log("Calling handleNew with:", cmd, arg);
       await handleNew(setHistory, cmd, arg);
+      return true;
+    }
+
+    // --- ACCOUNTS MANAGEMENT ---
+    if (base === "accounts" && commands[base]) {
+      const args = parseAccountsArgs(arg);
+      const output = handleAccountsCommand(args);
+      setHistory([
+        ...(history ?? []),
+        { type: "input", content: cmd },
+        { type: "output", content: output, format: "markdown" },
+      ]);
       return true;
     }
 
