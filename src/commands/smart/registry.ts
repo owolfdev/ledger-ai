@@ -170,6 +170,16 @@ export const commandRegistry: Record<string, CommandMeta> = {
         output: "entries -c USD -l 20",
         description: "Currency filter with limit",
       },
+      {
+        input: "Show me all coffee expenses",
+        output: "entries -t coffee",
+        description: "Filter by coffee tag",
+      },
+      {
+        input: "How much did I spend on food this month?",
+        output: "entries -t food -s -m august",
+        description: "Food spending total for August",
+      },
     ],
     categories: ["query", "finance", "search"],
     aliases: ["ent", "e", "list", "show", "find"],

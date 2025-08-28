@@ -35,44 +35,202 @@ const DESC_CATEGORY_RULES: Array<{ pattern: RegExp; category: string }> = [
     category: "Electronics:Accessories",
   },
 
-  // Food sub-categories
+  // Food sub-categories - Granular mapping for precise tracking
+  // Dairy products
   {
-    pattern: /(butter|milk|cheese|yogurt|cream|dairy|egg|eggs)/i,
+    pattern: /(butter|margarine|ghee)/i,
+    category: "Food:Dairy:Butter",
+  },
+  {
+    pattern: /(egg|eggs|egg\s*white|egg\s*yolk)/i,
+    category: "Food:Dairy:Eggs",
+  },
+  {
+    pattern: /(milk|dairy\s*beverage|almond\s*milk|soy\s*milk)/i,
+    category: "Food:Dairy:Milk",
+  },
+  {
+    pattern: /(cheese|cheddar|mozzarella|parmesan|brie|gouda)/i,
+    category: "Food:Dairy:Cheese",
+  },
+  {
+    pattern: /(yogurt|yoghurt|greek\s*yogurt)/i,
+    category: "Food:Dairy:Yogurt",
+  },
+  {
+    pattern: /(cream|heavy\s*cream|whipping\s*cream|sour\s*cream)/i,
+    category: "Food:Dairy:Cream",
+  },
+  {
+    pattern: /(dairy|dairy\s*product)/i,
     category: "Food:Dairy",
   },
+
+  // Meat products
   {
-    pattern: /(chicken|beef|pork|meat)/i,
+    pattern: /(beef|steak|burger|ground\s*beef|beef\s*mince)/i,
+    category: "Food:Meat:Beef",
+  },
+  {
+    pattern: /(chicken|poultry|chicken\s*breast|chicken\s*thigh)/i,
+    category: "Food:Meat:Chicken",
+  },
+  {
+    pattern: /(pork|bacon|ham|pork\s*chop)/i,
+    category: "Food:Meat:Pork",
+  },
+  {
+    pattern: /(fish|salmon|tuna|shrimp|prawn|seafood)/i,
+    category: "Food:Meat:Seafood",
+  },
+  {
+    pattern: /(meat|protein)/i,
     category: "Food:Meat",
   },
+
+  // Grain products
   {
-    pattern: /(oat|grain|rice|bread|cereal|pasta|noodle)/i,
+    pattern: /(bread|toast|bun|roll|sandwich\s*bread)/i,
+    category: "Food:Grains:Bread",
+  },
+  {
+    pattern: /(rice|basmati|jasmine|brown\s*rice|white\s*rice)/i,
+    category: "Food:Grains:Rice",
+  },
+  {
+    pattern: /(pasta|spaghetti|penne|macaroni|noodle)/i,
+    category: "Food:Grains:Pasta",
+  },
+  {
+    pattern: /(oat|oatmeal|porridge)/i,
+    category: "Food:Grains:Oats",
+  },
+  {
+    pattern: /(cereal|breakfast\s*cereal)/i,
+    category: "Food:Grains:Cereal",
+  },
+  {
+    pattern: /(grain|grain\s*product)/i,
     category: "Food:Grains",
   },
+
+  // Pantry staples
   {
-    pattern: /(olive|oil|vinegar|sauce|ketchup|condiment|mayonnaise)/i,
-    category: "Food:Condiments",
+    pattern: /(jam|jelly|preserve|marmalade)/i,
+    category: "Food:Pantry:Jam",
   },
   {
-    pattern:
-      /(bean|onion|garlic|veg|vegetable|lettuce|tomato|pepper|carrot|broccoli)/i,
-    category: "Food:Vegetables",
+    pattern: /(peanut\s*butter|nut\s*butter|almond\s*butter)/i,
+    category: "Food:Pantry:NutButter",
   },
   {
-    pattern: /(lemon|apple|banana|grape|fruit|mango|orange|berry)/i,
-    category: "Food:Fruit",
+    pattern: /(honey|syrup|maple\s*syrup)/i,
+    category: "Food:Pantry:Sweeteners",
   },
   {
-    pattern: /(peanut\s*butter|jam|jelly)/i,
+    pattern: /(olive\s*oil|vegetable\s*oil|cooking\s*oil)/i,
+    category: "Food:Pantry:Oils",
+  },
+  {
+    pattern: /(vinegar|balsamic|apple\s*cider\s*vinegar)/i,
+    category: "Food:Pantry:Vinegars",
+  },
+  {
+    pattern: /(sauce|ketchup|mustard|mayonnaise|condiment)/i,
+    category: "Food:Pantry:Condiments",
+  },
+  {
+    pattern: /(pantry|pantry\s*staple)/i,
     category: "Food:Pantry",
   },
+
+  // Vegetables
   {
-    pattern: /(coffee|latte|espresso|americano)/i,
+    pattern: /(lettuce|salad|greens|spinach|kale)/i,
+    category: "Food:Vegetables:Leafy",
+  },
+  {
+    pattern: /(tomato|tomatoes|cherry\s*tomato)/i,
+    category: "Food:Vegetables:Tomatoes",
+  },
+  {
+    pattern: /(onion|garlic|shallot|leek)/i,
+    category: "Food:Vegetables:Alliums",
+  },
+  {
+    pattern: /(carrot|carrots|carrot\s*stick)/i,
+    category: "Food:Vegetables:Carrots",
+  },
+  {
+    pattern: /(pepper|bell\s*pepper|chili|jalapeno)/i,
+    category: "Food:Vegetables:Peppers",
+  },
+  {
+    pattern: /(broccoli|cauliflower|cabbage)/i,
+    category: "Food:Vegetables:Cruciferous",
+  },
+  {
+    pattern: /(bean|beans|legume|lentil|chickpea)/i,
+    category: "Food:Vegetables:Legumes",
+  },
+  {
+    pattern: /(veg|vegetable|vegetables)/i,
+    category: "Food:Vegetables",
+  },
+
+  // Fruits
+  {
+    pattern: /(apple|apples|red\s*apple|green\s*apple)/i,
+    category: "Food:Fruit:Apples",
+  },
+  {
+    pattern: /(banana|bananas|banana\s*bunch)/i,
+    category: "Food:Fruit:Bananas",
+  },
+  {
+    pattern: /(orange|oranges|mandarin|tangerine)/i,
+    category: "Food:Fruit:Citrus",
+  },
+  {
+    pattern: /(grape|grapes|grape\s*bunch)/i,
+    category: "Food:Fruit:Grapes",
+  },
+  {
+    pattern: /(mango|mangoes|mango\s*fruit)/i,
+    category: "Food:Fruit:Mangoes",
+  },
+  {
+    pattern: /(berry|berries|strawberry|blueberry|raspberry)/i,
+    category: "Food:Fruit:Berries",
+  },
+  {
+    pattern: /(lemon|lemons|lime|limes)/i,
+    category: "Food:Fruit:Citrus",
+  },
+  {
+    pattern: /(fruit|fruits)/i,
+    category: "Food:Fruit",
+  },
+
+  // Beverages
+  {
+    pattern: /(coffee|latte|espresso|americano|cappuccino)/i,
     category: "Food:Coffee",
   },
   {
-    pattern: /(tea|matcha|oolong|earl\s*grey)/i,
+    pattern: /(tea|matcha|oolong|earl\s*grey|green\s*tea)/i,
     category: "Food:Tea",
   },
+  {
+    pattern: /(beer|ale|lager|stout|pilsner|craft\s*beer)/i,
+    category: "Food:Beer",
+  },
+  {
+    pattern: /(wine|red\s*wine|white\s*wine|champagne|sparkling)/i,
+    category: "Food:Wine",
+  },
+
+  // Dining
   {
     pattern: /(restaurant|dine|meal|lunch|dinner|snack|takeaway|take\s*out)/i,
     category: "Food:Dining",

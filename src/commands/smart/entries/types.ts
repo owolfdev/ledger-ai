@@ -17,6 +17,7 @@ export interface EntriesArgs {
   business?: string;
   account?: string;
   currency?: string; // NEW: Currency filter
+  tags?: string[]; // NEW: Tag filter (array of tag names)
   go?: string;
   range?: { start: string; end: string };
 }

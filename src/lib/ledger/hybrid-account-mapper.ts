@@ -5,6 +5,7 @@ import {
   mapAccount as ruleBasedMapAccount,
   type MapAccountOptions,
 } from "./account-map";
+import { mapAccountWithTags } from "./tag-aware-account-mapper";
 
 interface AIAccountMapperOptions extends MapAccountOptions {
   useAI?: boolean;
@@ -118,41 +119,57 @@ export async function mapAccountWithHybridAI(
 ): Promise<string> {
   const business = opts.business || "Personal";
 
-  // First get rule-based mapping
-  const ruleBasedAccount = ruleBasedMapAccount(description, opts);
+  try {
+    // First try tag-aware mapping (most accurate)
+    const tagAwareAccount = await mapAccountWithTags(description, business);
 
-  // Extract the category part (everything after "Expenses:Business:")
-  const accountParts = ruleBasedAccount.split(":");
-  if (accountParts.length < 3) {
-    return ruleBasedAccount; // Malformed account, return as-is
-  }
-
-  const categoryPath = accountParts.slice(2).join(":"); // e.g., "Food:Fruit"
-
-  // Check if this category should be enhanced with AI
-  if (opts.useAI !== false && shouldEnhanceWithAI(categoryPath)) {
-    try {
-      const enhancedCategory = await getAIEnhancement(
-        description,
-        categoryPath,
-        opts.vendor,
-        business
-      );
-
-      if (enhancedCategory) {
-        return buildAccountFromCategory(enhancedCategory, business);
-      }
-    } catch (error) {
-      console.error("AI enhancement failed, using rule-based result:", error);
+    // If tag-aware mapping found a specific account (not Misc), use it
+    if (!tagAwareAccount.includes(":Misc")) {
+      return tagAwareAccount;
     }
-  }
 
-  // Return original rule-based result if:
-  // - AI disabled
-  // - Category doesn't need enhancement
-  // - AI enhancement failed
-  // - AI confidence too low
-  return ruleBasedAccount;
+    // Fall back to rule-based mapping if tag-aware didn't find a match
+    const ruleBasedAccount = ruleBasedMapAccount(description, opts);
+
+    // Extract the category part (everything after "Expenses:Business:")
+    const accountParts = ruleBasedAccount.split(":");
+    if (accountParts.length < 3) {
+      return ruleBasedAccount; // Malformed account, return as-is
+    }
+
+    const categoryPath = accountParts.slice(2).join(":"); // e.g., "Food:Fruit"
+
+    // Check if this category should be enhanced with AI
+    if (opts.useAI !== false && shouldEnhanceWithAI(categoryPath)) {
+      try {
+        const enhancedCategory = await getAIEnhancement(
+          description,
+          categoryPath,
+          opts.vendor,
+          business
+        );
+
+        if (enhancedCategory) {
+          return buildAccountFromCategory(enhancedCategory, business);
+        }
+      } catch (error) {
+        console.error("AI enhancement failed, using rule-based result:", error);
+      }
+    }
+
+    // Return original rule-based result if:
+    // - AI disabled
+    // - Category doesn't need enhancement
+    // - AI enhancement failed
+    // - AI confidence too low
+    return ruleBasedAccount;
+  } catch (error) {
+    console.error(
+      "Tag-aware mapping failed, falling back to rule-based:",
+      error
+    );
+    return ruleBasedMapAccount(description, opts);
+  }
 }
 
 // Synchronous version that maintains backward compatibility

@@ -77,27 +77,120 @@ export async function entriesListCommand(
       return "No entries found.";
     }
 
+    // NEW: Apply tag filtering after query execution
+    let filteredData = data;
+    if (args.tags && args.tags.length > 0) {
+      console.log("Applying post-query tag filtering for:", args.tags);
+
+      try {
+        // Get entries that have the specified tags
+        const supabase = createClient();
+
+        // First get the tag IDs
+        const { data: tagData, error: tagError } = await supabase
+          .from("tags")
+          .select("id")
+          .in("name", args.tags);
+
+        if (tagError || !tagData || tagData.length === 0) {
+          console.error("Error fetching tags:", tagError);
+          filteredData = [];
+        } else {
+          const tagIds = tagData.map((tag) => tag.id);
+
+          // Get entry IDs from entry_tags table
+          const entryTagsResult = await supabase
+            .from("entry_tags")
+            .select("entry_id")
+            .in("tag_id", tagIds);
+
+          // Get posting IDs from posting_tags table, then get their entry IDs
+          const postingTagsResult = await supabase
+            .from("posting_tags")
+            .select("posting_id")
+            .in("tag_id", tagIds);
+
+          // Get entry IDs from postings
+          let postingEntryIds: number[] = [];
+          if (postingTagsResult.data && postingTagsResult.data.length > 0) {
+            const postingIds = postingTagsResult.data.map(
+              (row) => row.posting_id
+            );
+            const { data: postingEntries } = await supabase
+              .from("ledger_postings")
+              .select("entry_id")
+              .in("id", postingIds);
+
+            if (postingEntries) {
+              postingEntryIds = postingEntries.map((row) => row.entry_id);
+            }
+          }
+
+          if (entryTagsResult.error) {
+            console.error("Error fetching entry tags:", entryTagsResult.error);
+          }
+          if (postingTagsResult.error) {
+            console.error(
+              "Error fetching posting tags:",
+              postingTagsResult.error
+            );
+          }
+
+          // Combine entry IDs from both sources
+          const taggedEntryIds = new Set<number>();
+
+          if (entryTagsResult.data) {
+            entryTagsResult.data.forEach((row: { entry_id: number }) =>
+              taggedEntryIds.add(row.entry_id)
+            );
+          }
+
+          // Add entry IDs from posting tags
+          postingEntryIds.forEach((entryId) => taggedEntryIds.add(entryId));
+
+          if (taggedEntryIds.size > 0) {
+            const taggedEntryIdsArray = Array.from(taggedEntryIds);
+            filteredData = data.filter((entry) =>
+              taggedEntryIdsArray.includes(entry.id)
+            );
+            console.log(
+              `Filtered ${data.length} entries down to ${filteredData.length} tagged entries (from both entry and posting tags)`
+            );
+          } else {
+            console.log("No entries found with the specified tags");
+            filteredData = [];
+          }
+        }
+      } catch (filterError) {
+        console.error("Error in tag filtering:", filterError);
+        // Keep original data if filtering fails
+      }
+    }
+
     // Build filter description
     const filterDesc =
       (args.business ? ` for ${args.business}` : "") +
       (args.vendor ? ` matching "${args.vendor}"` : "") +
       (args.account ? ` with account "${args.account}"` : "") +
-      (args.currency ? ` in ${args.currency}` : "");
+      (args.currency ? ` in ${args.currency}` : "") +
+      (args.tags ? ` with tags: ${args.tags.join(", ")}` : "");
 
     // Create header
-    const header = createEntryListHeader(data.length, filterDesc, {
+    const header = createEntryListHeader(filteredData.length, filterDesc, {
       sort: args.sort,
       dir: args.dir,
       limit: args.limit,
     });
 
     // Format entries with proper component separation
-    const formattedEntries = data.map((entry) => formatEntryLine(entry));
+    const formattedEntries = filteredData.map((entry) =>
+      formatEntryLine(entry)
+    );
 
     // Calculate totals if requested
     let totalsBlock = "";
     if (args.sum) {
-      const currencyTotals = groupByCurrency(data);
+      const currencyTotals = groupByCurrency(filteredData);
       totalsBlock = formatTotals(currencyTotals);
     }
 

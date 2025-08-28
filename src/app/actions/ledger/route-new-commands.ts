@@ -217,6 +217,58 @@ export async function handleNewCommand(
     };
   }
 
+  // ---- AUTO-TAGGING SYSTEM ----
+  try {
+    // Get the created postings with their IDs for auto-tagging
+    const { data: createdPostings, error: fetchErr } = await supabase
+      .from("ledger_postings")
+      .select("id, account, amount, currency")
+      .eq("entry_id", entry_id)
+      .order("sort_order", { ascending: true });
+
+    if (!fetchErr && createdPostings) {
+      // Import auto-tagging functions
+      const { autoTagEntry, applyAutoTags } = await import(
+        "@/lib/ledger/auto-tagger"
+      );
+
+      // Auto-tag the entry
+      const autoTagResult = await autoTagEntry({
+        description: payload.payee,
+        memo: payload.memo,
+        business: payload.business,
+        postings: createdPostings,
+      });
+
+      // Apply the auto-tags to the database
+      await applyAutoTags(entry_id, autoTagResult);
+
+      // Log auto-tagging results for debugging (only in development)
+      if (
+        process.env.NODE_ENV === "development" &&
+        (autoTagResult.entryTags.length > 0 ||
+          autoTagResult.postingTags.size > 0)
+      ) {
+        console.log("=== AUTO-TAGGING RESULTS ===");
+        console.log(
+          "Entry tags:",
+          autoTagResult.entryTags.map((t) => t.name)
+        );
+        console.log(
+          "Posting tags:",
+          Array.from(autoTagResult.postingTags.entries()).map(
+            ([id, tags]) =>
+              `Posting ${id}: ${tags.map((t) => t.name).join(", ")}`
+          )
+        );
+        console.log("===========================");
+      }
+    }
+  } catch (autoTagError) {
+    // Log auto-tagging errors but don't fail the entry creation
+    console.warn("Auto-tagging failed:", autoTagError);
+  }
+
   // ---- DEV FILE SYNC (rewrite from DB; no append to avoid duplicates) ----
   if (isLocalLedgerWriteEnabled()) {
     try {

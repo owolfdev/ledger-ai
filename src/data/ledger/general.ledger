@@ -329,19 +329,51 @@
     Expenses:Taxes:Sales           ฿169.28
     Assets:Bank:Kasikorn:Personal                   ฿-2993.48
 
-2025/08/28 Starbucks
-    Expenses:Personal:Food:Coffee  100.00฿
-    Assets:Bank:BangkokBank:Personal:Savings-100.00฿
+2025/08/28 Nico Nico
+    Expenses:Personal:Food:Dairy   70.00฿
+    Expenses:Personal:Misc         130.00฿
+    Expenses:Personal:Food:Coffee  90.00฿
+    Assets:Bank:Kasikorn:Personal -290.00฿
 
-2025/08/28 Starbucks
-    Expenses:Personal:Food:Coffee  100.00฿
-    Assets:Bank:BangkokBank:Personal:Savings-100.00฿
+2025/08/28 Nico Nico
+    Expenses:Personal:Food:Bakery  110.00฿
+    Assets:Bank:Kasikorn:Personal -110.00฿
 
-2025/08/28 Starbucks
-    Expenses:Personal:Food:Coffee  100.00฿
-    Assets:Bank:Channel60:Savings -100.00฿
+2025/08/28 Curtain Up Drama
+    Expenses:Personal:Misc         7,700.00฿
+    Assets:Bank:Kasikorn:Personal -7,700.00฿
 
-2025/08/28 Starbucks
+2025/08/28 Nami Massage
+    Expenses:Personal:Misc         700.00฿
+    Expenses:Personal:Misc         200.00฿
+    Assets:Bank:Kasikorn:Personal -900.00฿
+
+2025/08/28 Ichiba Dining
+    Expenses:Personal:Misc         380.00฿
+    Expenses:Personal:Misc         180.00฿
+    Expenses:Personal:Food:Meat:RedMeat 270.00฿
+    Expenses:Personal:Misc         41.50฿
+    Expenses:Taxes:Sales           61.01฿
+    Assets:Bank:Kasikorn:Personal -932.51฿
+
+2025/08/28 J Value
+    Expenses:Personal:Misc         60.00฿
+    Expenses:Taxes:Sales          -60.00฿
+
+2025/08/28 J Value Co.
+    Expenses:Personal:Misc         504.00฿
+    Expenses:Personal:Food:Grains  120.00฿
+    Assets:Bank:Kasikorn:Personal -624.00฿
+
+2025/08/29 Dynamic Test Shop
     Expenses:Personal:Food:Coffee  100.00฿
-    Liabilities:CreditCard        -100.00฿
+    Expenses:Personal:Food:Beer    200.00฿
+    Expenses:Personal:Food:Wine    300.00฿
+    Assets:Bank:Kasikorn:Personal -600.00฿
+
+2025/08/29 Market
+    Expenses:Personal:Food:Dairy:Milk 40.00฿
+    Expenses:Personal:Food:Dairy:Cream 100.00฿
+    Expenses:Personal:Food:Pork    60.00฿
+    Assets:Bank:Kasikorn:Personal -200.00฿
 

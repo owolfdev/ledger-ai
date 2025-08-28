@@ -159,6 +159,7 @@ export function parseArgs(raw?: string): EntriesArgs {
   let business: string | undefined;
   let account: string | undefined;
   let currency: string | undefined;
+  let tags: string[] | undefined;
   let range: { start: string; end: string } | undefined;
 
   if (!raw) return { sort, dir, limit, sum, count };
@@ -216,6 +217,17 @@ export function parseArgs(raw?: string): EntriesArgs {
     }
     if ((t === "--currency" || t === "-c") && i + 1 < parts.length) {
       currency = parts[i + 1].toUpperCase();
+      i++;
+      continue;
+    }
+
+    if ((t === "--tags" || t === "-t") && i + 1 < parts.length) {
+      const tagsArg = parts[i + 1];
+      // Parse comma-separated tags: "food,travel" -> ["food", "travel"]
+      tags = tagsArg
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
       i++;
       continue;
     }
@@ -351,6 +363,7 @@ export function parseArgs(raw?: string): EntriesArgs {
     business,
     account,
     currency,
+    tags,
     go,
     range,
   };
