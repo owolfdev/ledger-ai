@@ -43,27 +43,143 @@ export async function entriesListCommand(
 
     // Count mode
     if (args.count) {
-      const countQuery = queryBuilder.buildCountQuery(args, user ?? null);
-      const { count, error } = await countQuery;
+      let count = 0;
+      let filteredData: any[] = [];
 
-      if (error) {
-        return `<custom-alert message="Failed to count entries: ${error.message}" />`;
+      if (args.tags && args.tags.length > 0) {
+        // For tag filtering, we need to fetch entries first, then filter and count
+        const query = queryBuilder.buildListQuery(args, user ?? null);
+        const { data, error } = await query;
+
+        if (error) {
+          return `<custom-alert message="Failed to fetch entries: ${error.message}" />`;
+        }
+
+        if (!data || data.length === 0) {
+          return "No entries found.";
+        }
+
+        // Apply tag filtering (same logic as list mode)
+        try {
+          const supabase = createClient();
+
+          // First get the tag IDs
+          const { data: tagData, error: tagError } = await supabase
+            .from("tags")
+            .select("id")
+            .in("name", args.tags);
+
+          if (tagError || !tagData || tagData.length === 0) {
+            console.error("Error fetching tags:", tagError);
+            filteredData = [];
+          } else {
+            const tagIds = tagData.map((tag) => tag.id);
+
+            // Get entry IDs from entry_tags table
+            const entryTagsResult = await supabase
+              .from("entry_tags")
+              .select("entry_id")
+              .in("tag_id", tagIds);
+
+            // Get posting IDs from posting_tags table, then get their entry IDs
+            const postingTagsResult = await supabase
+              .from("posting_tags")
+              .select("posting_id")
+              .in("tag_id", tagIds);
+
+            // Get entry IDs from postings
+            let postingEntryIds: number[] = [];
+            if (postingTagsResult.data && postingTagsResult.data.length > 0) {
+              const postingIds = postingTagsResult.data.map(
+                (row) => row.posting_id
+              );
+              const { data: postingEntries } = await supabase
+                .from("ledger_postings")
+                .select("entry_id")
+                .in("id", postingIds);
+
+              if (postingEntries) {
+                postingEntryIds = postingEntries.map((row) => row.entry_id);
+              }
+            }
+
+            if (entryTagsResult.error) {
+              console.error(
+                "Error fetching entry tags:",
+                entryTagsResult.error
+              );
+            }
+            if (postingTagsResult.error) {
+              console.error(
+                "Error fetching posting tags:",
+                postingTagsResult.error
+              );
+            }
+
+            // Combine entry IDs from both sources
+            const taggedEntryIds = new Set<number>();
+
+            if (entryTagsResult.data) {
+              entryTagsResult.data.forEach((row: { entry_id: number }) =>
+                taggedEntryIds.add(row.entry_id)
+              );
+            }
+
+            // Add entry IDs from posting tags
+            postingEntryIds.forEach((entryId) => taggedEntryIds.add(entryId));
+
+            if (taggedEntryIds.size > 0) {
+              const taggedEntryIdsArray = Array.from(taggedEntryIds);
+              filteredData = data.filter((entry) =>
+                taggedEntryIdsArray.includes(entry.id)
+              );
+            } else {
+              filteredData = [];
+            }
+          }
+        } catch (filterError) {
+          console.error("Error in tag filtering for count:", filterError);
+          filteredData = [];
+        }
+
+        count = filteredData.length;
+      } else {
+        // No tags - use regular count query
+        const countQuery = queryBuilder.buildCountQuery(args, user ?? null);
+        const { count: countResult, error } = await countQuery;
+
+        if (error) {
+          return `<custom-alert message="Failed to count entries: ${error.message}" />`;
+        }
+
+        count = countResult || 0;
       }
 
       let result =
-        `**${count || 0}** entries` +
+        `**${count}** entries` +
         (args.vendor ? ` matching "${args.vendor}"` : "") +
         (args.business ? ` for business "${args.business}"` : "") +
         (args.account ? ` with account "${args.account}"` : "") +
-        (args.currency ? ` in ${args.currency}` : "");
+        (args.currency ? ` in ${args.currency}` : "") +
+        (args.tags ? ` with tags: ${args.tags.join(", ")}` : "");
 
       // Add sum if requested
       if (args.sum && count && count > 0) {
-        const sumQuery = queryBuilder.buildSumQuery(args, user ?? null);
-        const { data: sumData, error: sumError } = await sumQuery;
-        if (!sumError && sumData) {
-          const currencyTotals = groupByCurrency(sumData);
-          result += formatTotals(currencyTotals);
+        if (args.tags && args.tags.length > 0) {
+          // Calculate item-specific totals for tagged items
+          const taggedItemTotals = await calculateTaggedItemTotals(
+            filteredData.map((entry) => entry.id),
+            args.tags
+          );
+          result += formatTaggedItemTotals(taggedItemTotals, args.tags);
+        } else {
+          // Use regular sum query
+          const sumQuery = queryBuilder.buildSumQuery(args, user ?? null);
+          const { data: sumData, error: sumError } = await sumQuery;
+          if (!sumError && sumData) {
+            const currencyTotals = groupByCurrency(sumData);
+            result += formatTotals(currencyTotals);
+          }
         }
       }
 

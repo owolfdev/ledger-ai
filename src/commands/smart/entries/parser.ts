@@ -304,7 +304,8 @@ export function parseArgs(raw?: string): EntriesArgs {
     }
 
     // Legacy support: Allow numeric limit without --limit flag for backward compatibility
-    if (/^\d+$/.test(t) && !hasExplicitLimit) {
+    // BUT only if it's not a flag (doesn't start with -)
+    if (!t.startsWith("-") && /^\d+$/.test(t) && !hasExplicitLimit) {
       limit = Math.max(1, Math.min(200, parseInt(t, 10)));
       hasExplicitLimit = true;
       continue;
