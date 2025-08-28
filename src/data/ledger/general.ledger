@@ -365,15 +365,18 @@
     Expenses:Personal:Food:Grains  120.00฿
     Assets:Bank:Kasikorn:Personal -624.00฿
 
-2025/08/29 Dynamic Test Shop
-    Expenses:Personal:Food:Coffee  100.00฿
-    Expenses:Personal:Food:Beer    200.00฿
-    Expenses:Personal:Food:Wine    300.00฿
-    Assets:Bank:Kasikorn:Personal -600.00฿
-
 2025/08/29 Market
-    Expenses:Personal:Food:Dairy:Milk 40.00฿
-    Expenses:Personal:Food:Dairy:Cream 100.00฿
-    Expenses:Personal:Food:Pork    60.00฿
-    Assets:Bank:Kasikorn:Personal -200.00฿
+    Expenses:Personal:Food:Butter  200.00฿
+    Expenses:Personal:Food:Wine    300.00฿
+    Expenses:Personal:Food:Meat:Beef 200.00฿
+    Assets:Bank:Kasikorn:Personal -700.00฿
+
+2025/08/29 Butcher
+    Expenses:Personal:Food:Meat:Beef 400.00฿
+    Assets:Bank:Kasikorn:Personal -400.00฿
+
+2025/08/29 Liquor Store
+    Expenses:Personal:Food:Wine    1,000.00฿
+    Expenses:Personal:Food:Wine    1,000.00฿
+    Assets:Bank:Kasikorn:Personal -2,000.00฿
 

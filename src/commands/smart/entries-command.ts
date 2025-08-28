@@ -8,7 +8,12 @@ import type { CommandMeta } from "./utils";
 import { parseArgs } from "./entries/parser";
 import { QueryBuilder } from "./entries/query-builder";
 import { formatEntryLine, createEntryListHeader } from "./entries/formatting";
-import { groupByCurrency, formatTotals } from "./entries/currency";
+import {
+  groupByCurrency,
+  formatTotals,
+  calculateTaggedItemTotals,
+  formatTaggedItemTotals,
+} from "./entries/currency";
 
 export async function entriesListCommand(
   arg?: string,
@@ -190,8 +195,18 @@ export async function entriesListCommand(
     // Calculate totals if requested
     let totalsBlock = "";
     if (args.sum) {
-      const currencyTotals = groupByCurrency(filteredData);
-      totalsBlock = formatTotals(currencyTotals);
+      if (args.tags && args.tags.length > 0) {
+        // Calculate item-specific totals for tagged items
+        const taggedItemTotals = await calculateTaggedItemTotals(
+          filteredData.map((entry) => entry.id),
+          args.tags
+        );
+        totalsBlock = formatTaggedItemTotals(taggedItemTotals, args.tags);
+      } else {
+        // Calculate regular entry totals
+        const currencyTotals = groupByCurrency(filteredData);
+        totalsBlock = formatTotals(currencyTotals);
+      }
     }
 
     // Combine all parts with proper spacing for MDX component separation
