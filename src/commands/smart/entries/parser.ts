@@ -161,6 +161,7 @@ export function parseArgs(raw?: string): EntriesArgs {
   let currency: string | undefined;
   let tags: string[] | undefined;
   let range: { start: string; end: string } | undefined;
+  let entry: string | undefined;
 
   if (!raw) return { sort, dir, limit, sum, count };
 
@@ -233,6 +234,11 @@ export function parseArgs(raw?: string): EntriesArgs {
     }
     if ((t === "--go" || t === "-g") && i + 1 < parts.length) {
       go = parts[i + 1];
+      i++;
+      continue;
+    }
+    if ((t === "--entry" || t === "-e") && i + 1 < parts.length) {
+      entry = parts[i + 1];
       i++;
       continue;
     }
@@ -367,5 +373,6 @@ export function parseArgs(raw?: string): EntriesArgs {
     tags,
     go,
     range,
+    entry,
   };
 }

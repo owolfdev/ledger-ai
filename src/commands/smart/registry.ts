@@ -225,6 +225,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`--sum\` / \`-s\`                    — Show totals with multi-currency breakdown
   • \`--count\` / \`-n\`                  — Show count only, no entries listed
   • \`--go <id>\` / \`-g <id>\`           — Navigate to specific entry by ID
+  • \`--entry <id>\` / \`-e <id>\`        — View tags for specific entry by ID
   
   **Sorting & Limits:**
   • \`--sort <date|created>\` / \`-D <date|created>\` — Sort by date or creation time

@@ -19,6 +19,7 @@ export interface EntriesArgs {
   currency?: string; // NEW: Currency filter
   tags?: string[]; // NEW: Tag filter (array of tag names)
   go?: string;
+  entry?: string; // NEW: Entry ID for viewing tags
   range?: { start: string; end: string };
 }
 

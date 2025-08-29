@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // ================================================
 // FILE: src/commands/smart/entries-command.ts
 // REFACTORED - Standardized flag system and improved UX
@@ -36,6 +37,97 @@ export async function entriesListCommand(
         return "";
       }
       return `**Entry ${entryId}**: [/ledger/entry/${entryId}](/ledger/entry/${entryId})`;
+    }
+
+    // Handle entry tags mode
+    if (args.entry) {
+      const entryId = args.entry;
+      if (!/^\d+$/.test(entryId)) {
+        return `<custom-alert message="Invalid entry ID: ${entryId}. ID must be numeric." />`;
+      }
+
+      try {
+        const supabase = createClient();
+
+        // Fetch the entry details
+        const { data: entry, error: entryError } = await supabase
+          .from("ledger_entries")
+          .select("*")
+          .eq("id", entryId)
+          .eq("user_id", user?.id)
+          .single();
+
+        if (entryError || !entry) {
+          return `Entry ${entryId} not found.`;
+        }
+
+        // Fetch entry-level tags
+        const { data: entryTags } = await supabase
+          .from("entry_tags")
+          .select("tags!inner(name)")
+          .eq("entry_id", entryId);
+
+        // Fetch postings for this entry
+        const { data: postings } = await supabase
+          .from("ledger_postings")
+          .select("*")
+          .eq("entry_id", entryId)
+          .order("sort_order", { ascending: true });
+
+        // Fetch posting-level tags
+        const postingTagsMap = new Map<number, string[]>();
+        if (postings && postings.length > 0) {
+          const postingIds = postings.map((p) => p.id);
+          const { data: allPostingTags } = await supabase
+            .from("posting_tags")
+            .select("posting_id, tags!inner(name)")
+            .in("posting_id", postingIds);
+
+          if (allPostingTags) {
+            allPostingTags.forEach((pt: any) => {
+              const postingId = pt.posting_id;
+              if (!postingTagsMap.has(postingId)) {
+                postingTagsMap.set(postingId, []);
+              }
+              // Handle the tags structure from Supabase
+              const tags = pt.tags;
+              if (tags && tags.name) {
+                postingTagsMap.get(postingId)!.push(tags.name);
+              }
+            });
+          }
+        }
+
+        // Format the output
+        const entryDate = new Date(entry.entry_date).toLocaleDateString(
+          "en-CA"
+        );
+        const entryTagsList =
+          entryTags
+            ?.map((et: any) => et.tags?.name || "")
+            .filter(Boolean)
+            .join(", ") || "(none)";
+
+        let output = `**Entry ${entryId}**: ${entry.description} (${entryDate})\n\n`;
+        output += `**Tags**: ${entryTagsList}\n\n`;
+        output += `**Postings**:\n`;
+
+        if (postings && postings.length > 0) {
+          postings.forEach((posting) => {
+            const postingTags = postingTagsMap.get(posting.id) || [];
+            const postingTagsList = postingTags.join(", ");
+            output += `- **${posting.id}**: ${posting.account} [${
+              postingTagsList || ""
+            }]\n`;
+          });
+        } else {
+          output += `- (no postings found)\n`;
+        }
+
+        return output;
+      } catch (error) {
+        return `Failed to fetch tags for entry ${entryId}: ${error}`;
+      }
     }
 
     const supabase = createClient();
