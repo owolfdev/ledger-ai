@@ -350,6 +350,16 @@ export const commandRegistry: Record<string, CommandMeta> = {
         output: 'edit-entry 340 --memo "client meeting"',
         description: "Add memo to entry",
       },
+      {
+        input: "Add tags coffee and personal to entry 340",
+        output: "edit-entry 340 --tags coffee,personal",
+        description: "Set entry-level tags",
+      },
+      {
+        input: "Set posting 123 tags to food and groceries",
+        output: "edit-entry 340 --posting 123 --tags food,groceries",
+        description: "Set posting-level tags",
+      },
     ],
     categories: ["edit", "modify", "finance"],
     aliases: ["editent", "modify", "fix", "update"],
@@ -361,7 +371,14 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`edit-entry 323 --vendor "Starbucks Coffee"\` — Update vendor name
   • \`edit-entry 323 --date 2025-08-15\` — Change transaction date
   • \`edit-entry 323 --memo "client meeting"\` — Add or update memo
-  • \`edit-entry 323 --delete\` or \`edit-entry 323 -d\` — Delete the entry`,
+  • \`edit-entry 323 --delete\` or \`edit-entry 323 -d\` — Delete the entry
+  
+  **Tag Management:**
+  • \`edit-entry 323 --tags coffee,personal,breakfast\` — Set entry-level tags
+  • \`edit-entry 323 --posting 123 --tags food,groceries\` — Set posting-level tags
+  
+  **Combined Operations:**
+  • \`edit-entry 323 --vendor "Coffee Shop" --tags coffee,personal\` — Update vendor and tags`,
     // ... rest of your existing usage stays the same
   },
 
@@ -386,6 +403,10 @@ export const commandRegistry: Record<string, CommandMeta> = {
   **Multiple changes:**
   • \`editent 323 --business Personal --vendor "Coffee Shop" --memo "team meeting"\`
   
+  **Tag Management:**
+  • \`editent 323 --tags coffee,personal,breakfast\` — Set entry-level tags
+  • \`editent 323 --posting 123 --tags food,groceries\` — Set posting-level tags
+  
   See \`help edit-entry\` for full documentation.`,
   },
 
@@ -409,6 +430,10 @@ export const commandRegistry: Record<string, CommandMeta> = {
   
   **Multiple changes:**
   • \`ee 323 --business Personal --vendor "Coffee Shop" --memo "team meeting"\`
+  
+  **Tag Management:**
+  • \`ee 323 --tags coffee,personal,breakfast\` — Set entry-level tags
+  • \`ee 323 --posting 123 --tags food,groceries\` — Set posting-level tags
   
   See \`help edit-entry\` for full documentation.`,
   },
