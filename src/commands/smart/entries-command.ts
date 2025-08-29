@@ -116,9 +116,15 @@ export async function entriesListCommand(
           postings.forEach((posting) => {
             const postingTags = postingTagsMap.get(posting.id) || [];
             const postingTagsList = postingTags.join(", ");
-            output += `- **${posting.id}**: ${posting.account} [${
-              postingTagsList || ""
-            }]\n`;
+
+            // Format the amount with proper sign and currency
+            const amount = parseFloat(posting.amount);
+            const sign = amount >= 0 ? "+" : "";
+            const formattedAmount = `${sign}${amount.toFixed(2)}฿`;
+
+            output += `- **${posting.id}**: ${
+              posting.account
+            } ${formattedAmount} [${postingTagsList || ""}]\n`;
           });
         } else {
           output += `- (no postings found)\n`;
