@@ -88,6 +88,10 @@
     Expenses:Personal:Food:Fruit    14.00฿
     Assets:Bank:Kasikorn:Personal    -277.00฿
 
+2025/08/20 Paleo Robbie
+    Expenses:Personal:Food:Beef:Steak    1,266.00฿
+    Assets:Bank:Kasikorn:Personal    -1,266.00฿
+
 2025/08/20 Conkey's Bakery
     Expenses:Personal:Misc    120.00฿
     Expenses:Personal:Misc    90.00฿
@@ -97,11 +101,7 @@
     Liabilities:Credit:KBank    -530.00฿
 
 2025/08/20 Paleo Robbie
-    Expenses:Personal:Food:Tea    1,266.00฿
-    Assets:Bank:Kasikorn:Personal    -1,266.00฿
-
-2025/08/20 Paleo Robbie
-    Expenses:Personal:Food:Tea    1,208.00฿
+    Expenses:Personal:Food:Beef:Steak    1,208.00฿
     Assets:Bank:Kasikorn:Personal    -1,208.00฿
 
 2025/08/20 Kalaprapeuk
@@ -373,6 +373,11 @@
     Expenses:Personal:Food:Wine    450.00฿
     Assets:Bank:Kasikorn:Personal    -450.00฿
 
+2025/08/29 Kasemsubsiri Co.
+    Expenses:Personal:Transport:Parking    28.04฿
+    Expenses:Personal:Tax    1.96฿
+    Assets:Bank:Kasikorn:Personal    -30.00฿
+
 2025/08/29 Lemon Farm
     Expenses:Personal:Misc    130.00฿
     Assets:Bank:Kasikorn:Personal    -130.00฿
@@ -412,11 +417,6 @@
     Expenses:Personal:Food:Noodles    200.00฿
     Assets:Bank:Kasikorn:Personal    -200.00฿
 
-2025/08/29 Kasemsubsiri Co.
-    Expenses:Personal:Transport:Parking    28.04฿
-    Expenses:Personal:Tax    1.96฿
-    Assets:Bank:Kasikorn:Personal    -30.00฿
-
 2025/08/30 Gourmet Market
     Expenses:Personal:Shopping:Bag    72.00฿
     Expenses:Personal:Shopping:Bag    72.00฿
@@ -427,7 +427,7 @@
     Assets:Bank:Kasikorn:Personal    -366.00฿
 
 2025/08/30 Lek
-    Expenses:Personal:Home:Household    15,000.00฿
+    Expenses:Personal:Home:Handyman    15,000.00฿
     Assets:Bank:Kasikorn:Personal    -15,000.00฿
 
 2025/08/30 AIS

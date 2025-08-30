@@ -8,6 +8,7 @@ import Header from "@/components/nav/header";
 import Footer from "@/components/nav/footer";
 import ThemeBridge from "@/components/theme-bridge";
 import CookieConsentManager from "@/components/compliance/cookie-consent-manager";
+import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,6 +53,7 @@ export default function RootLayout({
             </main>
             <Footer />
           </div>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

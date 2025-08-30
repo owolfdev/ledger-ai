@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { clearAllTerminalHistories } from "@/lib/utils/clear-terminal-histories";
 import { formatCurrencyWithSymbol } from "@/lib/utils/currency-format";
+import { useToast } from "@/hooks/use-toast";
 
 type LedgerEntry = {
   id: number;
@@ -377,6 +378,7 @@ export default function EditableLedgerEntry({
   postings,
 }: EditableLedgerEntryProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [editMode, setEditMode] = useState<"basic" | "advanced">("basic");
   const [isPending, startTransition] = useTransition();
@@ -418,13 +420,26 @@ export default function EditableLedgerEntry({
 
         if (result.success) {
           clearAllTerminalHistories(); // Clear all terminal histories
+          toast({
+            title: "Entry Deleted",
+            description: "🗑️ Ledger entry has been permanently removed.",
+            variant: "default",
+          });
           router.push("/");
         } else {
-          alert(`Failed to delete entry: ${result.error}`);
+          toast({
+            title: "Delete Failed",
+            description: `Failed to delete entry: ${result.error}`,
+            variant: "destructive",
+          });
         }
       } catch (error) {
         console.error("Failed to delete entry:", error);
-        alert("Failed to delete entry. Please try again.");
+        toast({
+          title: "Delete Failed",
+          description: "Failed to delete entry. Please try again.",
+          variant: "destructive",
+        });
       } finally {
         setShowDeleteDialog(false);
       }
@@ -462,15 +477,31 @@ export default function EditableLedgerEntry({
 
         if (result.success) {
           clearAllTerminalHistories(); // Clear all terminal histories
-          setIsEditing(false);
-          setEditMode("basic");
-          window.location.reload();
+          // Show success toast
+          toast({
+            title: "Entry Saved",
+            description: "✅ Your ledger entry has been updated successfully!",
+            variant: "default",
+          });
+
+          // Reload after a short delay to let user see the toast
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
         } else {
-          alert(`Failed to save: ${result.error}`);
+          toast({
+            title: "Save Failed",
+            description: `Failed to save: ${result.error}`,
+            variant: "destructive",
+          });
         }
       } catch (error) {
         console.error("Failed to save:", error);
-        alert("Failed to save changes. Please try again.");
+        toast({
+          title: "Save Failed",
+          description: "Failed to save changes. Please try again.",
+          variant: "destructive",
+        });
       }
     });
   };
@@ -487,6 +518,12 @@ export default function EditableLedgerEntry({
     setEditPostings(postings.map((p, index) => ({ ...p, sort_order: index })));
     setIsEditing(false);
     setEditMode("basic");
+
+    toast({
+      title: "Edit Cancelled",
+      description: "Changes have been discarded. Entry remains unchanged.",
+      variant: "default",
+    });
   };
 
   const handleImageUploaded = (url: string) => {
@@ -579,9 +616,42 @@ export default function EditableLedgerEntry({
                 disabled={isPending || !canSave}
                 className="w-full sm:w-auto sm:h-[32px] h-12 text-lg"
               >
-                {isPending ? "Saving..." : "Save Changes"}
+                {isPending ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
               </Button>
             </div>
+
+            {/* Show saving status when pending */}
+            {isPending && (
+              <div className="text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                💾 Saving your changes... Please wait.
+              </div>
+            )}
           </div>
         </div>
 
@@ -762,7 +832,33 @@ export default function EditableLedgerEntry({
                 disabled={isPending}
                 className="w-full sm:w-auto"
               >
-                {isPending ? "Deleting..." : "Delete"}
+                {isPending ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
@@ -805,7 +901,33 @@ export default function EditableLedgerEntry({
                   disabled={isPending}
                   className="w-full sm:w-auto"
                 >
-                  {isPending ? "Deleting..." : "Delete Entry"}
+                  {isPending ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 0 018-8V0C5.373 0 0 5.373 0 12h0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Deleting...
+                    </>
+                  ) : (
+                    "Delete Entry"
+                  )}
                 </Button>
               </DialogFooter>
             </DialogContent>
