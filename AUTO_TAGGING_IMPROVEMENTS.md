@@ -70,7 +70,7 @@ REDUNDANT_PATTERNS: [
 ### Thresholds
 
 ```typescript
-MIN_CONFIDENCE: 30,                    // Minimum confidence score
+MIN_CONFIDENCE: 40,                    // Minimum confidence score
 MIN_RELEVANCE: 0.3,                    // Minimum relevance score
 MIN_RELEVANCE_WITH_CONTEXT: 0.5,       // Higher threshold with account context
 MAX_TAGS_PER_POSTING: 5,               // Maximum tags per posting

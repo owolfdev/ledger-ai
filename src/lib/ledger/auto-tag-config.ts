@@ -3,12 +3,12 @@
 
 export const AUTO_TAG_CONFIG = {
   // Confidence thresholds
-  MIN_CONFIDENCE: 10, // Temporarily lowered from 30 to debug coffee tagging
+  MIN_CONFIDENCE: 40, // Increased from 10 to require better keyword matches
   MIN_RELEVANCE: 0.3, // Minimum contextual relevance score
   MIN_RELEVANCE_WITH_CONTEXT: 0.5, // Higher threshold when account context is available
 
   // Tag limits
-  MAX_TAGS_PER_POSTING: 5, // Maximum tags per posting
+  MAX_TAGS_PER_POSTING: 3, // Reduced from 5 to prevent tag spam
 
   // Context mismatch rules - tags that should never be applied to certain account types
   CONTEXT_MISMATCHES: [
@@ -135,6 +135,22 @@ export const AUTO_TAG_CONFIG = {
       relevance: 0.3,
       reason: "Dinner items are not breakfast",
     },
+
+    // NEW: Misc account should be conservative
+    {
+      account: "misc",
+      tag: "coffee",
+      relevance: 0.2,
+      reason:
+        "Misc expenses are unlikely to be coffee unless specifically mentioned",
+    },
+    {
+      account: "misc",
+      tag: "condo-fees",
+      relevance: 0.2,
+      reason:
+        "Misc expenses are unlikely to be condo fees unless specifically mentioned",
+    },
   ],
 
   // Redundant tag patterns - tags that add no value when account already indicates the same thing
@@ -229,13 +245,19 @@ export const AUTO_TAG_CONFIG = {
       tag: "dinner",
       reason: "Account path already indicates dinner",
     },
+    // NEW: Misc account redundancy
+    {
+      account: "misc",
+      tag: "miscellaneous",
+      reason: "Account path already indicates miscellaneous",
+    },
   ],
 
   // Scoring weights for tag ranking
   SCORING_WEIGHTS: {
-    confidence: 0.4, // How well the tag matches the keywords
-    relevance: 0.4, // How contextually appropriate the tag is
-    priority: 0.2, // User-defined tag priority
+    confidence: 0.5, // Increased weight for confidence - prefer exact matches
+    relevance: 0.3, // Slightly reduced weight for relevance
+    priority: 0.2, // Keep priority weight the same
   },
 
   // Tag categories that should be prioritized for certain account types
@@ -246,6 +268,7 @@ export const AUTO_TAG_CONFIG = {
     shopping: ["category", "brand", "quality", "season"],
     health: ["type", "provider", "urgency", "coverage"],
     utilities: ["service", "provider", "usage", "billing"],
+    business: ["legal", "professional", "service"], // NEW: Business category priorities
   },
 
   // Minimum relevance scores for different tag categories
@@ -256,6 +279,7 @@ export const AUTO_TAG_CONFIG = {
     shopping: 0.4, // Shopping tags need good relevance
     health: 0.6, // Health tags need very high relevance
     utilities: 0.5, // Utility tags need high relevance
+    business: 0.4, // NEW: Business tags need good relevance
     default: 0.3, // Default threshold for other categories
   },
 } as const;

@@ -9,10 +9,76 @@ export type MapAccountOptions = {
 
 // Business rules - maps description patterns to account categories (without business prefix)
 const DESC_CATEGORY_RULES: Array<{ pattern: RegExp; category: string }> = [
-  // Electronics
+  // Professional Services (NEW - fixes legal fee issue)
+  {
+    pattern: /(legal|lawyer|attorney|legal\s*fee|legal\s*service|law\s*firm)/i,
+    category: "Professional:Legal",
+  },
+  {
+    pattern: /(consulting|consultant|professional\s*service)/i,
+    category: "Professional:Consulting",
+  },
+  {
+    pattern: /(architect|architectural|design\s*service)/i,
+    category: "Professional:Architecture",
+  },
+  {
+    pattern: /(accountant|accounting|bookkeeping)/i,
+    category: "Professional:Accounting",
+  },
+
+  // Utilities & Housing (NEW)
+  {
+    pattern: /(rent|rental)/i,
+    category: "Housing:Rent",
+  },
+  {
+    pattern: /(electricity|electric|power)/i,
+    category: "Utilities:Electricity",
+  },
+  {
+    pattern: /(water|water\s*bill)/i,
+    category: "Utilities:Water",
+  },
+  {
+    pattern: /(internet\s*home|wifi|broadband)/i,
+    category: "Utilities:Internet",
+  },
+  {
+    pattern: /(phone\s*bill|mobile\s*bill)/i,
+    category: "Utilities:Phone",
+  },
+  {
+    pattern: /(condo\s*fee|management\s*fee|maintenance\s*fee)/i,
+    category: "Housing:Fees",
+  },
+  {
+    pattern: /(cleaning\s*supplies|appliances)/i,
+    category: "Home:Supplies",
+  },
+
+  // Financial Services (NEW)
+  {
+    pattern: /(bank\s*fee|banking\s*fee|atm\s*fee|transfer\s*fee)/i,
+    category: "Financial:Fees",
+  },
+  {
+    pattern: /(cash\s*withdrawal|money\s*transfer)/i,
+    category: "Financial:Transfer",
+  },
+  {
+    pattern: /(insurance|health\s*insurance)/i,
+    category: "Financial:Insurance",
+  },
+
+  // Electronics & Shopping (NEW - more granular)
   {
     pattern: /(iphone|ipad|macbook|apple\s*watch|airpods)/i,
     category: "Electronics:Apple",
+  },
+  {
+    pattern: /(itunes|app\s*store)/i,
+    category: "Subscription:Apple",
   },
   {
     pattern: /(pixel\s*(phone|buds|tablet)|google\s*(nest|home))/i,
@@ -33,6 +99,116 @@ const DESC_CATEGORY_RULES: Array<{ pattern: RegExp; category: string }> = [
   {
     pattern: /(usb\s*c?|charger|power\s*bank|cable|adapter)/i,
     category: "Electronics:Accessories",
+  },
+  {
+    pattern: /(phone\s*accessories|phone\s*case)/i,
+    category: "Electronics:Phone",
+  },
+  {
+    pattern: /(lazada|online\s*shopping)/i,
+    category: "Shopping:Online",
+  },
+  {
+    pattern: /(jewelry|accessories|bag|purse)/i,
+    category: "Shopping:Accessories",
+  },
+  {
+    pattern: /(furniture|home\s*decor)/i,
+    category: "Shopping:Home",
+  },
+
+  // Thai-Specific Foods (NEW)
+  {
+    pattern: /(pad\s*thai|som\s*tam|tom\s*yum|mango\s*sticky\s*rice)/i,
+    category: "Food:Thai",
+  },
+  {
+    pattern: /(instant\s*noodles|mama\s*noodles|mama)/i,
+    category: "Food:Noodles:Instant",
+  },
+  {
+    pattern: /(street\s*food|food\s*court)/i,
+    category: "Food:Dining:StreetFood",
+  },
+  {
+    pattern: /(japanese|sushi|ramen|sashimi)/i,
+    category: "Food:Japanese",
+  },
+  {
+    pattern: /(korean|kimchi|bulgogi)/i,
+    category: "Food:Korean",
+  },
+  {
+    pattern: /(chinese|dim\s*sum|fried\s*rice)/i,
+    category: "Food:Chinese",
+  },
+  {
+    pattern: /(indian|curry|biryani)/i,
+    category: "Food:Indian",
+  },
+  {
+    pattern: /(western|international)/i,
+    category: "Food:Western",
+  },
+
+  // Beverages (NEW - enhanced)
+  {
+    pattern: /(bubble\s*tea|boba|thai\s*tea|milk\s*tea)/i,
+    category: "Food:Beverages:BubbleTea",
+  },
+  {
+    pattern: /(smoothie|juice|fresh\s*juice)/i,
+    category: "Food:Beverages:Smoothie",
+  },
+  {
+    pattern: /(coconut\s*water)/i,
+    category: "Food:Beverages:CoconutWater",
+  },
+  {
+    pattern: /(coffee|latte|espresso|americano|cappuccino)/i,
+    category: "Food:Coffee",
+  },
+  {
+    pattern: /(tea|matcha|oolong|earl\s*grey|green\s*tea)/i,
+    category: "Food:Tea",
+  },
+  {
+    pattern: /(beer|ale|lager|stout|pilsner|craft\s*beer)/i,
+    category: "Food:Beer",
+  },
+  {
+    pattern: /(wine|red\s*wine|white\s*wine|champagne|sparkling)/i,
+    category: "Food:Wine",
+  },
+
+  // Healthcare (NEW)
+  {
+    pattern: /(doctor|clinic|hospital|medical)/i,
+    category: "Health:Medical",
+  },
+  {
+    pattern: /(dentist|dental)/i,
+    category: "Health:Dental",
+  },
+  {
+    pattern: /(pharmacy|medicine|vitamins|supplements)/i,
+    category: "Health:Pharmacy",
+  },
+  {
+    pattern: /(massage|spa|salon|haircut|nails)/i,
+    category: "Personal:Care",
+  },
+  {
+    pattern: /(shampoo|skincare|cosmetics|makeup)/i,
+    category: "Personal:Toiletries",
+  },
+  {
+    pattern: /(gym|fitness|personal\s*training)/i,
+    category: "Health:Fitness",
+  },
+  {
+    pattern: /(dry\s*cleaning|laundry\s*service)/i,
+    category: "Personal:Services",
   },
 
   // Food sub-categories - Granular mapping for precise tracking
@@ -114,6 +290,29 @@ const DESC_CATEGORY_RULES: Array<{ pattern: RegExp; category: string }> = [
     category: "Food:Grains",
   },
 
+  // Education & Schooling (NEW)
+  {
+    pattern:
+      /(school|tuition|education|enrol?l?ment|registration\s*fee|ค่าเทอม|学费)/i,
+    category: "Education:Tuition",
+  },
+  {
+    pattern: /(uniform|school\s*uniform)/i,
+    category: "Education:Uniforms",
+  },
+  {
+    pattern: /(textbook|school\s*book|workbook|stationer(y|ies))/i,
+    category: "Education:BooksSupplies",
+  },
+  {
+    pattern: /(field\s*trip|excursion|outing)/i,
+    category: "Education:Activities",
+  },
+  {
+    pattern: /(after[-\s]?school|extracurricular|club\s*fee)/i,
+    category: "Education:AfterSchool",
+  },
+
   // Pantry staples
   {
     pattern: /(jam|jelly|preserve|marmalade)/i,
@@ -178,10 +377,18 @@ const DESC_CATEGORY_RULES: Array<{ pattern: RegExp; category: string }> = [
     category: "Food:Vegetables",
   },
 
-  // Fruits
+  // Snacks and Sweets (NEW)
   {
-    pattern: /(apple|apples|red\s*apple|green\s*apple)/i,
-    category: "Food:Fruit:Apples",
+    pattern: /(ice\s*cream|chocolate|candy)/i,
+    category: "Food:Snacks:Sweet",
+  },
+  {
+    pattern: /(chips|crackers|cookies|biscuit)/i,
+    category: "Food:Snacks:Savory",
+  },
+  {
+    pattern: /(seaweed|nuts|dried\s*fruit)/i,
+    category: "Food:Snacks:Healthy",
   },
   {
     pattern: /(banana|bananas|banana\s*bunch)/i,
@@ -212,24 +419,6 @@ const DESC_CATEGORY_RULES: Array<{ pattern: RegExp; category: string }> = [
     category: "Food:Fruit",
   },
 
-  // Beverages
-  {
-    pattern: /(coffee|latte|espresso|americano|cappuccino)/i,
-    category: "Food:Coffee",
-  },
-  {
-    pattern: /(tea|matcha|oolong|earl\s*grey|green\s*tea)/i,
-    category: "Food:Tea",
-  },
-  {
-    pattern: /(beer|ale|lager|stout|pilsner|craft\s*beer)/i,
-    category: "Food:Beer",
-  },
-  {
-    pattern: /(wine|red\s*wine|white\s*wine|champagne|sparkling)/i,
-    category: "Food:Wine",
-  },
-
   // Dining
   {
     pattern: /(restaurant|dine|meal|lunch|dinner|snack|takeaway|take\s*out)/i,
@@ -244,17 +433,61 @@ const DESC_CATEGORY_RULES: Array<{ pattern: RegExp; category: string }> = [
     category: "Food:Groceries",
   },
 
-  // Transport & fuel
+  // Transportation (NEW - enhanced)
   {
-    pattern: /(gas|fuel|petrol|diesel)/i,
+    pattern: /(grab|uber|taxi|ride\s*hailing)/i,
+    category: "Transport:RideHailing",
+  },
+  {
+    pattern: /(bts|mrt|skytrain|subway|metro)/i,
+    category: "Transport:PublicTransit",
+  },
+  {
+    pattern: /(bus|public\s*bus)/i,
+    category: "Transport:Bus",
+  },
+  {
+    pattern: /(motorbike\s*taxi|motorcycle\s*taxi)/i,
+    category: "Transport:MotorbikeTaxi",
+  },
+  {
+    pattern: /(motorbike|motorcycle)(?!\s*taxi)/i,
+    category: "Transport:PersonalVehicle",
+  },
+  {
+    pattern: /(car(?!\s*wash)|automobile)/i,
+    category: "Transport:PersonalVehicle",
+  },
+  {
+    pattern: /(tuk\s*tuk|boat|ferry|airport\s*link)/i,
+    category: "Transport:Specialty",
+  },
+  {
+    pattern: /(flight|airline|plane)/i,
+    category: "Transport:Air",
+  },
+  {
+    pattern: /(hotel|accommodation)/i,
+    category: "Transport:Accommodation",
+  },
+  {
+    pattern: /(gas|fuel|petrol|diesel|gasoline)/i,
     category: "Transport:Fuel",
   },
   {
-    pattern: /(grab|uber|taxi|ride|fare|bts|mrt|metro|bus|train)/i,
-    category: "Transport:Transit",
+    pattern: /(parking|toll|tollway|easypass)/i,
+    category: "Transport:Fees",
+  },
+  {
+    pattern: /(car\s*wash|maintenance|repair|tires)/i,
+    category: "Transport:Maintenance",
   },
 
-  // Business-specific categories
+  // Streaming Services (NEW)
+  {
+    pattern: /(netflix|spotify|youtube\s*premium|disney\s*plus|apple\s*music)/i,
+    category: "Subscription:Entertainment",
+  },
   {
     pattern: /(subscription|saas|software|hosting|domain)/i,
     category: "Subscription:Software",
@@ -263,6 +496,8 @@ const DESC_CATEGORY_RULES: Array<{ pattern: RegExp; category: string }> = [
     pattern: /(supabase|vercel|netlify|aws|digital\s*ocean)/i,
     category: "Subscription:Infrastructure",
   },
+
+  // Business-specific categories
   {
     pattern: /(supplies|inventory|stock|materials)/i,
     category: "Supplies:General",
@@ -311,14 +546,37 @@ const DESC_CATEGORY_RULES: Array<{ pattern: RegExp; category: string }> = [
 
 // Vendor-specific mappings (without business prefix)
 const VENDOR_EXACT: Array<{ name: string; category: string }> = [
-  // Add vendor-specific mappings here
+  // Thai-specific vendors
+  { name: "grab", category: "Transport:RideHailing" },
+  { name: "bts", category: "Transport:PublicTransit" },
+  { name: "mrt", category: "Transport:PublicTransit" },
+  { name: "starbucks", category: "Food:Coffee" },
+  { name: "7-eleven", category: "Food:Groceries" },
 ];
 
 const VENDOR_CONTAINS: Array<{ pattern: RegExp; category: string }> = [
-  { pattern: /7\s*eleven|7-?11/i, category: "Groceries" },
+  // Thai-specific vendors
+  { pattern: /7\s*eleven|7-?11/i, category: "Food:Groceries" },
+  { pattern: /villa\s*market/i, category: "Food:Groceries" },
+  { pattern: /big\s*c/i, category: "Food:Groceries" },
+  { pattern: /lotus/i, category: "Food:Groceries" },
+  // Coffee shops
   { pattern: /amazon\s*coffee|cafe amazon/i, category: "Food:Coffee" },
-  { pattern: /walmart/i, category: "Groceries" },
-  { pattern: /costco/i, category: "Groceries" },
+  { pattern: /starbucks/i, category: "Food:Coffee" },
+  { pattern: /blue\s*bottle/i, category: "Food:Coffee" },
+  // Transportation
+  { pattern: /grab/i, category: "Transport:RideHailing" },
+  { pattern: /uber/i, category: "Transport:RideHailing" },
+  // Banks
+  { pattern: /kasikorn|k\s*bank/i, category: "Financial:Banking" },
+  { pattern: /bangkok\s*bank/i, category: "Financial:Banking" },
+  // International
+  { pattern: /walmart/i, category: "Food:Groceries" },
+  { pattern: /costco/i, category: "Food:Groceries" },
+  { pattern: /lazada/i, category: "Shopping:Online" },
+
+  // Education vendors (NEW)
+  { pattern: /elc\s*school/i, category: "Education:Tuition" },
 ];
 
 function buildAccountFromCategory(category: string, business: string): string {
@@ -379,9 +637,10 @@ export function getDefaultBusiness(): string {
 // Minimal smoke tests (dev-time)
 if (process.env.NODE_ENV === "development") {
   const _a = mapAccount("iPhone 15 Pro"); // Should be Expenses:Personal:Electronics:Apple
-  const _b = mapAccount("butter", { business: "MyBrickAndMortar" }); // Should be Expenses:MyBrickAndMortar:Food:Dairy
+  const _b = mapAccount("butter", { business: "MyBrickAndMortar" }); // Should be Expenses:MyBrickAndMortar:Food:Dairy:Butter
   const _c = mapAccount("supabase subscription", {
     business: "MyOnlineBusiness",
   }); // Should be Expenses:MyOnlineBusiness:Subscription:Infrastructure
-  void [_a, _b, _c];
+  const _d = mapAccount("legal fee", { vendor: "Lawyer" }); // Should be Expenses:Personal:Professional:Legal
+  void [_a, _b, _c, _d];
 }
