@@ -138,6 +138,53 @@ export async function calculateTaggedItemTotals(
   return Array.from(groups.values()).sort((a, b) => b.count - a.count);
 }
 
+// NEW: Calculate account-specific totals for account-filtered entries
+export async function calculateAccountFilteredTotals(
+  entryIds: number[],
+  accountFilter: string
+): Promise<CurrencyTotal[]> {
+  const supabase = createClient();
+  const groups = new Map<string, CurrencyTotal>();
+
+  try {
+    // Get all postings for the filtered entries
+    const { data: postings, error } = await supabase
+      .from("ledger_postings")
+      .select("id, entry_id, amount, currency, account")
+      .in("entry_id", entryIds);
+
+    if (error || !postings) {
+      console.error("Error fetching postings for account totals:", error);
+      return [];
+    }
+
+    // Calculate totals for each posting that matches the account filter
+    postings.forEach((posting) => {
+      // Only include postings that match the account filter (case-insensitive)
+      if (posting.account.toLowerCase().includes(accountFilter.toLowerCase())) {
+        const currency = posting.currency || "THB";
+        const amount = Math.abs(Number(posting.amount)) || 0; // Use absolute value for expenses
+
+        if (groups.has(currency)) {
+          const existing = groups.get(currency)!;
+          existing.amount += amount;
+          existing.count += 1;
+        } else {
+          groups.set(currency, {
+            currency,
+            amount,
+            count: 1,
+          });
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error calculating account-filtered totals:", error);
+  }
+
+  return Array.from(groups.values()).sort((a, b) => b.count - a.count);
+}
+
 // NEW: Format multi-currency totals
 export function formatTotals(currencyTotals: CurrencyTotal[]): string {
   if (currencyTotals.length === 0) return "";
@@ -185,4 +232,31 @@ export function formatTaggedItemTotals(
   });
 
   return `\n\n**Total spent on ${tagList} by Currency:**\n${lines.join("\n")}`;
+}
+
+// NEW: Format account-filtered totals
+export function formatAccountFilteredTotals(
+  currencyTotals: CurrencyTotal[],
+  accountFilter: string
+): string {
+  if (currencyTotals.length === 0) return "";
+
+  if (currencyTotals.length === 1) {
+    const total = currencyTotals[0];
+    return `\n\n**Total in ${accountFilter} accounts:** ${formatCurrencyWithSymbol(
+      total.amount,
+      total.currency
+    )} (${total.count} postings)`;
+  }
+
+  // Multiple currencies - show breakdown
+  const lines = currencyTotals.map((total) => {
+    return `  - ${formatCurrencyWithSymbol(total.amount, total.currency)} ${
+      total.currency
+    } (${total.count} postings)`;
+  });
+
+  return `\n\n**Total in ${accountFilter} accounts by Currency:**\n${lines.join(
+    "\n"
+  )}`;
 }

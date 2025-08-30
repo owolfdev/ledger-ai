@@ -169,12 +169,18 @@ export function parseArgs(raw?: string): EntriesArgs {
   let hasExplicitLimit = false;
 
   for (let i = 0; i < parts.length; i++) {
-    const t = parts[i].toLowerCase();
+    const originalToken = parts[i];
+    const t = originalToken.toLowerCase();
 
     // REFACTORED: All flags now use -- prefix for consistency
     // Also support short flags for better UX
-    if (t === "--date" || t === "--created" || t === "-D" || t === "-C") {
-      sort = t === "--created" || t === "-C" ? "created" : "date";
+    if (
+      t === "--date" ||
+      t === "--created" ||
+      originalToken === "-D" ||
+      originalToken === "-C"
+    ) {
+      sort = t === "--created" || originalToken === "-C" ? "created" : "date";
       continue;
     }
     if (t === "--sort" && i + 1 < parts.length) {
@@ -211,7 +217,7 @@ export function parseArgs(raw?: string): EntriesArgs {
       i++;
       continue;
     }
-    if ((t === "--account" || t === "-A") && i + 1 < parts.length) {
+    if ((t === "--account" || t === "-a") && i + 1 < parts.length) {
       account = parts[i + 1];
       i++;
       continue;
@@ -279,7 +285,7 @@ export function parseArgs(raw?: string): EntriesArgs {
       continue;
     }
 
-    if ((t === "--day" || t === "-D") && i + 1 < parts.length) {
+    if ((t === "--day" || originalToken === "-D") && i + 1 < parts.length) {
       day = parts[i + 1];
       i++;
       continue;
@@ -299,13 +305,13 @@ export function parseArgs(raw?: string): EntriesArgs {
       continue;
     }
 
-    // Handle direction flags AFTER account flag to avoid -A conflict
-    if (t === "--asc" || t === "-a") {
-      dir = "asc";
-      continue;
-    }
-    if (t === "--desc" || t === "-d") {
-      dir = "desc";
+    // Handle order flag
+    if (t === "--order" && i + 1 < parts.length) {
+      const orderArg = parts[i + 1].toLowerCase();
+      if (orderArg === "asc" || orderArg === "desc") {
+        dir = orderArg as Dir;
+      }
+      i++;
       continue;
     }
 

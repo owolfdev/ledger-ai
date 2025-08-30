@@ -14,6 +14,8 @@ import {
   formatTotals,
   calculateTaggedItemTotals,
   formatTaggedItemTotals,
+  calculateAccountFilteredTotals,
+  formatAccountFilteredTotals,
 } from "./entries/currency";
 
 export async function entriesListCommand(
@@ -144,19 +146,19 @@ export async function entriesListCommand(
       let count = 0;
       let filteredData: any[] = [];
 
+      // Always fetch entries first for count mode to ensure we have data for totaling
+      const query = queryBuilder.buildListQuery(args, user ?? null);
+      const { data, error } = await query;
+
+      if (error) {
+        return `<custom-alert message="Failed to fetch entries: ${error.message}" />`;
+      }
+
+      if (!data || data.length === 0) {
+        return "No entries found.";
+      }
+
       if (args.tags && args.tags.length > 0) {
-        // For tag filtering, we need to fetch entries first, then filter and count
-        const query = queryBuilder.buildListQuery(args, user ?? null);
-        const { data, error } = await query;
-
-        if (error) {
-          return `<custom-alert message="Failed to fetch entries: ${error.message}" />`;
-        }
-
-        if (!data || data.length === 0) {
-          return "No entries found.";
-        }
-
         // Apply tag filtering (same logic as list mode)
         try {
           const supabase = createClient();
@@ -239,19 +241,12 @@ export async function entriesListCommand(
           console.error("Error in tag filtering for count:", filterError);
           filteredData = [];
         }
-
-        count = filteredData.length;
       } else {
-        // No tags - use regular count query
-        const countQuery = queryBuilder.buildCountQuery(args, user ?? null);
-        const { count: countResult, error } = await countQuery;
-
-        if (error) {
-          return `<custom-alert message="Failed to count entries: ${error.message}" />`;
-        }
-
-        count = countResult || 0;
+        // No tags - use the data as is for account filtering
+        filteredData = data;
       }
+
+      count = filteredData.length;
 
       let result =
         `**${count}** entries` +
@@ -270,6 +265,16 @@ export async function entriesListCommand(
             args.tags
           );
           result += formatTaggedItemTotals(taggedItemTotals, args.tags);
+        } else if (args.account) {
+          // Calculate account-filtered totals for account-filtered entries
+          const accountFilteredTotals = await calculateAccountFilteredTotals(
+            filteredData.map((entry) => entry.id),
+            args.account
+          );
+          result += formatAccountFilteredTotals(
+            accountFilteredTotals,
+            args.account
+          );
         } else {
           // Use regular sum query
           const sumQuery = queryBuilder.buildSumQuery(args, user ?? null);
@@ -416,6 +421,16 @@ export async function entriesListCommand(
           args.tags
         );
         totalsBlock = formatTaggedItemTotals(taggedItemTotals, args.tags);
+      } else if (args.account) {
+        // Calculate account-filtered totals for account-filtered entries
+        const accountFilteredTotals = await calculateAccountFilteredTotals(
+          filteredData.map((entry) => entry.id),
+          args.account
+        );
+        totalsBlock = formatAccountFilteredTotals(
+          accountFilteredTotals,
+          args.account
+        );
       } else {
         // Calculate regular entry totals
         const currencyTotals = groupByCurrency(filteredData);
