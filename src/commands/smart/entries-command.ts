@@ -256,6 +256,22 @@ export async function entriesListCommand(
         (args.currency ? ` in ${args.currency}` : "") +
         (args.tags ? ` with tags: ${args.tags.join(", ")}` : "");
 
+      // Add account summary when using --account without --sum
+      if (args.account && !args.sum && count > 0) {
+        const accountFilteredTotals = await calculateAccountFilteredTotals(
+          filteredData.map((entry) => entry.id),
+          args.account
+        );
+
+        if (accountFilteredTotals.length > 0) {
+          const totalPostings = accountFilteredTotals.reduce(
+            (sum, total) => sum + total.count,
+            0
+          );
+          result += `\n\ntotal postings (${totalPostings} postings with the account "${args.account}") in entries`;
+        }
+      }
+
       // Add sum if requested
       if (args.sum && count && count > 0) {
         if (args.tags && args.tags.length > 0) {
@@ -411,6 +427,24 @@ export async function entriesListCommand(
       formatEntryLine(entry)
     );
 
+    // Add account summary when using --account without --sum
+    let accountSummary = "";
+    if (args.account && !args.sum) {
+      // Count postings that match the account filter
+      const accountFilteredTotals = await calculateAccountFilteredTotals(
+        filteredData.map((entry) => entry.id),
+        args.account
+      );
+
+      if (accountFilteredTotals.length > 0) {
+        const totalPostings = accountFilteredTotals.reduce(
+          (sum, total) => sum + total.count,
+          0
+        );
+        accountSummary = `\n\ntotal postings (${totalPostings} postings with the account "${args.account}") in entries`;
+      }
+    }
+
     // Calculate totals if requested
     let totalsBlock = "";
     if (args.sum) {
@@ -446,7 +480,7 @@ export async function entriesListCommand(
       "<div class='h-4'></div>",
     ];
 
-    return parts.join("\n\n") + totalsBlock; // Double newlines for component separation
+    return parts.join("\n\n") + accountSummary + totalsBlock; // Double newlines for component separation
   } catch (error) {
     return `<custom-alert message="Unexpected error: ${error}" />`;
   }

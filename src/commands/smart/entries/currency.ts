@@ -246,14 +246,14 @@ export function formatAccountFilteredTotals(
     return `\n\n**Total in ${accountFilter} accounts:** ${formatCurrencyWithSymbol(
       total.amount,
       total.currency
-    )} (${total.count} postings)`;
+    )} (${total.count} postings with the account "${accountFilter}")`;
   }
 
   // Multiple currencies - show breakdown
   const lines = currencyTotals.map((total) => {
     return `  - ${formatCurrencyWithSymbol(total.amount, total.currency)} ${
       total.currency
-    } (${total.count} postings)`;
+    } (${total.count} postings with the account "${accountFilter}")`;
   });
 
   return `\n\n**Total in ${accountFilter} accounts by Currency:**\n${lines.join(
