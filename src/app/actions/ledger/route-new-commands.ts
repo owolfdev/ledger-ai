@@ -10,6 +10,7 @@ import { renderLedger } from "@/lib/ledger/render-ledger";
 import { syncLedgerFileFromDB } from "@/app/actions/ledger/after-save-ledger-sync";
 import { isLocalLedgerWriteEnabled } from "@/lib/ledger/is-local-write-enabled";
 import { mapAccountWithHybridAI } from "@/lib/ledger/hybrid-account-mapper";
+// Auto-tagger functions imported dynamically below
 
 export type NewCommandPayload = {
   date: string; // YYYY-MM-DD (local)
@@ -205,65 +206,57 @@ export async function handleNewCommand(
     };
   }
 
-  const { error: insPostsErr } = await supabase
+  const { data: insertedPostings, error: insPostsErr } = await supabase
     .from("ledger_postings")
-    .insert(rows);
-  if (insPostsErr) {
+    .insert(rows)
+    .select("id, account, amount, currency, sort_order"); // Select to get the IDs
+
+  if (insPostsErr || !insertedPostings) {
     await supabase.from("ledger_entries").delete().eq("id", entry_id);
-    // Don't cleanup image when posting insertion fails - the image is already associated with a valid entry
     return {
       ok: false,
-      error: `insert ledger_postings failed: ${insPostsErr.message}`,
+      error: `insert ledger_postings failed: ${insPostsErr?.message}`,
     };
   }
 
   // ---- AUTO-TAGGING SYSTEM ----
   try {
-    // Get the created postings with their IDs for auto-tagging
-    const { data: createdPostings, error: fetchErr } = await supabase
-      .from("ledger_postings")
-      .select("id, account, amount, currency")
-      .eq("entry_id", entry_id)
-      .order("sort_order", { ascending: true });
+    console.log("=== STARTING AUTO-TAGGING ===");
 
-    if (!fetchErr && createdPostings) {
-      // Import auto-tagging functions
-      const { autoTagEntry, applyAutoTags } = await import(
-        "@/lib/ledger/auto-tagger"
-      );
+    // Import auto-tagging functions
+    const { autoTagEntry, applyAutoTags } = await import(
+      "@/lib/ledger/auto-tagger"
+    );
 
-      // Auto-tag the entry
-      const autoTagResult = await autoTagEntry({
-        description: payload.payee,
-        memo: payload.memo,
-        business: payload.business,
-        postings: createdPostings,
-      });
+    // Auto-tag the entry and its postings
+    const autoTagResult = await autoTagEntry({
+      description: payload.payee,
+      memo: payload.memo,
+      business: payload.business,
+      postings: insertedPostings.map((p) => ({
+        id: p.id,
+        account: p.account,
+        amount: p.amount,
+        currency: p.currency,
+      })),
+    });
 
-      // Apply the auto-tags to the database
-      await applyAutoTags(entry_id, autoTagResult);
+    // Apply the auto-tags to the database
+    await applyAutoTags(entry_id, autoTagResult);
 
-      // Log auto-tagging results for debugging (only in development)
-      if (
-        process.env.NODE_ENV === "development" &&
-        (autoTagResult.entryTags.length > 0 ||
-          autoTagResult.postingTags.size > 0)
-      ) {
-        console.log("=== AUTO-TAGGING RESULTS ===");
-        console.log(
-          "Entry tags:",
-          autoTagResult.entryTags.map((t) => t.name)
-        );
-        console.log(
-          "Posting tags:",
-          Array.from(autoTagResult.postingTags.entries()).map(
-            ([id, tags]) =>
-              `Posting ${id}: ${tags.map((t) => t.name).join(", ")}`
-          )
-        );
-        console.log("===========================");
-      }
-    }
+    // Log auto-tagging results for debugging
+    console.log("=== AUTO-TAGGING RESULTS ===");
+    console.log(
+      "Entry tags:",
+      autoTagResult.entryTags.map((t) => t.name)
+    );
+    console.log(
+      "Posting tags:",
+      Array.from(autoTagResult.postingTags.entries()).map(
+        ([id, tags]) => `Posting ${id}: ${tags.map((t) => t.name).join(", ")}`
+      )
+    );
+    console.log("===========================");
   } catch (autoTagError) {
     // Log auto-tagging errors but don't fail the entry creation
     console.warn("Auto-tagging failed:", autoTagError);

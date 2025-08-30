@@ -8,6 +8,7 @@ import { User } from "@/types/user";
 import { entriesListCommand } from "@/commands/smart/entries-command";
 import { editEntryCommand } from "@/commands/smart/edit-entry-command";
 import { ledgerCliCommand } from "@/commands/smart/ledger-cli-command";
+import { autoTagCommand } from "@/commands/smart/auto-tag-command";
 
 export const commandRegistry: Record<string, CommandMeta> = {
   // --- Basic/Navigation ---
@@ -515,6 +516,57 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • All executions are logged for security monitoring
   • Requires Ledger CLI installed and available in PATH
   • Restricted to authenticated users only`,
+  },
+
+  // Auto-tagging System
+  "auto-tag": {
+    description:
+      "Test and manage the auto-tagging system for ledger entries. Test how tags would be applied to specific descriptions and account paths.",
+    content: (
+      arg?: string,
+      pageCtx?: string,
+      cmds?: Record<string, CommandMeta>,
+      user?: User | null
+    ) => autoTagCommand(arg || "", pageCtx || "", cmds || {}, user || null),
+    usage: `auto-tag <command> [options]
+
+**📋 Commands:**
+• \`test <description> <account>\` — Test how tags would be applied
+• \`rules\` — Show current auto-tagging rules and configuration
+• \`stats\` — Show tag statistics and usage data
+• \`help\` — Show this help message
+
+**💡 Examples:**
+• \`auto-tag test "Starbucks Coffee" "Expenses:Personal:Food:Coffee"\`
+• \`auto-tag test "Villa Market" "Expenses:Personal:Food:Pantry:Oil"\`
+• \`auto-tag rules\` — View confidence thresholds and context rules
+• \`auto-tag stats\` — View tag usage statistics
+
+**🔧 Features:**
+• Contextual relevance scoring to avoid irrelevant tags
+• Confidence thresholds for quality control
+• Account path context awareness
+• Redundant tag filtering
+• Priority-based tag ranking
+
+**🎯 Use Cases:**
+• Test tag matching before creating entries
+• Debug auto-tagging behavior
+• Understand tag relevance scoring
+• Monitor tag usage patterns`,
+  },
+
+  // Auto-tagging aliases
+  at: {
+    description:
+      "Short alias for 'auto-tag' - test and manage auto-tagging system",
+    content: (
+      arg?: string,
+      pageCtx?: string,
+      cmds?: Record<string, CommandMeta>,
+      user?: User | null
+    ) => autoTagCommand(arg || "", pageCtx || "", cmds || {}, user || null),
+    usage: "at <command> [options] - Same as auto-tag command",
   },
 
   // You might also want shorter aliases:
