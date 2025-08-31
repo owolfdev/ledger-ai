@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build the system prompt
+    // Build the system prompt with updated examples using new flag-based syntax
     const systemPrompt = `${context}
 
 INPUT: "${input}"
@@ -45,7 +45,7 @@ Generate the appropriate terminal command based on the natural language input ab
 
 1. Use ONLY commands from the registry provided above
 2. Match the exact syntax shown in the usage examples
-3. For expenses/purchases, use the "new" command
+3. For expenses/purchases, use the "new" command with flag-based syntax
 4. For queries/searches, use the "entries" command  
 5. For modifications, use the "edit-entry" command
 6. Include proper flags and arguments
@@ -54,11 +54,36 @@ Generate the appropriate terminal command based on the natural language input ab
 
 Return ONLY the command string, nothing else. If you cannot generate a valid command, return "ERROR: [explanation]".
 
-Examples:
-- "I bought coffee for 150 baht" → "new coffee 150"
-- "I spent $20 at Starbucks" → "new coffee 20 @ Starbucks"  
+IMPORTANT: Use the NEW flag-based syntax for all commands:
+
+NEW COMMAND EXAMPLES (Flag-based syntax):
+- "I bought coffee for 150 baht" → "new -i coffee 150"
+- "I spent $20 at Starbucks" → "new -i coffee 20 --vendor Starbucks"  
+- "I had lunch yesterday for 200 baht" → "new -i lunch 200 --date yesterday"
+- "MyBrick: office supplies for $100" → "new -i supplies 100 --business MyBrick"
+- "Bought gas $50 with credit card" → "new -i gas 50 --payment credit card"
+- "Coffee and pastry at Starbucks" → "new -i coffee 6 pastry 4 --vendor Starbucks"
+
+ENTRIES COMMAND EXAMPLES:
 - "Show my expenses from today" → "entries today"
-- "How much did I spend on coffee this month" → "entries -v coffee -s -m august"`;
+- "How much did I spend on coffee this month" → "entries -v coffee -s -m august"
+- "List my Starbucks transactions" → "entries -v Starbucks"
+- "What did I spend on Personal business last month" → "entries -b Personal -s -m july"
+
+EDIT-ENTRY COMMAND EXAMPLES:
+- "Change entry 323 business to MyBrick" → "edit-entry 323 --business MyBrick"
+- "Fix the vendor name for entry 330 to Starbucks" → "edit-entry 330 --vendor Starbucks"
+- "Update entry 340 memo to client meeting" → "edit-entry 340 --memo client meeting"
+
+FLAG SYNTAX RULES:
+- Use -i flag for items and prices: "new -i item1 price1 item2 price2"
+- Use --vendor for vendor names: "--vendor Starbucks"
+- Use --business for business context: "--business MyBrick"
+- Use --date for dates: "--date 2025-01-15"
+- Use --memo for notes: "--memo meeting with client"
+- Use --payment for payment methods: "--payment credit card"
+- Quote multi-word values: "--vendor \"Starbucks Coffee\""
+- Quote multi-word items: "new -i \"coffee mug\" 200"`;
 
     // Call OpenAI
     const completion = await openai.chat.completions.create({

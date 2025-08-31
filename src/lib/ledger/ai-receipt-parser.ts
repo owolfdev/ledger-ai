@@ -407,21 +407,19 @@ export function createFallbackParser(): AiReceiptParser {
         return `new -i item 0 --vendor Unknown --memo "OCR parsing failed"`;
       }
 
-      // Build multi-line command
+      // Build command with new flag-based syntax
       const commandParts = ["new"];
 
-      // Add items (each on its own line with comma except the last)
-      items.forEach((item, index) => {
-        if (index === items.length - 1) {
-          commandParts.push(item); // Last item without comma
-        } else {
-          commandParts.push(item + ","); // Other items with comma
-        }
+      // Add items with -i flag
+      const itemArgs = items.map((item) => {
+        const [description, price] = item.split(" ");
+        return `"${description}" ${price}`;
       });
+      commandParts.push(`-i ${itemArgs.join(" ")}`);
 
       // Add vendor
       if (vendor) {
-        commandParts.push(`--vendor ${vendor}`);
+        commandParts.push(`--vendor "${vendor}"`);
       }
 
       // Add date flag
@@ -434,7 +432,7 @@ export function createFallbackParser(): AiReceiptParser {
         commandParts.push(`--memo "total ${currency}${total}"`);
       }
 
-      return commandParts.join("\n");
+      return commandParts.join(" ");
     },
   };
 }

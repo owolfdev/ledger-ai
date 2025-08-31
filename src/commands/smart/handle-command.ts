@@ -205,7 +205,8 @@ async function processAiPrompt(
   >,
   history: TerminalOutputRendererProps[],
   commands: Record<string, CommandMeta>,
-  pageContext?: string
+  pageContext?: string,
+  onPopulateInput?: (cmd: string) => void
 ) {
   setHistory((h) => [
     ...h,
@@ -241,6 +242,37 @@ You must only suggest commands that are allowed in the command registry.
 Output trusted components like <my-alert ... /> if useful.
 Never suggest generic shell/Unix commands.
 If a question relates to site content, recommend relevant blog posts with markdown links.
+
+IMPORTANT: Use the NEW flag-based syntax for all commands:
+
+NEW COMMAND EXAMPLES (Flag-based syntax):
+- "I bought coffee for 150 baht" → "new -i coffee 150"
+- "I spent $20 at Starbucks" → "new -i coffee 20 --vendor Starbucks"  
+- "I had lunch yesterday for 200 baht" → "new -i lunch 200 --date yesterday"
+- "MyBrick: office supplies for $100" → "new -i supplies 100 --business MyBrick"
+- "Bought gas $50 with credit card" → "new -i gas 50 --payment credit card"
+- "Coffee and pastry at Starbucks" → "new -i coffee 6 pastry 4 --vendor Starbucks"
+
+ENTRIES COMMAND EXAMPLES:
+- "Show my expenses from today" → "entries today"
+- "How much did I spend on coffee this month" → "entries -v coffee -s -m august"
+- "List my Starbucks transactions" → "entries -v Starbucks"
+- "What did I spend on Personal business last month" → "entries -b Personal -s -m july"
+
+EDIT-ENTRY COMMAND EXAMPLES:
+- "Change entry 323 business to MyBrick" → "edit-entry 323 --business MyBrick"
+- "Fix the vendor name for entry 330 to Starbucks" → "edit-entry 330 --vendor Starbucks"
+- "Update entry 340 memo to client meeting" → "edit-entry 340 --memo client meeting"
+
+FLAG SYNTAX RULES:
+- Use -i flag for items and prices: "new -i item1 price1 item2 price2"
+- Use --vendor for vendor names: "--vendor Starbucks"
+- Use --business for business context: "--business MyBrick"
+- Use --date for dates: "--date 2025-01-15"
+- Use --memo for notes: "--memo meeting with client"
+- Use --payment for payment methods: "--payment credit card"
+- Quote multi-word values: "--vendor \"Starbucks Coffee\""
+- Quote multi-word items: "new -i \"coffee mug\" 200"
 
 Here is the page context:
 ${pageContext || ""}
@@ -341,6 +373,33 @@ ${Object.entries(commands)
       }
     }
   }
+
+  // Extract command from AI response and populate input
+  if (onPopulateInput && result) {
+    console.log("Full AI response for command extraction:", result);
+
+    // Look for command in various formats
+    const commandMatch =
+      result.match(/```\s*\n?([^\n]+)\n?```/) ||
+      result.match(/command:\s*([^\n]+)/i) ||
+      result.match(/use the following command:\s*\n\n([^\n]+)/i) ||
+      result.match(/would use the following command:\s*\n\n([^\n]+)/i) ||
+      result.match(/command:\s*\n\n([^\n]+)/i) ||
+      result.match(/new -i [^\n]+/i); // Direct match for new commands
+
+    if (commandMatch && commandMatch[1]) {
+      const command = commandMatch[1].trim();
+      console.log("Extracted command from AI response:", command);
+      onPopulateInput(command);
+    } else if (commandMatch && !commandMatch[1]) {
+      // Handle direct match case (like "new -i coffee 100 --vendor Starbucks")
+      const command = commandMatch[0].trim();
+      console.log("Extracted command from direct match:", command);
+      onPopulateInput(command);
+    } else {
+      console.log("No command found in AI response");
+    }
+  }
 }
 
 // Helper function for command suggestions
@@ -350,31 +409,9 @@ function createCommandSuggestion(
   reasoning: string,
   intentReasoning: string
 ): string {
-  const confidenceLevel =
-    confidence > 0.8 ? "High" : confidence > 0.6 ? "Medium" : "Low";
   const confidenceIcon = confidence > 0.8 ? "✓" : confidence > 0.6 ? "~" : "!";
 
-  return `
-### ${confidenceIcon} AI Command Suggestion
-
-**Generated Command:**
-\`\`\`
-${command}
-\`\`\`
-
-**Confidence:** ${confidenceLevel} (${Math.round(confidence * 100)}%)
-
-**Analysis:**
-- **Intent Detection:** ${intentReasoning}  
-- **Command Generation:** ${reasoning}
-
-**Next Steps:**
-1. **Review** the suggested command above
-2. **Edit** if needed (the command is now in your input field)
-3. **Submit** to execute the command
-
-*The command has been populated in your terminal input for review and manual execution.*
-  `.trim();
+  return `${confidenceIcon} Generated: \`${command}\``;
 }
 
 export function createHandleCommand(
@@ -399,12 +436,14 @@ export function createHandleCommand(
     const [rawBase, ...rest] = trimmed.split(/[\s\n]+/);
     const base = (rawBase || "").toLowerCase();
 
-    // console.log(
-    //   "Command base:",
-    //   base,
-    //   "Available commands:",
-    //   Object.keys(commands)
-    // );
+    console.log("Command parsing:", {
+      original: cmd,
+      trimmed: trimmed,
+      base: base,
+      rest: rest,
+      arg: rest.join(" "),
+      availableCommands: Object.keys(commands),
+    });
 
     const arg = rest.join(" ");
     // ----------- Side-effect/Imperative Commands ----------- //
@@ -1058,9 +1097,19 @@ export function createHandleCommand(
     // NEW: TIER 2 - NATURAL LANGUAGE COMMAND GENERATION
     // ==========================================
     // Insert this BEFORE the AI fallback section
+    console.log("Starting natural language processing for:", trimmed);
     try {
       const intentDetector = new IntentDetector(commands);
+      console.log("IntentDetector created successfully");
       const intentResult = await intentDetector.detectIntent(trimmed);
+
+      console.log("Intent detection result:", {
+        input: trimmed,
+        shouldGenerate: intentResult.shouldGenerateCommand,
+        confidence: intentResult.confidence,
+        potentialCommands: intentResult.potentialCommands,
+        reasoning: intentResult.reasoning,
+      });
 
       if (intentResult.shouldGenerateCommand && intentResult.confidence > 0.5) {
         const commandGenerator = new CommandGenerator(commands);
@@ -1068,6 +1117,13 @@ export function createHandleCommand(
           trimmed,
           intentResult.potentialCommands
         );
+
+        console.log("Command generation result:", {
+          success: generationResult.success,
+          command: generationResult.command,
+          confidence: generationResult.confidence,
+          error: generationResult.error,
+        });
 
         if (generationResult.success && generationResult.command) {
           // Create command suggestion output
@@ -1120,7 +1176,8 @@ export function createHandleCommand(
       setHistory,
       history || [],
       commands,
-      pageContext
+      pageContext,
+      onPopulateInput
     );
     return true;
   };

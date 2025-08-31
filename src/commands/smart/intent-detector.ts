@@ -24,6 +24,9 @@ export class IntentDetector {
     /^had\s+.*\s+at/i,
     /expense/i,
     /transaction/i,
+    // Noun phrase with amount (e.g., "coffee starbucks 100")
+    /^[a-z]+\s+[a-z]+\s+\d+/i,
+    /^[a-z]+\s+\d+/i,
   ];
 
   private readonly QUERY_PATTERNS = [
@@ -95,7 +98,11 @@ export class IntentDetector {
       const allNames = [cmdKey, ...(meta.aliases || [])];
 
       for (const name of allNames) {
-        if (input.includes(name)) {
+        // Only match if it's a standalone word or at the beginning
+        // This prevents "e" in "coffee" from matching the "entries" command
+        // Use word boundaries to ensure it's a complete word
+        const regex = new RegExp(`\\b${name}\\b`, "i");
+        if (regex.test(input)) {
           return {
             shouldGenerateCommand: true,
             confidence: 0.9,
@@ -224,11 +231,16 @@ export class IntentDetector {
       );
     const hasObject = input.split(" ").length > 3;
 
+    // Check for noun phrase with amount (e.g., "coffee starbucks 100")
+    const isNounPhraseWithAmount =
+      /^[a-z]+\s+[a-z]+\s+\d+/i.test(input) || /^[a-z]+\s+\d+/i.test(input);
+
     let confidence = 0;
 
     if (hasVerb) confidence += 0.3;
     if (hasAmount) confidence += 0.2;
     if (hasObject) confidence += 0.1;
+    if (isNounPhraseWithAmount) confidence += 0.4; // High confidence for noun phrases with amounts
 
     // If it looks like a complete sentence with action words, worth trying AI
     if (confidence >= 0.4) {

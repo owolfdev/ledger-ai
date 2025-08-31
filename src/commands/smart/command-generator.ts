@@ -106,11 +106,11 @@ IMPORTANT RULES:
 7. For edits, prefer the "edit-entry" command
 
 COMMON PATTERNS:
-- "I bought coffee for 150 baht" → "new coffee 150"
-- "I spent $20 at Starbucks" → "new coffee 20 @ Starbucks"
+- "I bought coffee for 150 baht" → "new -i coffee 150"
+- "I spent $20 at Starbucks" → "new -i coffee 20 --vendor Starbucks"
 - "Show me today's expenses" → "entries today"
 - "How much did I spend on coffee?" → "entries -v coffee -s"
-- "MyBrick: office supplies $100" → "new MyBrick: supplies 100"
+- "MyBrick: office supplies $100" → "new -i supplies 100 --business MyBrick"
 
 Return ONLY the command, nothing else. If you cannot generate a valid command, return "ERROR: [reason]".
     `.trim();
