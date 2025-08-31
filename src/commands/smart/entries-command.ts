@@ -182,7 +182,7 @@ export async function entriesListCommand(
     }
 
     // Use data as is
-    let filteredData = data;
+    const filteredData = data;
 
     // Get total count of matching entries (without limit) for accurate header
     const countQuery = queryBuilder.buildCountQuery(args, user ?? null);
