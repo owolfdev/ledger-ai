@@ -71,16 +71,6 @@ export class QueryBuilder {
       query = query.ilike("description", `%${args.vendor}%`);
     }
 
-    // Tag filter - NEW: Support both entry-level and posting-level tags
-    if (args.tags && args.tags.length > 0) {
-      // Simple tag filtering: get entry IDs that have the specified tags
-      console.log("Applying tag filter for:", args.tags);
-
-      // For now, we'll filter after the query executes
-      // This avoids breaking the query builder chain
-      console.log("Tag filtering will be applied post-query");
-    }
-
     // Apply date filters
     query = this.applyDateFilters(query, args);
 
@@ -96,16 +86,6 @@ export class QueryBuilder {
 
     // Apply all filters
     query = this.applyCommonFilters(query, args, user);
-
-    // Apply tag filtering if requested
-    if (args.tags && args.tags.length > 0) {
-      // For now, skip tag filtering to avoid complexity
-      console.log(
-        "Tag filtering requested for:",
-        args.tags,
-        "but not yet implemented"
-      );
-    }
 
     // Add ordering and limit
     const orderCol = args.sort === "created" ? "created_at" : "entry_date";
@@ -135,47 +115,5 @@ export class QueryBuilder {
     query = this.applyCommonFilters(query, args, user);
 
     return query;
-  }
-
-  // NEW: Separate method for tag filtering
-  async applyTagFilter(query: any, tags: string[]) {
-    try {
-      // First get the tag IDs
-      const { data: tagData, error: tagError } = await this.supabase
-        .from("tags")
-        .select("id")
-        .in("name", tags);
-
-      if (tagError || !tagData || tagData.length === 0) {
-        console.error("Error fetching tags:", tagError);
-        // Return a query that will have no results but maintains the query builder chain
-        return this.supabase.from("ledger_entries").select("*").eq("id", -1);
-      }
-
-      const tagIds = tagData.map((tag) => tag.id);
-
-      // Then get entry IDs that have these tags
-      const { data: taggedEntries, error: entryError } = await this.supabase
-        .from("entry_tags")
-        .select("entry_id")
-        .in("tag_id", tagIds);
-
-      if (entryError) {
-        console.error("Error fetching tagged entries:", entryError);
-        return query; // Return original query if tag filtering fails
-      }
-
-      if (taggedEntries && taggedEntries.length > 0) {
-        const entryIds = taggedEntries.map((row) => row.entry_id);
-        return query.in("id", entryIds);
-      } else {
-        // No entries found with these tags, return empty result
-        // Return a query that will have no results but maintains the query builder chain
-        return this.supabase.from("ledger_entries").select("*").eq("id", -1);
-      }
-    } catch (error) {
-      console.error("Error in tag filtering:", error);
-      return query; // Return original query if tag filtering fails
-    }
   }
 }

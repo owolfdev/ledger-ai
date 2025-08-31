@@ -16,8 +16,6 @@ export interface EditEntryArgs {
   date?: string;
   memo?: string;
   delete?: boolean; // ✅ NEW: Delete flag
-  tags?: string[]; // NEW: Tags for entry or posting
-  posting?: string; // NEW: Posting ID for posting-level tag editing
 }
 
 function parseArgs(raw?: string): EditEntryArgs | null {
@@ -84,8 +82,6 @@ function parseArgs(raw?: string): EditEntryArgs | null {
   let date: string | undefined;
   let memo: string | undefined;
   let deleteFlag = false; // ✅ NEW: Delete flag
-  let tags: string[] | undefined; // NEW: Tags for entry or posting
-  let posting: string | undefined; // NEW: Posting ID for posting-level tag editing
 
   // Parse flags
   for (let i = 1; i < filteredParts.length; i++) {
@@ -127,35 +123,12 @@ function parseArgs(raw?: string): EditEntryArgs | null {
       i++;
       continue;
     }
-    // NEW: Tags parsing
-    if ((flag === "--tags" || flag === "-t") && i + 1 < filteredParts.length) {
-      tags = filteredParts[i + 1].split(",").map((tag) => tag.trim());
-      i++;
-      continue;
-    }
-    // NEW: Posting ID parsing
-    if (
-      (flag === "--posting" || flag === "-p") &&
-      i + 1 < filteredParts.length
-    ) {
-      posting = filteredParts[i + 1];
-      i++;
-      continue;
-    }
   }
 
-  // ✅ UPDATED: Delete flag is valid on its own, tags are also valid
-  if (
-    !deleteFlag &&
-    !business &&
-    !vendor &&
-    !description &&
-    !date &&
-    !memo &&
-    !tags
-  ) {
+  // ✅ UPDATED: Delete flag is valid on its own
+  if (!deleteFlag && !business && !vendor && !description && !date && !memo) {
     throw new Error(
-      "At least one field must be specified to edit (--business, --vendor, --date, --memo, --tags) or use --delete/-d to remove entry"
+      "At least one field must be specified to edit (--business, --vendor, --date, --memo) or use --delete/-d to remove entry"
     );
   }
 
@@ -167,8 +140,6 @@ function parseArgs(raw?: string): EditEntryArgs | null {
     date,
     memo,
     delete: deleteFlag, // ✅ NEW: Return delete flag
-    tags, // NEW: Return tags
-    posting, // NEW: Return posting ID
   };
 }
 
@@ -277,161 +248,6 @@ async function deleteEntry(entryId: string, userId: string): Promise<void> {
   } catch (syncError) {
     console.error("Failed to sync ledger file after deletion:", syncError);
     // Don't fail the operation, just log the error
-  }
-}
-
-// NEW: Helper function to get or create tag IDs
-async function getOrCreateTagIds(
-  tagNames: string[],
-  userId: string
-): Promise<string[]> {
-  const supabase = createClient();
-  const tagIds: string[] = [];
-
-  for (const tagName of tagNames) {
-    if (!tagName.trim()) continue;
-
-    // First, try to find existing tag
-    const { data: existingTag, error: fetchError } = await supabase
-      .from("tags")
-      .select("id")
-      .eq("name", tagName.trim())
-      .single();
-
-    if (fetchError && fetchError.code !== "PGRST116") {
-      // PGRST116 = no rows returned
-      throw new Error(
-        `Failed to fetch tag "${tagName}": ${fetchError.message}`
-      );
-    }
-
-    if (existingTag) {
-      // Tag exists, use its ID
-      tagIds.push(existingTag.id);
-    } else {
-      // Tag doesn't exist, create it
-      const { data: newTag, error: createError } = await supabase
-        .from("tags")
-        .insert({
-          name: tagName.trim(),
-          created_at: new Date().toISOString(),
-        })
-        .select("id")
-        .single();
-
-      if (createError) {
-        throw new Error(
-          `Failed to create tag "${tagName}": ${createError.message}`
-        );
-      }
-
-      tagIds.push(newTag.id);
-    }
-  }
-
-  return tagIds;
-}
-
-// NEW: Helper function to update entry-level tags
-async function updateEntryTags(
-  entryId: string,
-  tagNames: string[],
-  userId: string
-): Promise<void> {
-  const supabase = createClient();
-
-  // Get or create tag IDs
-  const tagIds = await getOrCreateTagIds(tagNames, userId);
-
-  // First, remove all existing entry tags
-  const { error: deleteError } = await supabase
-    .from("entry_tags")
-    .delete()
-    .eq("entry_id", entryId);
-
-  if (deleteError) {
-    throw new Error(
-      `Failed to remove existing entry tags: ${deleteError.message}`
-    );
-  }
-
-  // Then, add new entry tags
-  if (tagIds.length > 0) {
-    const entryTagInserts = tagIds.map((tagId) => ({
-      entry_id: entryId,
-      tag_id: tagId,
-      created_at: new Date().toISOString(),
-    }));
-
-    const { error: insertError } = await supabase
-      .from("entry_tags")
-      .insert(entryTagInserts);
-
-    if (insertError) {
-      throw new Error(
-        `Failed to insert new entry tags: ${insertError.message}`
-      );
-    }
-  }
-}
-
-// NEW: Helper function to update posting-level tags
-async function updatePostingTags(
-  entryId: string,
-  postingId: number,
-  tagNames: string[],
-  userId: string
-): Promise<void> {
-  const supabase = createClient();
-
-  // Verify the posting belongs to the entry
-  const { data: posting, error: fetchError } = await supabase
-    .from("ledger_postings")
-    .select("id")
-    .eq("id", postingId)
-    .eq("entry_id", entryId)
-    .single();
-
-  if (fetchError) {
-    throw new Error(`Failed to fetch posting: ${fetchError.message}`);
-  }
-
-  if (!posting) {
-    throw new Error(`Posting ${postingId} not found or access denied`);
-  }
-
-  // Get or create tag IDs
-  const tagIds = await getOrCreateTagIds(tagNames, userId);
-
-  // First, remove all existing posting tags
-  const { error: deleteError } = await supabase
-    .from("posting_tags")
-    .delete()
-    .eq("posting_id", postingId);
-
-  if (deleteError) {
-    throw new Error(
-      `Failed to remove existing posting tags: ${deleteError.message}`
-    );
-  }
-
-  // Then, add new posting tags
-  if (tagIds.length > 0) {
-    const postingTagInserts = tagIds.map((tagId) => ({
-      posting_id: postingId,
-      tag_id: tagId,
-      created_at: new Date().toISOString(),
-    }));
-
-    const { error: insertError } = await supabase
-      .from("posting_tags")
-      .insert(postingTagInserts);
-
-    if (insertError) {
-      throw new Error(
-        `Failed to insert new posting tags: ${insertError.message}`
-      );
-    }
   }
 }
 
@@ -591,33 +407,6 @@ The entry, all its postings, and any associated receipt images have been removed
             // Continue with other postings
           }
         }
-      }
-    }
-
-    // NEW: Handle tag editing
-    if (args.tags !== undefined) {
-      try {
-        if (args.posting) {
-          // Editing posting-level tags
-          await updatePostingTags(
-            args.entryId,
-            parseInt(args.posting),
-            args.tags,
-            user.id
-          );
-          changes.push(
-            `posting ${args.posting} tags → ${args.tags.join(", ")}`
-          );
-        } else {
-          // Editing entry-level tags
-          await updateEntryTags(args.entryId, args.tags, user.id);
-          changes.push(`entry tags → ${args.tags.join(", ")}`);
-        }
-      } catch (tagError) {
-        console.error("Tag update error:", tagError);
-        return `<my-alert message="Failed to update tags: ${
-          tagError instanceof Error ? tagError.message : String(tagError)
-        }" />`;
       }
     }
 

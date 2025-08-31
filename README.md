@@ -395,7 +395,7 @@ entries -t coffee                          # Filter by coffee tag
 --vendor <name> / -v <name>               # Filter by vendor/description
 --account <pattern> / -A <pattern>        # Filter by account name
 --currency <code> / -c <code>             # Filter by currency (USD, THB, EUR)
---tags <tags> / -t <tags>                 # Filter by tags
+
 --sum / -s                                # Show totals
 --limit <number> / -l <number>            # Limit results
 --month <month> / -m <month>              # Filter by month (january, august, etc.)
@@ -412,8 +412,7 @@ edit-entry 323 --business MyBrick         # Change business context
 edit-entry 330 --vendor "Starbucks"       # Update vendor name
 edit-entry 325 --date yesterday           # Fix transaction date
 edit-entry 340 --memo "client meeting"    # Add memo to entry
-edit-entry 340 --tags coffee,personal     # Set entry-level tags
-edit-entry 340 --posting 123 --tags food,groceries  # Set posting-level tags
+
 edit-entry 340 --delete                   # Delete the entry
 
 # Available flags
@@ -422,7 +421,6 @@ edit-entry 340 --delete                   # Delete the entry
 --date <date> / -D <date>                 # Change transaction date
 --memo <text> / -m <text>                 # Add or update memo
 --delete / -d                              # Delete the entry
---tags <tags> / -t <tags>                 # Set entry-level tags
 --posting <id> / -p <id>                  # Specify posting ID for posting-level operations
 ```
 

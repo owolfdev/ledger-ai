@@ -12,8 +12,6 @@ import { formatEntryLine, createEntryListHeader } from "./entries/formatting";
 import {
   groupByCurrency,
   formatTotals,
-  calculateTaggedItemTotals,
-  formatTaggedItemTotals,
   calculateAccountFilteredTotals,
   formatAccountFilteredTotals,
 } from "./entries/currency";
@@ -63,12 +61,6 @@ export async function entriesListCommand(
           return `Entry ${entryId} not found.`;
         }
 
-        // Fetch entry-level tags
-        const { data: entryTags } = await supabase
-          .from("entry_tags")
-          .select("tags!inner(name)")
-          .eq("entry_id", entryId);
-
         // Fetch postings for this entry
         const { data: postings } = await supabase
           .from("ledger_postings")
@@ -76,57 +68,22 @@ export async function entriesListCommand(
           .eq("entry_id", entryId)
           .order("sort_order", { ascending: true });
 
-        // Fetch posting-level tags
-        const postingTagsMap = new Map<number, string[]>();
-        if (postings && postings.length > 0) {
-          const postingIds = postings.map((p) => p.id);
-          const { data: allPostingTags } = await supabase
-            .from("posting_tags")
-            .select("posting_id, tags!inner(name)")
-            .in("posting_id", postingIds);
-
-          if (allPostingTags) {
-            allPostingTags.forEach((pt: any) => {
-              const postingId = pt.posting_id;
-              if (!postingTagsMap.has(postingId)) {
-                postingTagsMap.set(postingId, []);
-              }
-              // Handle the tags structure from Supabase
-              const tags = pt.tags;
-              if (tags && tags.name) {
-                postingTagsMap.get(postingId)!.push(tags.name);
-              }
-            });
-          }
-        }
-
         // Format the output
         const entryDate = new Date(entry.entry_date).toLocaleDateString(
           "en-CA"
         );
-        const entryTagsList =
-          entryTags
-            ?.map((et: any) => et.tags?.name || "")
-            .filter(Boolean)
-            .join(", ") || "(none)";
 
         let output = `**Entry ${entryId}**: ${entry.description} (${entryDate})\n\n`;
-        output += `**Tags**: ${entryTagsList}\n\n`;
         output += `**Postings**:\n`;
 
         if (postings && postings.length > 0) {
           postings.forEach((posting) => {
-            const postingTags = postingTagsMap.get(posting.id) || [];
-            const postingTagsList = postingTags.join(", ");
-
             // Format the amount with proper sign and currency
             const amount = parseFloat(posting.amount);
             const sign = amount >= 0 ? "+" : "";
             const formattedAmount = `${sign}${amount.toFixed(2)}฿`;
 
-            output += `- **${posting.id}**: ${
-              posting.account
-            } ${formattedAmount} [${postingTagsList || ""}]\n`;
+            output += `- **${posting.id}**: ${posting.account} ${formattedAmount}\n`;
           });
         } else {
           output += `- (no postings found)\n`;
@@ -134,7 +91,7 @@ export async function entriesListCommand(
 
         return output;
       } catch (error) {
-        return `Failed to fetch tags for entry ${entryId}: ${error}`;
+        return `Failed to fetch entry ${entryId}: ${error}`;
       }
     }
 
@@ -158,93 +115,8 @@ export async function entriesListCommand(
         return "No entries found.";
       }
 
-      if (args.tags && args.tags.length > 0) {
-        // Apply tag filtering (same logic as list mode)
-        try {
-          const supabase = createClient();
-
-          // First get the tag IDs
-          const { data: tagData, error: tagError } = await supabase
-            .from("tags")
-            .select("id")
-            .in("name", args.tags);
-
-          if (tagError || !tagData || tagData.length === 0) {
-            console.error("Error fetching tags:", tagError);
-            filteredData = [];
-          } else {
-            const tagIds = tagData.map((tag) => tag.id);
-
-            // Get entry IDs from entry_tags table
-            const entryTagsResult = await supabase
-              .from("entry_tags")
-              .select("entry_id")
-              .in("tag_id", tagIds);
-
-            // Get posting IDs from posting_tags table, then get their entry IDs
-            const postingTagsResult = await supabase
-              .from("posting_tags")
-              .select("posting_id")
-              .in("tag_id", tagIds);
-
-            // Get entry IDs from postings
-            let postingEntryIds: number[] = [];
-            if (postingTagsResult.data && postingTagsResult.data.length > 0) {
-              const postingIds = postingTagsResult.data.map(
-                (row) => row.posting_id
-              );
-              const { data: postingEntries } = await supabase
-                .from("ledger_postings")
-                .select("entry_id")
-                .in("id", postingIds);
-
-              if (postingEntries) {
-                postingEntryIds = postingEntries.map((row) => row.entry_id);
-              }
-            }
-
-            if (entryTagsResult.error) {
-              console.error(
-                "Error fetching entry tags:",
-                entryTagsResult.error
-              );
-            }
-            if (postingTagsResult.error) {
-              console.error(
-                "Error fetching posting tags:",
-                postingTagsResult.error
-              );
-            }
-
-            // Combine entry IDs from both sources
-            const taggedEntryIds = new Set<number>();
-
-            if (entryTagsResult.data) {
-              entryTagsResult.data.forEach((row: { entry_id: number }) =>
-                taggedEntryIds.add(row.entry_id)
-              );
-            }
-
-            // Add entry IDs from posting tags
-            postingEntryIds.forEach((entryId) => taggedEntryIds.add(entryId));
-
-            if (taggedEntryIds.size > 0) {
-              const taggedEntryIdsArray = Array.from(taggedEntryIds);
-              filteredData = data.filter((entry) =>
-                taggedEntryIdsArray.includes(entry.id)
-              );
-            } else {
-              filteredData = [];
-            }
-          }
-        } catch (filterError) {
-          console.error("Error in tag filtering for count:", filterError);
-          filteredData = [];
-        }
-      } else {
-        // No tags - use the data as is for account filtering
-        filteredData = data;
-      }
+      // Use the data as is for account filtering
+      filteredData = data;
 
       count = filteredData.length;
 
@@ -253,8 +125,7 @@ export async function entriesListCommand(
         (args.vendor ? ` matching "${args.vendor}"` : "") +
         (args.business ? ` for business "${args.business}"` : "") +
         (args.account ? ` with account "${args.account}"` : "") +
-        (args.currency ? ` in ${args.currency}` : "") +
-        (args.tags ? ` with tags: ${args.tags.join(", ")}` : "");
+        (args.currency ? ` in ${args.currency}` : "");
 
       // Add account summary when using --account without --sum
       if (args.account && !args.sum && count > 0) {
@@ -274,14 +145,7 @@ export async function entriesListCommand(
 
       // Add sum if requested
       if (args.sum && count && count > 0) {
-        if (args.tags && args.tags.length > 0) {
-          // Calculate item-specific totals for tagged items
-          const taggedItemTotals = await calculateTaggedItemTotals(
-            filteredData.map((entry) => entry.id),
-            args.tags
-          );
-          result += formatTaggedItemTotals(taggedItemTotals, args.tags);
-        } else if (args.account) {
+        if (args.account) {
           // Calculate account-filtered totals for account-filtered entries
           const accountFilteredTotals = await calculateAccountFilteredTotals(
             filteredData.map((entry) => entry.id),
@@ -317,103 +181,15 @@ export async function entriesListCommand(
       return "No entries found.";
     }
 
-    // NEW: Apply tag filtering after query execution
+    // Use data as is
     let filteredData = data;
-    if (args.tags && args.tags.length > 0) {
-      console.log("Applying post-query tag filtering for:", args.tags);
-
-      try {
-        // Get entries that have the specified tags
-        const supabase = createClient();
-
-        // First get the tag IDs
-        const { data: tagData, error: tagError } = await supabase
-          .from("tags")
-          .select("id")
-          .in("name", args.tags);
-
-        if (tagError || !tagData || tagData.length === 0) {
-          console.error("Error fetching tags:", tagError);
-          filteredData = [];
-        } else {
-          const tagIds = tagData.map((tag) => tag.id);
-
-          // Get entry IDs from entry_tags table
-          const entryTagsResult = await supabase
-            .from("entry_tags")
-            .select("entry_id")
-            .in("tag_id", tagIds);
-
-          // Get posting IDs from posting_tags table, then get their entry IDs
-          const postingTagsResult = await supabase
-            .from("posting_tags")
-            .select("posting_id")
-            .in("tag_id", tagIds);
-
-          // Get entry IDs from postings
-          let postingEntryIds: number[] = [];
-          if (postingTagsResult.data && postingTagsResult.data.length > 0) {
-            const postingIds = postingTagsResult.data.map(
-              (row) => row.posting_id
-            );
-            const { data: postingEntries } = await supabase
-              .from("ledger_postings")
-              .select("entry_id")
-              .in("id", postingIds);
-
-            if (postingEntries) {
-              postingEntryIds = postingEntries.map((row) => row.entry_id);
-            }
-          }
-
-          if (entryTagsResult.error) {
-            console.error("Error fetching entry tags:", entryTagsResult.error);
-          }
-          if (postingTagsResult.error) {
-            console.error(
-              "Error fetching posting tags:",
-              postingTagsResult.error
-            );
-          }
-
-          // Combine entry IDs from both sources
-          const taggedEntryIds = new Set<number>();
-
-          if (entryTagsResult.data) {
-            entryTagsResult.data.forEach((row: { entry_id: number }) =>
-              taggedEntryIds.add(row.entry_id)
-            );
-          }
-
-          // Add entry IDs from posting tags
-          postingEntryIds.forEach((entryId) => taggedEntryIds.add(entryId));
-
-          if (taggedEntryIds.size > 0) {
-            const taggedEntryIdsArray = Array.from(taggedEntryIds);
-            filteredData = data.filter((entry) =>
-              taggedEntryIdsArray.includes(entry.id)
-            );
-            console.log(
-              `Filtered ${data.length} entries down to ${filteredData.length} tagged entries (from both entry and posting tags)`
-            );
-          } else {
-            console.log("No entries found with the specified tags");
-            filteredData = [];
-          }
-        }
-      } catch (filterError) {
-        console.error("Error in tag filtering:", filterError);
-        // Keep original data if filtering fails
-      }
-    }
 
     // Build filter description
     const filterDesc =
       (args.business ? ` for ${args.business}` : "") +
       (args.vendor ? ` matching "${args.vendor}"` : "") +
       (args.account ? ` with account "${args.account}"` : "") +
-      (args.currency ? ` in ${args.currency}` : "") +
-      (args.tags ? ` with tags: ${args.tags.join(", ")}` : "");
+      (args.currency ? ` in ${args.currency}` : "");
 
     // Create header
     const header = createEntryListHeader(filteredData.length, filterDesc, {
@@ -448,14 +224,7 @@ export async function entriesListCommand(
     // Calculate totals if requested
     let totalsBlock = "";
     if (args.sum) {
-      if (args.tags && args.tags.length > 0) {
-        // Calculate item-specific totals for tagged items
-        const taggedItemTotals = await calculateTaggedItemTotals(
-          filteredData.map((entry) => entry.id),
-          args.tags
-        );
-        totalsBlock = formatTaggedItemTotals(taggedItemTotals, args.tags);
-      } else if (args.account) {
+      if (args.account) {
         // Calculate account-filtered totals for account-filtered entries
         const accountFilteredTotals = await calculateAccountFilteredTotals(
           filteredData.map((entry) => entry.id),

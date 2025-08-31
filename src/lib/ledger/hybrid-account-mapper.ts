@@ -5,7 +5,6 @@ import {
   mapAccount as ruleBasedMapAccount,
   type MapAccountOptions,
 } from "./account-map";
-import { mapAccountWithTags } from "./tag-aware-account-mapper";
 
 interface AIAccountMapperOptions extends MapAccountOptions {
   useAI?: boolean;
@@ -120,15 +119,7 @@ export async function mapAccountWithHybridAI(
   const business = opts.business || "Personal";
 
   try {
-    // First try tag-aware mapping (most accurate)
-    const tagAwareAccount = await mapAccountWithTags(description, business);
-
-    // If tag-aware mapping found a specific account (not Misc), use it
-    if (!tagAwareAccount.includes(":Misc")) {
-      return tagAwareAccount;
-    }
-
-    // Fall back to rule-based mapping if tag-aware didn't find a match
+    // Use rule-based mapping as the base
     const ruleBasedAccount = ruleBasedMapAccount(description, opts);
 
     // Extract the category part (everything after "Expenses:Business:")
@@ -164,10 +155,7 @@ export async function mapAccountWithHybridAI(
     // - AI confidence too low
     return ruleBasedAccount;
   } catch (error) {
-    console.error(
-      "Tag-aware mapping failed, falling back to rule-based:",
-      error
-    );
+    console.error("Hybrid mapping failed, falling back to rule-based:", error);
     return ruleBasedMapAccount(description, opts);
   }
 }

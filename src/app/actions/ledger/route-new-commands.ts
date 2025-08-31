@@ -10,7 +10,6 @@ import { renderLedger } from "@/lib/ledger/render-ledger";
 import { syncLedgerFileFromDB } from "@/app/actions/ledger/after-save-ledger-sync";
 import { isLocalLedgerWriteEnabled } from "@/lib/ledger/is-local-write-enabled";
 import { mapAccountWithHybridAI } from "@/lib/ledger/hybrid-account-mapper";
-// Auto-tagger functions imported dynamically below
 
 export type NewCommandPayload = {
   date: string; // YYYY-MM-DD (local)
@@ -217,49 +216,6 @@ export async function handleNewCommand(
       ok: false,
       error: `insert ledger_postings failed: ${insPostsErr?.message}`,
     };
-  }
-
-  // ---- AUTO-TAGGING SYSTEM ----
-  try {
-    console.log("=== STARTING AUTO-TAGGING ===");
-
-    // Import auto-tagging functions
-    const { autoTagEntry, applyAutoTags } = await import(
-      "@/lib/ledger/auto-tagger"
-    );
-
-    // Auto-tag the entry and its postings
-    const autoTagResult = await autoTagEntry({
-      description: payload.payee,
-      memo: payload.memo,
-      business: payload.business,
-      postings: insertedPostings.map((p) => ({
-        id: p.id,
-        account: p.account,
-        amount: p.amount,
-        currency: p.currency,
-      })),
-    });
-
-    // Apply the auto-tags to the database
-    await applyAutoTags(entry_id, autoTagResult);
-
-    // Log auto-tagging results for debugging
-    console.log("=== AUTO-TAGGING RESULTS ===");
-    console.log(
-      "Entry tags:",
-      autoTagResult.entryTags.map((t) => t.name)
-    );
-    console.log(
-      "Posting tags:",
-      Array.from(autoTagResult.postingTags.entries()).map(
-        ([id, tags]) => `Posting ${id}: ${tags.map((t) => t.name).join(", ")}`
-      )
-    );
-    console.log("===========================");
-  } catch (autoTagError) {
-    // Log auto-tagging errors but don't fail the entry creation
-    console.warn("Auto-tagging failed:", autoTagError);
   }
 
   // ---- DEV FILE SYNC (rewrite from DB; no append to avoid duplicates) ----

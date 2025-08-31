@@ -8,7 +8,6 @@ import { User } from "@/types/user";
 import { entriesListCommand } from "@/commands/smart/entries-command";
 import { editEntryCommand } from "@/commands/smart/edit-entry-command";
 import { ledgerCliCommand } from "@/commands/smart/ledger-cli-command";
-import { autoTagCommand } from "@/commands/smart/auto-tag-command";
 
 export const commandRegistry: Record<string, CommandMeta> = {
   // --- Basic/Navigation ---
@@ -171,16 +170,6 @@ export const commandRegistry: Record<string, CommandMeta> = {
         output: "entries -c USD -l 20",
         description: "Currency filter with limit",
       },
-      {
-        input: "Show me all coffee expenses",
-        output: "entries -t coffee",
-        description: "Filter by coffee tag",
-      },
-      {
-        input: "How much did I spend on food this month?",
-        output: "entries -t food -s -m august",
-        description: "Food spending total for August",
-      },
     ],
     categories: ["query", "finance", "search"],
     aliases: ["ent", "e", "list", "show", "find"],
@@ -200,7 +189,6 @@ export const commandRegistry: Record<string, CommandMeta> = {
     • \`--month <month>\` / \`-m <month>\`      — Filter by month (january, february, etc.)
     • \`--limit <number>\` / \`-l <number>\`    — Limit number of results
     • \`--summary\` / \`-s\`                    — Show totals and summaries
-    • \`--tags <tag1,tag2>\` / \`-t <tag1,tag2>\` — Filter by tags
     
     **Navigation:**
     • \`--goto <id>\` / \`-g <id>\`             — Navigate to specific entry
@@ -209,7 +197,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
     • \`entries today\`                         — Today's entries
     • \`entries -v Starbucks -s\`               — Starbucks expenses with totals
     • \`entries -b Personal -m august -s\`      — Personal business expenses for August with totals
-    • \`entries -t coffee -c USD\`              — Coffee expenses in USD
+
     • \`entries -A Food -l 10\`                 — Food account entries, limit 10`,
   },
 
@@ -237,7 +225,6 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`--month <month>\` / \`-m <month>\`      — Filter by month (january, february, etc.)
   • \`--limit <number>\` / \`-l <number>\`    — Limit number of results
   • \`--summary\` / \`-s\`                    — Show totals and summaries
-  • \`--tags <tag1,tag2>\` / \`-t <tag1,tag2>\` — Filter by tags
   
   **Navigation:**
   • \`--goto <id>\` / \`-g <id>\`             — Navigate to specific entry
@@ -246,7 +233,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`ent today\`                              — Today's entries
   • \`ent -v Starbucks -s\`                    — Starbucks expenses with totals
   • \`ent -b Personal -m august -s\`           — Personal business expenses for August with totals
-  • \`ent -t coffee -c USD\`                   — Coffee expenses in USD
+
   • \`ent -A Food -l 10\`                      — Food account entries, limit 10
   
   **Date Filtering:**
@@ -259,7 +246,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`--sum\` / \`-s\`                    — Show totals with multi-currency breakdown
   • \`--count\` / \`-n\`                  — Show count only, no entries listed
   • \`--go <id>\` / \`-g <id>\`           — Navigate to specific entry by ID
-  • \`--entry <id>\` / \`-e <id>\`        — View tags for specific entry by ID
+  • \`--entry <id>\` / \`-e <id>\`        — View specific entry by ID
   
   **Sorting & Limits:**
   • \`--sort <date|created>\` / \`-D <date|created>\` — Sort by date or creation time
@@ -384,16 +371,6 @@ export const commandRegistry: Record<string, CommandMeta> = {
         output: 'edit-entry 340 --memo "client meeting"',
         description: "Add memo to entry",
       },
-      {
-        input: "Add tags coffee and personal to entry 340",
-        output: "edit-entry 340 --tags coffee,personal",
-        description: "Set entry-level tags",
-      },
-      {
-        input: "Set posting 123 tags to food and groceries",
-        output: "edit-entry 340 --posting 123 --tags food,groceries",
-        description: "Set posting-level tags",
-      },
     ],
     categories: ["edit", "modify", "finance"],
     aliases: ["editent", "modify", "fix", "update"],
@@ -407,12 +384,8 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`edit-entry 323 --memo "client meeting"\` / \`edit-entry 323 -m "client meeting"\` — Add or update memo
   • \`edit-entry 323 --delete\` / \`edit-entry 323 -d\` — Delete the entry
   
-  **Tag Management:**
-  • \`edit-entry 323 --tags coffee,personal,breakfast\` / \`edit-entry 323 -t coffee,personal,breakfast\` — Set entry-level tags
-  • \`edit-entry 323 --posting 123 --tags food,groceries\` / \`edit-entry 323 -p 123 -t food,groceries\` — Set posting-level tags
-  
   **Combined Operations:**
-  • \`edit-entry 323 --vendor "Coffee Shop" --tags coffee,personal\` — Update vendor and tags`,
+  • \`edit-entry 323 --vendor "Coffee Shop" --memo "team meeting"\` — Update vendor and memo`,
     // ... rest of your existing usage stays the same
   },
 
@@ -437,9 +410,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   **Multiple changes:**
   • \`editent 323 --business Personal --vendor "Coffee Shop" --memo "team meeting"\`
   
-  **Tag Management:**
-  • \`editent 323 --tags coffee,personal,breakfast\` — Set entry-level tags
-  • \`editent 323 --posting 123 --tags food,groceries\` — Set posting-level tags
+
   
   See \`help edit-entry\` for full documentation.`,
   },
@@ -465,9 +436,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   **Multiple changes:**
   • \`ee 323 --business Personal --vendor "Coffee Shop" --memo "team meeting"\`
   
-  **Tag Management:**
-  • \`ee 323 --tags coffee,personal,breakfast\` / \`ee 323 -t coffee,personal,breakfast\` — Set entry-level tags
-  • \`ee 323 --posting 123 --tags food,groceries\` / \`ee 323 -p 123 -t food,groceries\` — Set posting-level tags
+
   
   See \`help edit-entry\` for full documentation.`,
   },
@@ -549,57 +518,6 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • All executions are logged for security monitoring
   • Requires Ledger CLI installed and available in PATH
   • Restricted to authenticated users only`,
-  },
-
-  // Auto-tagging System
-  "auto-tag": {
-    description:
-      "Test and manage the auto-tagging system for ledger entries. Test how tags would be applied to specific descriptions and account paths.",
-    content: (
-      arg?: string,
-      pageCtx?: string,
-      cmds?: Record<string, CommandMeta>,
-      user?: User | null
-    ) => autoTagCommand(arg || "", pageCtx || "", cmds || {}, user || null),
-    usage: `auto-tag <command> [options]
-
-**📋 Commands:**
-• \`test <description> <account>\` — Test how tags would be applied
-• \`rules\` — Show current auto-tagging rules and configuration
-• \`stats\` — Show tag statistics and usage data
-• \`help\` — Show this help message
-
-**💡 Examples:**
-• \`auto-tag test "Starbucks Coffee" "Expenses:Personal:Food:Coffee"\`
-• \`auto-tag test "Villa Market" "Expenses:Personal:Food:Pantry:Oil"\`
-• \`auto-tag rules\` — View confidence thresholds and context rules
-• \`auto-tag stats\` — View tag usage statistics
-
-**🔧 Features:**
-• Contextual relevance scoring to avoid irrelevant tags
-• Confidence thresholds for quality control
-• Account path context awareness
-• Redundant tag filtering
-• Priority-based tag ranking
-
-**🎯 Use Cases:**
-• Test tag matching before creating entries
-• Debug auto-tagging behavior
-• Understand tag relevance scoring
-• Monitor tag usage patterns`,
-  },
-
-  // Auto-tagging aliases
-  at: {
-    description:
-      "Short alias for 'auto-tag' - test and manage auto-tagging system",
-    content: (
-      arg?: string,
-      pageCtx?: string,
-      cmds?: Record<string, CommandMeta>,
-      user?: User | null
-    ) => autoTagCommand(arg || "", pageCtx || "", cmds || {}, user || null),
-    usage: "at <command> [options] - Same as auto-tag command",
   },
 
   // You might also want shorter aliases:

@@ -34,5 +34,4 @@ export const globalCommandKeys = [
   "bal",
   "reg",
   "accounts",
-  "auto-tag",
 ];

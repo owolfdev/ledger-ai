@@ -47,97 +47,6 @@ export function groupByCurrency(
   );
 }
 
-// NEW: Calculate item-specific totals for tagged items
-export async function calculateTaggedItemTotals(
-  entryIds: number[],
-  tagNames: string[]
-): Promise<CurrencyTotal[]> {
-  const supabase = createClient();
-  const groups = new Map<string, CurrencyTotal>();
-
-  try {
-    // Get all postings for the filtered entries
-    const { data: postings, error } = await supabase
-      .from("ledger_postings")
-      .select("id, entry_id, amount, currency")
-      .in("entry_id", entryIds);
-
-    if (error || !postings) {
-      console.error("Error fetching postings for item totals:", error);
-      return [];
-    }
-
-    // Get tag IDs for the specified tag names
-    const { data: tags, error: tagError } = await supabase
-      .from("tags")
-      .select("id, name")
-      .in("name", tagNames);
-
-    if (tagError || !tags) {
-      console.error("Error fetching tags for item totals:", tagError);
-      return [];
-    }
-
-    const tagIds = tags.map((tag) => tag.id);
-    const tagNamesMap = new Map(tags.map((tag) => [tag.id, tag.name]));
-
-    // Get postings that have the specified tags
-    const { data: taggedPostings, error: postingTagError } = await supabase
-      .from("posting_tags")
-      .select("posting_id, tag_id")
-      .in("tag_id", tagIds);
-
-    if (postingTagError || !taggedPostings) {
-      console.error(
-        "Error fetching posting tags for item totals:",
-        postingTagError
-      );
-      return [];
-    }
-
-    // Create a map of posting_id -> tag_names for quick lookup
-    const postingTagsMap = new Map<string, string[]>();
-    taggedPostings.forEach((pt) => {
-      const postingId = pt.posting_id.toString();
-      const tagName = tagNamesMap.get(pt.tag_id);
-      if (tagName) {
-        if (!postingTagsMap.has(postingId)) {
-          postingTagsMap.set(postingId, []);
-        }
-        postingTagsMap.get(postingId)!.push(tagName);
-      }
-    });
-
-    // Calculate totals for each tagged posting
-    postings.forEach((posting) => {
-      const postingId = posting.id.toString();
-      const postingTags = postingTagsMap.get(postingId) || [];
-
-      // Only include postings that have the requested tags
-      if (postingTags.some((tagName) => tagNames.includes(tagName))) {
-        const currency = posting.currency || "THB";
-        const amount = Math.abs(Number(posting.amount)) || 0; // Use absolute value for expenses
-
-        if (groups.has(currency)) {
-          const existing = groups.get(currency)!;
-          existing.amount += amount;
-          existing.count += 1;
-        } else {
-          groups.set(currency, {
-            currency,
-            amount,
-            count: 1,
-          });
-        }
-      }
-    });
-  } catch (error) {
-    console.error("Error calculating tagged item totals:", error);
-  }
-
-  return Array.from(groups.values()).sort((a, b) => b.count - a.count);
-}
-
 // NEW: Calculate account-specific totals for account-filtered entries
 export async function calculateAccountFilteredTotals(
   entryIds: number[],
@@ -205,33 +114,6 @@ export function formatTotals(currencyTotals: CurrencyTotal[]): string {
   });
 
   return `\n\n**Totals by Currency:**\n${lines.join("\n")}`;
-}
-
-// NEW: Format tagged item totals with item breakdown
-export function formatTaggedItemTotals(
-  currencyTotals: CurrencyTotal[],
-  tagNames: string[]
-): string {
-  if (currencyTotals.length === 0) return "";
-
-  const tagList = tagNames.join(", ");
-
-  if (currencyTotals.length === 1) {
-    const total = currencyTotals[0];
-    return `\n\n**Total spent on ${tagList}:** ${formatCurrencyWithSymbol(
-      total.amount,
-      total.currency
-    )} (${total.count} items)`;
-  }
-
-  // Multiple currencies - show breakdown
-  const lines = currencyTotals.map((total) => {
-    return `  - ${formatCurrencyWithSymbol(total.amount, total.currency)} ${
-      total.currency
-    } (${total.count} items)`;
-  });
-
-  return `\n\n**Total spent on ${tagList} by Currency:**\n${lines.join("\n")}`;
 }
 
 // NEW: Format account-filtered totals
