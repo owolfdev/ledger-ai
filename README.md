@@ -1,6 +1,6 @@
 # 📟 Ledger App — Terminal Command System
 
-**Technical Reference — August 2025**
+**Technical Reference — Updated August 2025**
 
 ---
 
@@ -9,20 +9,42 @@
 The Ledger App is a **React-based smart terminal** for quickly creating, managing, and editing financial ledger entries.
 It combines **structured parsing**, **AI-assisted inference**, **Supabase-backed persistence**, and **comprehensive entry management** with optional **Ledger CLI integration** for development workflows.
 
+### **🎯 Recent Improvements (August 2025)**
+
+**Command Syntax Standardization:**
+
+- ✅ **Eliminated mixed syntax** - No more `@` vendor symbols or `business:` prefixes
+- ✅ **Consistent flag system** - All commands now use standard `--flag` syntax
+- ✅ **Short flag support** - Added `-b`, `-v`, `-D`, `-m`, `-d`, `-t`, `-p` abbreviations
+- ✅ **Improved UX** - Commands are now intuitive and follow CLI best practices
+- ✅ **Better consistency** - Unified syntax across all commands and aliases
+
+**Examples of improvements:**
+
+```bash
+# OLD (confusing mixed syntax)
+new MyBrick: supplies 500 @ HomeDepot
+edit-entry 323 --business MyBrick
+
+# NEW (consistent flag-based syntax)
+new -i supplies 500 --vendor HomeDepot --business MyBrick
+edit-entry 323 -b MyBrick
+```
+
 ---
 
 ## **2. Core Features**
 
 - **Smart Command Parser**
 
-  - Supports structured JSON, natural "manual" commands (`new coffee $5 Starbucks, credit card`), **and OCR-assisted entry with review workflow**
+  - Supports structured JSON, natural "manual" commands (`new coffee $5 --vendor Starbucks --payment credit-card`), **and OCR-assisted entry with review workflow**
   - Automatic detection of:
     - Date (absolute or relative: `2025-08-10`, `yesterday`)
     - Items & prices (with optional category overrides)
     - Payment account mapping (`credit card` → `Liabilities:CreditCard`)
-    - Memo extraction (`memo "Lunch meeting"`)
+    - Memo extraction (`--memo "Lunch meeting"`)
     - Currency detection (`$` → `USD`, `฿` → `THB`)
-    - Business context (`MyBrick: supplies $50` or `--business Personal`)
+    - Business context (`--business MyBrick` or `--business Personal`)
   - Extensible regex mapping for expense categories
 
 - **Entry Management System**
@@ -76,7 +98,7 @@ The Ledger App provides three ways to create entries, all converging on the same
 ### **Method 1: Manual Terminal Entry**
 
 ```
-User types: "new coffee $5 @ Starbucks"
+User types: "new coffee $5 --vendor Starbucks"
     ↓
 new command handler processes input
     ↓
@@ -92,7 +114,7 @@ User uploads receipt image
     ↓
 OCR processing extracts data
     ↓
-AI builds equivalent command: "new coffee $5 @ Starbucks"
+AI builds equivalent command: "new coffee $5 --vendor Starbucks"
     ↓
 Command populates terminal input for user review/editing
     ↓
@@ -140,14 +162,14 @@ The system supports multiple payment methods with automatic account mapping:
 
 ```bash
 # Use default (Kasikorn Bank)
-new coffee ฿1500 @ EmQuartier
+new coffee ฿1500 --vendor EmQuartier
 
 # Explicitly specify payment method
-new coffee ฿1500 @ EmQuartier --payment kasikorn
-new coffee ฿1500 @ EmQuartier --payment cash
-new coffee ฿1500 @ EmQuartier --payment credit card
-new coffee ฿1500 @ EmQuartier --payment bkk bank
-new coffee ฿1500 @ EmQuartier --payment "channel 60"
+new coffee ฿1500 --vendor EmQuartier --payment kasikorn
+new coffee ฿1500 --vendor EmQuartier --payment cash
+new coffee ฿1500 --vendor EmQuartier --payment credit card
+new coffee ฿1500 --vendor EmQuartier --payment bkk bank
+new coffee ฿1500 --vendor EmQuartier --payment "channel 60"
 ```
 
 **✨ Smart Flag Parsing:** Multi-word payment methods like `bkk bank` and `credit card` work without quotes! The system automatically groups words until it finds the next flag.
@@ -161,7 +183,7 @@ new coffee ฿1500 @ EmQuartier --payment "channel 60"
 User types:
 
 ```bash
-new coffee $4, pastry $5 @ Starbucks --payment "credit card" --memo "pumpkin latte not good" --date yesterday
+new coffee $4, pastry $5 --vendor Starbucks --payment "credit card" --memo "pumpkin latte not good" --date yesterday
 ```
 
 **Step-by-step processing:**
@@ -170,7 +192,7 @@ new coffee $4, pastry $5 @ Starbucks --payment "credit card" --memo "pumpkin lat
 
    - Detects date (`yesterday`)
    - Extracts items: `coffee $4`, `pastry $5`
-   - Detects vendor (`@ Starbucks`)
+   - Detects vendor (`--vendor Starbucks`)
    - Maps payment method to `Liabilities:CreditCard`
    - Extracts memo and business context
    - Detects currency (`USD`)
@@ -213,7 +235,7 @@ new coffee $4, pastry $5 @ Starbucks --payment "credit card" --memo "pumpkin lat
 User uploads Starbucks receipt image:
 
 1. **OCR Processing** → Extracts text from image using Tesseract.js with multiple optimization strategies
-2. **AI Command Generation** → Creates: `new coffee $5.67, pastry $3.25 @ Starbucks --date 2025-08-17`
+2. **AI Command Generation** → Creates: `new coffee $5.67, pastry $3.25 --vendor Starbucks --date 2025-08-17`
 3. **Terminal Input Population** → Command appears in terminal input field for user review
 4. **User Review & Edit** → User adds: `--business Channel60 --memo "client meeting"`
 5. **Same Processing Pipeline** → Identical to manual entry from this point forward
@@ -247,7 +269,7 @@ User uploads Starbucks receipt image:
 | `/components/terminal/terminal.tsx`                | Core terminal interface with input handling and command execution                                 |
 | `/components/terminal/smart-terminal.tsx`          | Context-aware terminal wrapper with command registry and user management                          |
 | `/commands/smart/handle-command.ts`                | Command routing and execution with AI fallback                                                    |
-| `/commands/smart/registry.ts`                      | Complete command registry with usage documentation                                                |
+| `/commands/smart/registry.ts`                      | Complete command registry with usage documentation and examples                                   |
 | **Ledger CLI Integration**                         |
 | `/commands/smart/ledger-cli-command.ts`            | Client-side Ledger CLI command interface                                                          |
 | `/app/api/ledger-cli/route.ts`                     | Server-side Ledger CLI execution with security controls                                           |
@@ -269,6 +291,7 @@ User uploads Starbucks receipt image:
 - **Real-time validation** ensuring transactions remain balanced
 - **Auto-balance button** to automatically balance the last posting
 - **Account suggestions** with business-aware examples
+- **Enhanced UX** with clear loading states and professional toast notifications
 
 ### **Image Management**
 
@@ -291,7 +314,7 @@ User uploads Starbucks receipt image:
 **Supported Business Operations:**
 
 - `new coffee $6` → Personal business (default)
-- `new MyBrick: supplies $50` → MyBrick business (prefix syntax)
+- `new supplies $50 --business MyBrick` → MyBrick business (flag syntax)
 - `new coffee $6 --business Channel60` → Channel60 business (flag syntax)
 
 **Important Account Naming Rule:**
@@ -327,6 +350,82 @@ User uploads Starbucks receipt image:
 - Context-aware responses based on page content
 - Rate limiting and usage tracking
 
+### **Command Syntax & Usage**
+
+**NEW Command - Create Ledger Entries**
+
+```bash
+# Basic syntax
+new -i <item1> <price1> <item2> <price2>... [--options]
+
+# Examples
+new -i coffee 150                        # Simple expense (Personal business)
+new -i supplies 500 --business MyBrick   # Business context with flag
+new -i coffee 150 --vendor Starbucks     # With vendor using flag
+new -i coffee $6 pastry $4 --vendor Starbucks --memo "team meeting"  # Multiple items with vendor and memo
+new -i "coffee mug" 200 croissant 150   # Multi-word items with quotes
+
+# Available flags
+--items <item1> <price1> <item2> <price2>... / -i <item1> <price1> <item2> <price2>...  # Items and prices (required)
+--business <name> / -b <name>            # Set business context
+--vendor <name> / -v <name>              # Set vendor/merchant name
+--payment <method> / -p <method>         # Payment method (cash, credit card, etc.)
+--memo <text> / -m <text>                # Add memo/note
+--date <date> / -d <date>                # Set transaction date
+--image <url> / -i <url>                 # Attach image URL
+--use-ai / -u                            # Force AI categorization (default)
+--no-ai / -n                             # Disable AI, use rule-based mapping
+```
+
+**ENTRIES Command - List & Filter Entries**
+
+```bash
+# Basic syntax
+entries [options]
+
+# Examples
+entries today                              # Today's entries
+entries -v coffee -s -m august            # Coffee expenses with totals for current month
+entries -b Personal -s -m july            # Business filter with totals for specific month
+entries -c USD -l 20                      # Currency filter with limit
+entries -t coffee                          # Filter by coffee tag
+
+# Available flags
+--business <name> / -b <name>             # Filter by business account
+--vendor <name> / -v <name>               # Filter by vendor/description
+--account <pattern> / -A <pattern>        # Filter by account name
+--currency <code> / -c <code>             # Filter by currency (USD, THB, EUR)
+--tags <tags> / -t <tags>                 # Filter by tags
+--sum / -s                                # Show totals
+--limit <number> / -l <number>            # Limit results
+--month <month> / -m <month>              # Filter by month (january, august, etc.)
+```
+
+**EDIT-ENTRY Command - Modify Existing Entries**
+
+```bash
+# Basic syntax
+edit-entry <id> [--options]
+
+# Examples
+edit-entry 323 --business MyBrick         # Change business context
+edit-entry 330 --vendor "Starbucks"       # Update vendor name
+edit-entry 325 --date yesterday           # Fix transaction date
+edit-entry 340 --memo "client meeting"    # Add memo to entry
+edit-entry 340 --tags coffee,personal     # Set entry-level tags
+edit-entry 340 --posting 123 --tags food,groceries  # Set posting-level tags
+edit-entry 340 --delete                   # Delete the entry
+
+# Available flags
+--business <name> / -b <name>             # Change business context
+--vendor <name> / -v <name>               # Update vendor/description
+--date <date> / -D <date>                 # Change transaction date
+--memo <text> / -m <text>                 # Add or update memo
+--delete / -d                              # Delete the entry
+--tags <tags> / -t <tags>                 # Set entry-level tags
+--posting <id> / -p <id>                  # Specify posting ID for posting-level operations
+```
+
 ---
 
 ## **10. Modern Next.js Integration**
@@ -337,6 +436,7 @@ User uploads Starbucks receipt image:
 - **Error handling** with user-friendly feedback
 - **Image processing** with Sharp for optimal receipt storage
 - **Client-server separation** for Ledger CLI commands via API routes
+- **Toast notifications** with shadcn/ui for better user feedback
 
 ---
 
@@ -349,6 +449,9 @@ User uploads Starbucks receipt image:
 - **Server actions** provide type-safe, modern data operations
 - **OCR review workflow** enables speed of automation with precision of manual review
 - **Single processing pipeline** ensures consistency across all input methods
+- **Enhanced editing UX** with clear loading states and success feedback
+- **Professional toast system** for all user operations (save, delete, edit)
+- **Consistent command syntax** follows CLI standards for better usability
 
 ---
 
@@ -362,6 +465,8 @@ User uploads Starbucks receipt image:
 - **Image Processing**: Enhance Sharp pipeline in `/app/api/receipt-image/route.ts`
 - **Terminal Commands**: Add new commands to `/commands/smart/registry.ts` and appropriate command sets
 - **OCR Improvements**: Enhance Tesseract.js configurations in `terminal-image-upload.tsx`
+- **Command Syntax**: Follow the established `--flag` pattern for consistency
+- **Flag Abbreviations**: Add short forms (`-b`, `-v`, etc.) for all new flags
 
 ---
 
@@ -384,7 +489,7 @@ User uploads Starbucks receipt image:
 
 ```bash
 # Test manual entry
-new coffee $5 @ Starbucks --business Personal --memo "morning fuel"
+new -i coffee $5 --vendor Starbucks --business Personal --memo "morning fuel"
 
 # Test OCR workflow
 # Upload receipt image → review generated command → execute

@@ -61,9 +61,9 @@ function generateMappingRules(tags: TagInfo[]): DynamicMappingRule[] {
   // Generate rules for each category
   for (const [category, categoryTags] of tagsByCategory) {
     for (const tag of categoryTags) {
-      // Create pattern for the tag name
+      // Create pattern for the tag name - use exact match to avoid overriding specific categorization
       const pattern = new RegExp(
-        `\\b(${tag.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})\\b`,
+        `^(${tag.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})$`,
         "i"
       );
 

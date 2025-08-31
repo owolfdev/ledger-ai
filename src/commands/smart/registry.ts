@@ -193,8 +193,24 @@ export const commandRegistry: Record<string, CommandMeta> = {
     • \`--business <name>\` / \`-b <name>\`     — Filter by business account
     • \`--vendor <name>\` / \`-v <name>\`       — Filter by vendor/description
     • \`--account <pattern>\` / \`-A <pattern>\` — Filter by account name
-    • \`--currency <code>\` / \`-c <code>\`     — Filter by currency (USD, THB, EUR)`,
-    // ... rest of your existing usage stays the same
+    • \`--currency <code>\` / \`-c <code>\`     — Filter by currency (USD, THB, EUR)
+    
+    **Date & Display:**
+    • \`--date <date>\` / \`-d <date>\`         — Filter by specific date or alias (today, yesterday, august)
+    • \`--month <month>\` / \`-m <month>\`      — Filter by month (january, february, etc.)
+    • \`--limit <number>\` / \`-l <number>\`    — Limit number of results
+    • \`--summary\` / \`-s\`                    — Show totals and summaries
+    • \`--tags <tag1,tag2>\` / \`-t <tag1,tag2>\` — Filter by tags
+    
+    **Navigation:**
+    • \`--goto <id>\` / \`-g <id>\`             — Navigate to specific entry
+    
+    **🚀 Smart Examples:**
+    • \`entries today\`                         — Today's entries
+    • \`entries -v Starbucks -s\`               — Starbucks expenses with totals
+    • \`entries -b Personal -m august -s\`      — Personal business expenses for August with totals
+    • \`entries -t coffee -c USD\`              — Coffee expenses in USD
+    • \`entries -A Food -l 10\`                 — Food account entries, limit 10`,
   },
 
   ent: {
@@ -215,6 +231,23 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`--vendor <name>\` / \`-v <name>\`       — Filter by vendor/description
   • \`--account <pattern>\` / \`-A <pattern>\` — Filter by account name
   • \`--currency <code>\` / \`-c <code>\`     — Filter by currency (USD, THB, EUR)
+  
+  **Date & Display:**
+  • \`--date <date>\` / \`-d <date>\`         — Filter by specific date or alias (today, yesterday, august)
+  • \`--month <month>\` / \`-m <month>\`      — Filter by month (january, february, etc.)
+  • \`--limit <number>\` / \`-l <number>\`    — Limit number of results
+  • \`--summary\` / \`-s\`                    — Show totals and summaries
+  • \`--tags <tag1,tag2>\` / \`-t <tag1,tag2>\` — Filter by tags
+  
+  **Navigation:**
+  • \`--goto <id>\` / \`-g <id>\`             — Navigate to specific entry
+  
+  **🚀 Smart Examples:**
+  • \`ent today\`                              — Today's entries
+  • \`ent -v Starbucks -s\`                    — Starbucks expenses with totals
+  • \`ent -b Personal -m august -s\`           — Personal business expenses for August with totals
+  • \`ent -t coffee -c USD\`                   — Coffee expenses in USD
+  • \`ent -A Food -l 10\`                      — Food account entries, limit 10
   
   **Date Filtering:**
   • \`--month <YYYY-MM|name>\` / \`-m <YYYY-MM|name>\` — Filter by month
@@ -368,15 +401,15 @@ export const commandRegistry: Record<string, CommandMeta> = {
     usage: `edit-entry id --[options]
   
   **Basic Usage:**
-  • \`edit-entry 323 --business MyBrick\` — Change business context
-  • \`edit-entry 323 --vendor "Starbucks Coffee"\` — Update vendor name
-  • \`edit-entry 323 --date 2025-08-15\` — Change transaction date
-  • \`edit-entry 323 --memo "client meeting"\` — Add or update memo
-  • \`edit-entry 323 --delete\` or \`edit-entry 323 -d\` — Delete the entry
+  • \`edit-entry 323 --business MyBrick\` / \`edit-entry 323 -b MyBrick\` — Change business context
+  • \`edit-entry 323 --vendor "Starbucks Coffee"\` / \`edit-entry 323 -v "Starbucks"\` — Update vendor name
+  • \`edit-entry 323 --date 2025-08-15\` / \`edit-entry 323 -D 2025-08-15\` — Change transaction date
+  • \`edit-entry 323 --memo "client meeting"\` / \`edit-entry 323 -m "client meeting"\` — Add or update memo
+  • \`edit-entry 323 --delete\` / \`edit-entry 323 -d\` — Delete the entry
   
   **Tag Management:**
-  • \`edit-entry 323 --tags coffee,personal,breakfast\` — Set entry-level tags
-  • \`edit-entry 323 --posting 123 --tags food,groceries\` — Set posting-level tags
+  • \`edit-entry 323 --tags coffee,personal,breakfast\` / \`edit-entry 323 -t coffee,personal,breakfast\` — Set entry-level tags
+  • \`edit-entry 323 --posting 123 --tags food,groceries\` / \`edit-entry 323 -p 123 -t food,groceries\` — Set posting-level tags
   
   **Combined Operations:**
   • \`edit-entry 323 --vendor "Coffee Shop" --tags coffee,personal\` — Update vendor and tags`,
@@ -423,18 +456,18 @@ export const commandRegistry: Record<string, CommandMeta> = {
     usage: `ee id --[options]
   
   **Quick Examples:**
-  • \`ee 323 --business MyBrick\` — Change business
-  • \`ee 323 --vendor "Starbucks"\` — Update vendor
-  • \`ee 323 --date 2025-08-15\` — Change date
-  • \`ee 323 --memo "note"\` — Add memo
-  • \`ee 323 --delete\` or \`ee 323 -d\` — Delete the entry
+  • \`ee 323 --business MyBrick\` / \`ee 323 -b MyBrick\` — Change business
+  • \`ee 323 --vendor "Starbucks"\` / \`ee 323 -v "Starbucks"\` — Update vendor
+  • \`ee 323 --date 2025-08-15\` / \`ee 323 -D 2025-08-15\` — Change date
+  • \`ee 323 --memo "note"\` / \`ee 323 -m "note"\` — Add memo
+  • \`ee 323 --delete\` / \`ee 323 -d\` — Delete the entry
   
   **Multiple changes:**
   • \`ee 323 --business Personal --vendor "Coffee Shop" --memo "team meeting"\`
   
   **Tag Management:**
-  • \`ee 323 --tags coffee,personal,breakfast\` — Set entry-level tags
-  • \`ee 323 --posting 123 --tags food,groceries\` — Set posting-level tags
+  • \`ee 323 --tags coffee,personal,breakfast\` / \`ee 323 -t coffee,personal,breakfast\` — Set entry-level tags
+  • \`ee 323 --posting 123 --tags food,groceries\` / \`ee 323 -p 123 -t food,groceries\` — Set posting-level tags
   
   See \`help edit-entry\` for full documentation.`,
   },
@@ -818,7 +851,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   new: {
     content: "__LEDGER_NEW_ENTRY__",
     description:
-      "Create a new double-entry ledger transaction from natural language. Uses intuitive @ syntax for vendors and --flags for options. Automatically categorizes expenses and supports multiple businesses with AI-powered categorization.",
+      "Create a new double-entry ledger transaction from natural language or receipt images. Uses unified flag-based syntax with -i for items and --flags for options. Both manual entry and automated OCR parsing use the same syntax for consistency. Automatically categorizes expenses and supports multiple businesses with AI-powered categorization.",
 
     // NEW: Natural language support
     intent: "action",
@@ -840,39 +873,58 @@ export const commandRegistry: Record<string, CommandMeta> = {
     examples: [
       {
         input: "I just bought coffee for 150 baht",
-        output: "new coffee 150",
+        output: "new -i coffee 150",
         description: "Simple expense entry",
       },
       {
         input: "I spent $20 at Starbucks for coffee",
-        output: "new coffee 20 @ Starbucks",
+        output: "new -i coffee 20 --vendor Starbucks",
         description: "Expense with vendor",
       },
       {
+        input: "Upload receipt from Starbucks",
+        output:
+          "new -i coffee 20 --vendor Starbucks --memo 'Receipt total $20'",
+        description: "Automated receipt parsing (same syntax)",
+      },
+      {
         input: "MyBrick: office supplies for $100",
-        output: "new MyBrick: supplies 100",
-        description: "Business expense with prefix syntax",
+        output: "new -i supplies 100 --business MyBrick",
+        description: "Business expense with flag syntax",
       },
       {
         input: "I had lunch yesterday for 200 baht",
-        output: "new lunch 200 -d yesterday",
+        output: "new -i lunch 200 --date yesterday",
         description: "Expense with date",
       },
       {
         input: "Bought gas $50 with credit card",
-        output: 'new gas 50 -p "credit card"',
+        output: 'new -i gas 50 --payment "credit card"',
         description: "Expense with payment method",
+      },
+      {
+        input: "I bought a coffee mug for 200 baht",
+        output: 'new -i "coffee mug" 200',
+        description: "Multi-word item with quotes",
+      },
+      {
+        input: "Office supplies and coffee for the team",
+        output:
+          'new -i supplies 500 coffee 150 --business MyBrick --memo "team meeting"',
+        description: "Multiple items with business context and memo",
       },
     ],
     categories: ["expense", "finance", "accounting"],
     aliases: ["expense", "spend", "buy", "purchase"],
 
-    usage: `new [business:]<items> [@ vendor] [--options]
+    usage: `new -i <item1> <price1> <item2> <price2>... [--options]
     
     **📋 Quick Reference - All Available Flags:**
     
     **Core Options:**
+    • \`--items <item1> <price1> <item2> <price2>...\` / \`-i <item1> <price1> <item2> <price2>...\` — Items and prices (required)
     • \`--business <name>\` / \`-b <name>\`     — Set business context
+    • \`--vendor <name>\` / \`-v <name>\`        — Set vendor/merchant name
     • \`--payment <method>\` / \`-p <method>\`   — Payment method (cash, credit card, etc.)
     • \`--memo <text>\` / \`-m <text>\`          — Add memo/note
     • \`--date <date>\` / \`-d <date>\`          — Set transaction date
@@ -882,11 +934,12 @@ export const commandRegistry: Record<string, CommandMeta> = {
     • \`--use-ai\` / \`-u\`                      — Force AI categorization (default)
     • \`--no-ai\` / \`-n\`                       — Disable AI, use rule-based mapping
     
-    **🚀 Smart Syntax (No Flags Needed):**
-    • \`new coffee 150\`                         — Simple expense (Personal business)
-    • \`new MyBrick: supplies 500\`              — Business prefix syntax
-    • \`new coffee 150 @ Starbucks\`             — With vendor using @ syntax
-    • \`new coffee $6, pastry $4 @ Starbucks\`  — Multiple items with vendor`,
+    **🚀 Smart Syntax Examples:**
+    • \`new -i coffee 150\`                      — Simple expense (Personal business)
+    • \`new -i supplies 500 --business MyBrick\` — Business context with flag
+    • \`new -i coffee 150 --vendor Starbucks\`   — With vendor using flag
+    • \`new -i coffee $6 pastry $4 --vendor Starbucks\`  — Multiple items with vendor
+    • \`new -i "coffee mug" 200 croissant 150\` — Multi-word items with quotes`,
   },
 
   // --- Account Management ---

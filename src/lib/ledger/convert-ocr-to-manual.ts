@@ -150,17 +150,17 @@ export function convertOcrToManualCommand(
     return "new"; // Return basic command if no items found
   }
 
-  // 👈 UPDATED: Build the items part with proper currency formatting
+  // 👈 UPDATED: Build the items part with new -i flag syntax
   const itemsText = cleanItems
     .map((item) => `${item.description.toLowerCase()} ${item.price.toFixed(2)}`)
-    .join(", ");
+    .join(" ");
 
-  // Start building the command
-  let command = `new ${itemsText}`;
+  // Start building the command with new syntax
+  let command = `new -i ${itemsText}`;
 
-  // Add vendor if available
+  // Add vendor if available (new --vendor syntax)
   if (vendor && vendor.trim()) {
-    command += ` @ ${vendor.trim()}`;
+    command += ` --vendor ${vendor.trim()}`;
   }
 
   // Add date if available and different from today
@@ -229,9 +229,9 @@ export function testConverter() {
   // console.log("\nConverted to manual command:");
   // console.log(result);
 
-  // 👈 UPDATED: Expected output with Thai Baht
+  // 👈 UPDATED: Expected output with new flag-based syntax
   // Expected output for Thai receipt:
-  // new all purpose flour 1.98฿, breakfast 0.98฿, baking soda 0.50฿, lentils 0.98฿, canola oil 1.28฿, dozen 1.18฿ @ Walmart --date 2012-05-07 --memo "total 6.90฿" --image "https://example.supabase.co/storage/v1/object/public/receipts/user123/2025/08/15/receipt.jpg"
+  // new -i all purpose flour 1.98฿ breakfast 0.98฿ baking soda 0.50฿ lentils 0.98฿ canola oil 1.28฿ dozen 1.18฿ --vendor Walmart --date 2012-05-07 --memo "total 6.90฿" --image "https://example.supabase.co/storage/v1/object/public/receipts/user123/2025/08/15/receipt.jpg"
 
   return result;
 }

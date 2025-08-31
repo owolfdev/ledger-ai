@@ -91,13 +91,19 @@ function parseArgs(raw?: string): EditEntryArgs | null {
   for (let i = 1; i < filteredParts.length; i++) {
     const flag = filteredParts[i].toLowerCase();
 
-    if (flag === "--business" && i + 1 < filteredParts.length) {
+    if (
+      (flag === "--business" || flag === "-b") &&
+      i + 1 < filteredParts.length
+    ) {
       business = filteredParts[i + 1];
       i++;
       continue;
     }
     if (
-      (flag === "--vendor" || flag === "--description") &&
+      (flag === "--vendor" ||
+        flag === "-v" ||
+        flag === "--description" ||
+        flag === "-d") &&
       i + 1 < filteredParts.length
     ) {
       vendor = filteredParts[i + 1];
@@ -105,12 +111,12 @@ function parseArgs(raw?: string): EditEntryArgs | null {
       i++;
       continue;
     }
-    if (flag === "--date" && i + 1 < filteredParts.length) {
+    if ((flag === "--date" || flag === "-D") && i + 1 < filteredParts.length) {
       date = filteredParts[i + 1];
       i++;
       continue;
     }
-    if (flag === "--memo" && i + 1 < filteredParts.length) {
+    if ((flag === "--memo" || flag === "-m") && i + 1 < filteredParts.length) {
       memo = filteredParts[i + 1];
       i++;
       continue;
@@ -122,13 +128,16 @@ function parseArgs(raw?: string): EditEntryArgs | null {
       continue;
     }
     // NEW: Tags parsing
-    if (flag === "--tags" && i + 1 < filteredParts.length) {
+    if ((flag === "--tags" || flag === "-t") && i + 1 < filteredParts.length) {
       tags = filteredParts[i + 1].split(",").map((tag) => tag.trim());
       i++;
       continue;
     }
     // NEW: Posting ID parsing
-    if (flag === "--posting" && i + 1 < filteredParts.length) {
+    if (
+      (flag === "--posting" || flag === "-p") &&
+      i + 1 < filteredParts.length
+    ) {
       posting = filteredParts[i + 1];
       i++;
       continue;

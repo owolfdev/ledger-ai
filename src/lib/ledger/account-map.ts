@@ -165,10 +165,6 @@ const DESC_CATEGORY_RULES: Array<{ pattern: RegExp; category: string }> = [
     category: "Food:Beverages:CoconutWater",
   },
   {
-    pattern: /(coffee|latte|espresso|americano|cappuccino)/i,
-    category: "Food:Coffee",
-  },
-  {
     pattern: /(tea|matcha|oolong|earl\s*grey|green\s*tea)/i,
     category: "Food:Tea",
   },
@@ -432,6 +428,16 @@ const DESC_CATEGORY_RULES: Array<{ pattern: RegExp; category: string }> = [
     pattern: /(groceries|grocery)/i,
     category: "Food:Groceries",
   },
+  // Household & Kitchenware (moved up for better precedence)
+  {
+    pattern: /(mug|cup|glass|plate|bowl|utensil|fork|spoon|knife)/i,
+    category: "Household:Kitchenware",
+  },
+  // Coffee (moved down and made more specific to avoid "coffee mug")
+  {
+    pattern: /^(coffee|latte|espresso|americano|cappuccino)$/i,
+    category: "Food:Coffee",
+  },
 
   // Transportation (NEW - enhanced)
   {
@@ -503,7 +509,7 @@ const DESC_CATEGORY_RULES: Array<{ pattern: RegExp; category: string }> = [
     category: "Supplies:General",
   },
   {
-    pattern: /(napkin|paper|cup|bag|packaging)/i,
+    pattern: /(napkin|paper|bag|packaging|disposable)/i,
     category: "Supplies:Packaging",
   },
   {
@@ -511,7 +517,6 @@ const DESC_CATEGORY_RULES: Array<{ pattern: RegExp; category: string }> = [
     category: "Marketing:Advertising",
   },
 
-  // Household
   {
     pattern: /(towel|linen|sheet|blanket|pillow)/i,
     category: "Household:HomeGoods",
@@ -601,7 +606,9 @@ function findVendorCategory(vendor?: string): string | undefined {
 
 function findDescriptionCategory(desc: string): string | undefined {
   for (const r of DESC_CATEGORY_RULES) {
-    if (r.pattern.test(desc)) return r.category;
+    if (r.pattern.test(desc)) {
+      return r.category;
+    }
   }
   return undefined;
 }
@@ -613,16 +620,16 @@ export function mapAccount(
   const desc = description.toLowerCase().trim();
   const business = opts.business || "Personal";
 
-  // Prefer vendor-based mapping if strong signal
-  const vendorCategory = findVendorCategory(opts.vendor);
-  if (vendorCategory) {
-    return buildAccountFromCategory(vendorCategory, business);
-  }
-
-  // Description-based mapping
+  // Description-based mapping (PRIORITY 1)
   const descCategory = findDescriptionCategory(desc);
   if (descCategory) {
     return buildAccountFromCategory(descCategory, business);
+  }
+
+  // Vendor-based mapping (PRIORITY 2 - fallback only)
+  const vendorCategory = findVendorCategory(opts.vendor);
+  if (vendorCategory) {
+    return buildAccountFromCategory(vendorCategory, business);
   }
 
   // Fallback to Misc

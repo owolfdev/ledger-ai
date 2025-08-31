@@ -181,13 +181,8 @@ export function createOpenAiReceiptParser(apiKey: string): AiReceiptParser {
 
       const systemPrompt = `You are an expert receipt parser for Thai and international receipts. Convert raw OCR text into clean ledger commands.
 
-TASK: Create a "new" command using this EXACT multi-line syntax:
-new
-item1 price1,
-item2 price2
-@ vendor
---date YYYY-MM-DD
---memo "total amount"
+TASK: Create a "new" command using this EXACT flag-based syntax:
+new -i item1 price1 item2 price2 --vendor vendor --date YYYY-MM-DD --memo "total amount"
 
 CRITICAL RULES:
 1. Use ${currency} for ALL prices consistently
@@ -198,50 +193,31 @@ CRITICAL RULES:
 6. Date format: YYYY-MM-DD only
 7. INCLUDE TAX as a separate line item if present
 8. Calculate subtotal from items, show in memo if different from total
-9. FORMAT AS MULTI-LINE for readability
+9. Use -i flag for items, --vendor for vendor, --date for date, --memo for memo
 
 TAX HANDLING:
 - If receipt shows tax/VAT, add it as: "tax [amount]"
 - If service charge exists, add it as: "service charge [amount]"  
 - Memo should show subtotal if tax was added separately
 
-MULTI-LINE FORMAT EXAMPLES:
+FLAG-BASED FORMAT EXAMPLES:
 
 Thai Restaurant with VAT:
-new
-tom yum kung 265,
-pad thai 180,
-thai iced tea 80,
-tax 36.75
-@ Nara Restaurant
---date 2002-01-11
---memo "subtotal 525, total 561.75"
+new -i "tom yum kung" 265 "pad thai" 180 "thai iced tea" 80 tax 36.75 --vendor "Nara Restaurant" --date 2002-01-11 --memo "subtotal 525, total 561.75"
 
 Grocery Store with Tax:
-new
-beef sirloin 60.00,
-duck leg 52.00,
-gouda cheese 167.00,
-tax 22.11
-@ FoodLand
---date 2016-09-08
---memo "subtotal 279.00, total 301.11"
+new -i "beef sirloin" 60.00 "duck leg" 52.00 "gouda cheese" 167.00 tax 22.11 --vendor FoodLand --date 2016-09-08 --memo "subtotal 279.00, total 301.11"
 
 Restaurant with Service Charge:
-new
-green curry 180,
-rice 60,
-service charge 24,
-tax 18.48
-@ Thai Restaurant
---memo "subtotal 240, total 282.48"
+new -i "green curry" 180 rice 60 "service charge" 24 tax 18.48 --vendor "Thai Restaurant" --memo "subtotal 240, total 282.48"
 
-FORMATTING RULES:
-- Start with "new" on its own line
-- Each item on its own line with comma (except last item)
-- Vendor line starts with "@ "
-- Each flag on its own line starting with "--"
-- Maintain proper indentation for readability
+FLAG SYNTAX RULES:
+- Use -i flag for all items and prices
+- Use --vendor for vendor name
+- Use --date for transaction date
+- Use --memo for notes and totals
+- Quote multi-word items: "coffee mug" 200
+- Quote vendor names with spaces: --vendor "Starbucks Coffee"
 
 THAI RECEIPT GUIDANCE:
 - Common Thai dishes: tom yum, pad thai, som tam, massaman, etc.
@@ -255,9 +231,9 @@ VALIDATION:
 - Use reasonable prices (not 0.01 or 50000)
 - Avoid identical item names unless actually repeated
 
-IMPORTANT: Return ONLY the raw multi-line command text. Do NOT wrap it in code blocks, backticks, or any markdown formatting. Do NOT repeat the word "new" twice.
+IMPORTANT: Return ONLY the raw command text. Do NOT wrap it in code blocks, backticks, or any markdown formatting. Do NOT repeat the word "new" twice.
 
-Return ONLY the multi-line command, no explanation.`;
+Return ONLY the command, no explanation.`;
 
       const userPrompt = `Convert this receipt OCR text to a command (use ${currency} currency):
 
@@ -428,7 +404,7 @@ export function createFallbackParser(): AiReceiptParser {
       }
 
       if (items.length === 0) {
-        return `new\nitem 0\n@ Unknown\n--memo "OCR parsing failed"`;
+        return `new -i item 0 --vendor Unknown --memo "OCR parsing failed"`;
       }
 
       // Build multi-line command
@@ -445,7 +421,7 @@ export function createFallbackParser(): AiReceiptParser {
 
       // Add vendor
       if (vendor) {
-        commandParts.push(`@ ${vendor}`);
+        commandParts.push(`--vendor ${vendor}`);
       }
 
       // Add date flag
