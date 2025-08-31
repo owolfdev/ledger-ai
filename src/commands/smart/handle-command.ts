@@ -274,6 +274,8 @@ FLAG SYNTAX RULES:
 - Quote multi-word values: "--vendor \"Starbucks Coffee\""
 - Quote multi-word items: "new -i \"coffee mug\" 200"
 
+FORMATTING: When providing code examples or commands, always add a blank line after the command for better readability.
+
 Here is the page context:
 ${pageContext || ""}
 
