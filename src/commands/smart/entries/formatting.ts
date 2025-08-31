@@ -135,5 +135,5 @@ export function createEntryListHeader(
   filterDescription: string = "",
   sortInfo: { sort: string; dir: string; limit: number }
 ): string {
-  return `Showing **${count}** entries (sort: ${sortInfo.sort} ${sortInfo.dir}, limit: ${sortInfo.limit}${filterDescription})`;
+  return `Found **${count}** entries (sort: ${sortInfo.sort} ${sortInfo.dir}, limit: ${sortInfo.limit}${filterDescription})`;
 }

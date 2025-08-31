@@ -51,6 +51,9 @@ export class QueryBuilder {
       query = query.eq("user_id", user.id);
     }
 
+    // Filter out deleted entries
+    query = query.eq("is_deleted", false);
+
     // Business filter - Allow partial matching for better UX
     if (args.business) {
       query = query.ilike("entry_text", `%Expenses:%${args.business}%`);
@@ -100,7 +103,7 @@ export class QueryBuilder {
   buildCountQuery(args: EntriesArgs, user: User | null) {
     let query = this.supabase
       .from("ledger_entries")
-      .select("*", { count: "exact", head: true });
+      .select("id", { count: "exact", head: true });
 
     // Apply all filters
     query = this.applyCommonFilters(query, args, user);

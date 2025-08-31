@@ -184,6 +184,10 @@ export async function entriesListCommand(
     // Use data as is
     let filteredData = data;
 
+    // Get total count of matching entries (without limit) for accurate header
+    const countQuery = queryBuilder.buildCountQuery(args, user ?? null);
+    const { count: totalCount } = await countQuery;
+
     // Build filter description
     const filterDesc =
       (args.business ? ` for ${args.business}` : "") +
@@ -191,12 +195,16 @@ export async function entriesListCommand(
       (args.account ? ` with account "${args.account}"` : "") +
       (args.currency ? ` in ${args.currency}` : "");
 
-    // Create header
-    const header = createEntryListHeader(filteredData.length, filterDesc, {
-      sort: args.sort,
-      dir: args.dir,
-      limit: args.limit,
-    });
+    // Create header with total count
+    const header = createEntryListHeader(
+      totalCount || filteredData.length,
+      filterDesc,
+      {
+        sort: args.sort,
+        dir: args.dir,
+        limit: args.limit,
+      }
+    );
 
     // Format entries with proper component separation
     const formattedEntries = filteredData.map((entry) =>
