@@ -376,7 +376,6 @@ export function parseArgs(raw?: string): EntriesArgs {
     business,
     account,
     currency,
-    tags,
     go,
     range,
     entry,
