@@ -80,6 +80,12 @@ INSERT INTO account_patterns (pattern_type, pattern, account_path, account_type,
 ('exact', 'berry', 'Expenses:Food:Fruits', 'expense', NULL, 60, true),
 ('exact', 'jam', 'Expenses:Food:Pantry', 'expense', NULL, 65, true),
 ('exact', 'pastry', 'Expenses:Food:Bakery', 'expense', NULL, 70, true),
+('exact', 'croissant', 'Expenses:Food:Bakery', 'expense', NULL, 75, true),
+('exact', 'muffin', 'Expenses:Food:Bakery', 'expense', NULL, 70, true),
+('exact', 'donut', 'Expenses:Food:Bakery', 'expense', NULL, 70, true),
+('exact', 'cake', 'Expenses:Food:Bakery', 'expense', NULL, 70, true),
+('exact', 'bagel', 'Expenses:Food:Bakery', 'expense', NULL, 70, true),
+('exact', 'scone', 'Expenses:Food:Bakery', 'expense', NULL, 70, true),
 ('exact', 'butter', 'Expenses:Food:Dairy', 'expense', NULL, 70, true),
 ('exact', 'candy', 'Expenses:Food:Sweets', 'expense', NULL, 60, true),
 ('exact', 'fruit', 'Expenses:Food:Fruits', 'expense', NULL, 70, true),
@@ -361,6 +367,8 @@ INSERT INTO account_patterns (pattern_type, pattern, account_path, account_type,
 INSERT INTO account_patterns (pattern_type, pattern, account_path, account_type, business_context, priority, is_active) VALUES
 -- Coffee variations
 ('regex', '\\b(coffee|latte|cappuccino|espresso|americano)\\b', 'Expenses:Food:Coffee', 'expense', NULL, 85, true),
+-- Bakery variations (higher priority than coffee to avoid conflicts)
+('regex', '\\b(croissant|pastry|muffin|donut|cake|bagel|scone|bun|roll|bread)\\b', 'Expenses:Food:Bakery', 'expense', NULL, 90, true),
 -- Thai food variations
 ('regex', '\\b(pad\\s*thai|som\\s*tam|tom\\s*yum|green\\s*curry|red\\s*curry|massaman|panang)\\b', 'Expenses:Food:ThaiFood', 'expense', NULL, 80, true),
 -- Transportation variations
@@ -399,6 +407,11 @@ INSERT INTO account_patterns (pattern_type, pattern, account_path, account_type,
 ('exact', 'marketing', 'Expenses:Business:Marketing', 'expense', 'Channel60', 55, true),
 ('exact', 'advertising', 'Expenses:Business:Marketing', 'expense', 'Channel60', 55, true),
 ('exact', 'content', 'Expenses:Business:Content', 'expense', 'Channel60', 60, true),
-('exact', 'equipment', 'Expenses:Business:Equipment', 'expense', 'Channel60', 65, true);
+('exact', 'equipment', 'Expenses:Business:Equipment', 'expense', 'Channel60', 65, true),
+('exact', 'coffee', 'Expenses:Business:Meals', 'expense', 'Channel60', 70, true),
+('exact', 'croissant', 'Expenses:Business:Meals', 'expense', 'Channel60', 70, true),
+('exact', 'lunch', 'Expenses:Business:Meals', 'expense', 'Channel60', 75, true),
+('exact', 'dinner', 'Expenses:Business:Meals', 'expense', 'Channel60', 75, true),
+('exact', 'breakfast', 'Expenses:Business:Meals', 'expense', 'Channel60', 70, true);
 
 COMMIT;

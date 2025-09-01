@@ -16,7 +16,15 @@ async function testDatabaseMapping() {
   console.log("🧪 Testing database-driven account mapping...\n");
 
   const testCases = [
+    // Test the specific failing cases
     { description: "coffee", vendor: "Starbucks", business: "Personal" },
+    { description: "croissant", vendor: "Starbucks", business: "Personal" },
+    { description: "coffee", vendor: "Starbucks", business: "Channel60" },
+    { description: "croissant", vendor: "Starbucks", business: "Channel60" },
+    { description: "coffee", vendor: undefined, business: "Personal" },
+    { description: "croissant", vendor: undefined, business: "Personal" },
+
+    // Original test cases
     { description: "lunch", vendor: "McDonald's", business: "Personal" },
     {
       description: "office supplies",
@@ -41,7 +49,9 @@ async function testDatabaseMapping() {
 
   for (const testCase of testCases) {
     console.log(
-      `📝 Testing: "${testCase.description}" from ${testCase.vendor} (${testCase.business})`
+      `📝 Testing: "${testCase.description}" from ${
+        testCase.vendor || "no vendor"
+      } (${testCase.business})`
     );
 
     try {
@@ -75,7 +85,7 @@ async function testDatabaseMapping() {
   ];
 
   for (const description of typeTestCases) {
-    console.log(`📝 Testing type detection: "${description}"`);
+    console.log(`📝 Testing account type for: "${description}"`);
 
     try {
       const result = await hybridDatabaseMapper.detectAccountType(description);
@@ -87,8 +97,6 @@ async function testDatabaseMapping() {
       console.log("");
     }
   }
-
-  console.log("🎉 Database mapping test completed!");
 }
 
 if (require.main === module) {
