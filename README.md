@@ -56,10 +56,13 @@ edit-entry 323 -b MyBrick
   - **Image upload & management** for receipt storage
   - **Real-time validation** ensuring double-entry balance
 
-- **AI Fallback**
+- **AI Fallback System**
 
-  - If command parsing fails or input is ambiguous, the terminal sends the request to OpenAI
-  - AI generates canonical Ledger CLI entries, respecting account naming conventions
+  - **Two-tier AI processing**: Natural language processing (IntentDetector + CommandGenerator) for structured inputs, and general AI fallback for complex queries
+  - **Intent detection**: Recognizes noun phrases with amounts (`coffee starbucks 100`), expense patterns, and command keywords
+  - **Command generation**: AI generates canonical Ledger CLI entries using new flag-based syntax
+  - **Command population**: Generated commands automatically appear in terminal input field for easy execution
+  - **Brief feedback**: Clean one-line responses like `✓ Generated: \`new -i coffee 100 --vendor Starbucks\``
 
 - **Supabase Storage**
 
@@ -98,7 +101,7 @@ The Ledger App provides three ways to create entries, all converging on the same
 ### **Method 1: Manual Terminal Entry**
 
 ```
-User types: "new coffee $5 --vendor Starbucks"
+User types: "new -i coffee 5 --vendor Starbucks"
     ↓
 new command handler processes input
     ↓
@@ -114,7 +117,7 @@ User uploads receipt image
     ↓
 OCR processing extracts data
     ↓
-AI builds equivalent command: "new coffee $5 --vendor Starbucks"
+AI builds equivalent command: "new -i coffee 5 --vendor Starbucks"
     ↓
 Command populates terminal input for user review/editing
     ↓
@@ -183,7 +186,7 @@ new coffee ฿1500 --vendor EmQuartier --payment "channel 60"
 User types:
 
 ```bash
-new coffee $4, pastry $5 --vendor Starbucks --payment "credit card" --memo "pumpkin latte not good" --date yesterday
+new -i coffee 4 pastry 5 --vendor Starbucks --payment "credit card" --memo "pumpkin latte not good" --date yesterday
 ```
 
 **Step-by-step processing:**
@@ -235,7 +238,7 @@ new coffee $4, pastry $5 --vendor Starbucks --payment "credit card" --memo "pump
 User uploads Starbucks receipt image:
 
 1. **OCR Processing** → Extracts text from image using Tesseract.js with multiple optimization strategies
-2. **AI Command Generation** → Creates: `new coffee $5.67, pastry $3.25 --vendor Starbucks --date 2025-08-17`
+2. **AI Command Generation** → Creates: `new -i coffee 5.67 pastry 3.25 --vendor Starbucks --date 2025-08-17`
 3. **Terminal Input Population** → Command appears in terminal input field for user review
 4. **User Review & Edit** → User adds: `--business Channel60 --memo "client meeting"`
 5. **Same Processing Pipeline** → Identical to manual entry from this point forward
@@ -325,7 +328,62 @@ User uploads Starbucks receipt image:
 
 ---
 
-## **9. Terminal Command System**
+## **9. AI Fallback System**
+
+The Ledger App features a sophisticated two-tier AI system for processing natural language input:
+
+### **Tier 1: Natural Language Processing (Structured Inputs)**
+
+For inputs like `coffee starbucks 100` or `apples from Safeway 200`:
+
+1. **Intent Detection**: `IntentDetector` analyzes input using patterns:
+
+   - Noun phrases with amounts: `/^[a-z]+\s+[a-z]+\s+\d+/i`
+   - Expense patterns: `bought`, `spent`, `paid`, etc.
+   - Command keywords: `entries`, `new`, `edit-entry`
+
+2. **Command Generation**: `CommandGenerator` creates structured commands:
+
+   - Input: `coffee starbucks 100`
+   - Output: `new -i coffee 100 --vendor Starbucks`
+
+3. **Command Population**: Generated command appears in input field
+4. **Brief Feedback**: Shows `✓ Generated: \`new -i coffee 100 --vendor Starbucks\``
+
+### **Tier 2: General AI Fallback (Complex Queries)**
+
+For more complex natural language like `apples from Safeway 200`:
+
+1. **AI Analysis**: General AI processes the request
+2. **Response Generation**: Creates explanatory response with command
+3. **Command Extraction**: System extracts command from AI response
+4. **Input Population**: Command populates terminal input field
+
+### **Key Features**
+
+- **Consistent Syntax**: All AI-generated commands use new flag-based syntax
+- **Command Population**: No copy-paste needed - commands appear in input field
+- **Brief Feedback**: Clean, minimal responses for better UX
+- **Proper Formatting**: Spacing after code blocks for readability
+
+### **Examples**
+
+```bash
+# Natural Language Processing
+coffee starbucks 100
+→ ✓ Generated: `new -i coffee 100 --vendor Starbucks`
+
+# General AI Fallback
+apples from Safeway 200
+→ To add the entry for apples purchased from Safeway for 200, you can use the following command:
+
+new -i apples 200 --vendor Safeway
+
+```
+
+---
+
+## **10. Terminal Command System**
 
 ### **Available Commands**
 
@@ -426,7 +484,7 @@ edit-entry 340 --delete                   # Delete the entry
 
 ---
 
-## **10. Modern Next.js Integration**
+## **11. Modern Next.js Integration**
 
 - **Server Actions** for all data mutations (no API routes needed for internal operations)
 - **TypeScript throughout** with strict type checking and Zod validation
@@ -438,7 +496,7 @@ edit-entry 340 --delete                   # Delete the entry
 
 ---
 
-## **11. Best Practices**
+## **12. Best Practices**
 
 - **Always save to Supabase first**, then sync to local file if enabled
 - **Account-based business context** eliminates need for complex foreign key relationships
@@ -453,7 +511,7 @@ edit-entry 340 --delete                   # Delete the entry
 
 ---
 
-## **12. Extending the System**
+## **13. Extending the System**
 
 - **New Categories**: Add to `account-map.ts` patterns with business-aware mapping
 - **New Payment Methods**: Extend `PARSER_GRAMMAR.payment.map` in `parse-manual-command.ts`
@@ -468,7 +526,7 @@ edit-entry 340 --delete                   # Delete the entry
 
 ---
 
-## **13. Development Workflow**
+## **14. Development Workflow**
 
 ### **Local Development**
 
