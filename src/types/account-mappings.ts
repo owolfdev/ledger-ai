@@ -110,7 +110,13 @@ export interface MappingResult {
   account: string;
   account_type: AccountType;
   confidence: number;
-  source: "pattern" | "vendor" | "user" | "business_default" | "ai";
+  source:
+    | "pattern"
+    | "vendor"
+    | "user"
+    | "business_default"
+    | "ai"
+    | "static_fallback";
   business_context?: string;
 }
 
