@@ -485,3 +485,59 @@
     Expenses:Personal:Food:Coffee  100.00฿
     Assets:Bank:Kasikorn:Personal -100.00฿
 
+2025/09/01 Unknown Vendor
+    Expenses:Supplies:General      500.00฿
+    Assets:Bank:Kasikorn:Personal -500.00฿
+
+2025/09/01 Unknown Vendor
+    Expenses:Supplies:General      500.00฿
+    Assets:Bank:Kasikorn:Personal -500.00฿
+
+2025/09/01 Starbucks
+    Expenses:Food:Coffee           150.00฿
+    Assets:Bank:Kasikorn:Personal -150.00฿
+
+2025/09/01 Starbucks
+    Expenses:Food:Coffee           150.00฿
+    Expenses:Food:Coffee           200.00฿
+    Assets:Bank:Kasikorn:Personal -350.00฿
+
+2025/09/01 Starbucks
+    Expenses:Food:Coffee           150.00฿
+    Expenses:Food:Coffee           200.00฿
+    Assets:Bank:Kasikorn:Personal -350.00฿
+
+2025/09/01 Starbucks
+    Expenses:Food:Coffee           150.00฿
+    Expenses:Food:Coffee           200.00฿
+    Assets:Bank:Kasikorn:Personal -350.00฿
+
+2025/09/01 Starbucks
+    Expenses:Food:Coffee           500.00฿
+    Assets:Bank:Kasikorn:Personal -500.00฿
+
+2025/09/01 Unknown Vendor
+    Expenses:Food:Coffee           150.00฿
+    Expenses:Food:Dining           200.00฿
+    Assets:Bank:Kasikorn:Personal -350.00฿
+
+2025/09/01 Starbucks
+    Expenses:Food:Coffee           120.00฿
+    Expenses:Food:Coffee           100.00฿
+    Assets:Bank:Kasikorn:Personal -220.00฿
+
+2025/09/01 Unknown Vendor
+    Expenses:Food:Coffee           120.00฿
+    Expenses:Food:Bakery           100.00฿
+    Assets:Bank:Kasikorn:Personal -220.00฿
+
+2025/09/01 Starbucks
+    Expenses:Food:Coffee           120.00฿
+    Expenses:Food:Bakery           100.00฿
+    Assets:Bank:Kasikorn:Personal -220.00฿
+
+2025/09/01 Starbucks
+    Expenses:Food:Coffee           120.00฿
+    Expenses:Food:Bakery           100.00฿
+    Assets:Bank:Kasikorn:Personal -220.00฿
+

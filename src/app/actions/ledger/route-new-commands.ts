@@ -9,7 +9,7 @@ import {
 import { renderLedger } from "@/lib/ledger/render-ledger";
 import { syncLedgerFileFromDB } from "@/app/actions/ledger/after-save-ledger-sync";
 import { isLocalLedgerWriteEnabled } from "@/lib/ledger/is-local-write-enabled";
-import { mapAccountWithHybridAI } from "@/lib/ledger/hybrid-account-mapper";
+import { mapAccountWithHybridAI } from "@/lib/ledger/hybrid-database-mapper";
 
 export type NewCommandPayload = {
   date: string; // YYYY-MM-DD (local)

@@ -5,7 +5,7 @@ import { TerminalOutputRendererProps } from "@/types/terminal";
 import { handleNewCommand as serverHandleNewCommand } from "@/app/actions/ledger/route-new-commands";
 import { renderLedger } from "@/lib/ledger/render-ledger";
 import { parseManualNewCommand } from "@/lib/ledger/parse-manual-command";
-import { mapAccountWithHybridAI } from "@/lib/ledger/hybrid-account-mapper";
+import { mapAccountWithHybridAI } from "@/lib/ledger/hybrid-database-mapper";
 import { mapAccount } from "@/lib/ledger/account-map";
 import {
   validateNewCommandPayload,
@@ -87,9 +87,41 @@ async function generateClientPostings(
   // Map all items to accounts (with AI if enabled)
   const itemMappings = await Promise.all(
     receipt.items.map(async (item) => {
-      const account = useAI
-        ? await mapAccountWithHybridAI(item.description, { vendor, business })
-        : mapAccount(item.description, { vendor, business });
+      let account: string;
+      let mappingSource = "static";
+
+      if (useAI) {
+        // Use database-driven mapping with feedback
+        const result = await mapAccountWithHybridAI(item.description, {
+          vendor,
+          business,
+        });
+        account = result;
+
+        // Try to get mapping source from the database mapper
+        try {
+          const { hybridDatabaseMapper } = await import(
+            "@/lib/ledger/hybrid-database-mapper"
+          );
+          const mappingResult = await hybridDatabaseMapper.mapAccount(
+            item.description,
+            vendor,
+            business
+          );
+          mappingSource = mappingResult.source;
+        } catch (error) {
+          // Fallback to static if we can't get the source
+          mappingSource = "static_fallback";
+        }
+      } else {
+        account = mapAccount(item.description, { vendor, business });
+        mappingSource = "static";
+      }
+
+      // Log mapping feedback
+      console.log(
+        `🗂️  Mapped "${item.description}" → ${account} (${mappingSource})`
+      );
 
       return {
         account,
@@ -102,9 +134,35 @@ async function generateClientPostings(
   // Handle tax if present
   const postings: ClientPosting[] = [...itemMappings];
   if (receipt.tax && receipt.tax > 0) {
-    const taxAccount = useAI
-      ? await mapAccountWithHybridAI("tax", { business })
-      : mapAccount("tax", { business });
+    let taxAccount: string;
+    let taxMappingSource = "static";
+
+    if (useAI) {
+      // Use database-driven mapping with feedback
+      const result = await mapAccountWithHybridAI("tax", { business });
+      taxAccount = result;
+
+      // Try to get mapping source from the database mapper
+      try {
+        const { hybridDatabaseMapper } = await import(
+          "@/lib/ledger/hybrid-database-mapper"
+        );
+        const mappingResult = await hybridDatabaseMapper.mapAccount(
+          "tax",
+          undefined,
+          business
+        );
+        taxMappingSource = mappingResult.source;
+      } catch (error) {
+        taxMappingSource = "static_fallback";
+      }
+    } else {
+      taxAccount = mapAccount("tax", { business });
+      taxMappingSource = "static";
+    }
+
+    // Log tax mapping feedback
+    console.log(`🗂️  Mapped "tax" → ${taxAccount} (${taxMappingSource})`);
 
     postings.push({
       account: taxAccount,

@@ -3,7 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { type ReceiptShape } from "@/lib/ledger/build-postings-from-receipt";
 import { renderLedger, assertBalanced } from "@/lib/ledger/render-ledger";
-import { mapAccountWithHybridAI } from "@/lib/ledger/hybrid-account-mapper";
+import { mapAccountWithHybridAI } from "@/lib/ledger/hybrid-database-mapper";
 
 export interface CreateLedgerFromStructuredInput {
   date: string;
