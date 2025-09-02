@@ -30,5 +30,5 @@
     ".next/types/**/*.ts",
     "src/content/pages/home.mdx"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "interface"]
 }
