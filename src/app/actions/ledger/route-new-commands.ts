@@ -20,6 +20,7 @@ export type NewCommandPayload = {
   memo?: string | null;
   imageUrl?: string | null;
   business?: string; // NEW: business context
+  type?: string; // NEW: transaction type (expense, income, asset, liability, transfer)
   postings?: Array<{ account: string; amount: number; currency: string }>; // NEW: pre-generated AI-enhanced postings
 };
 
@@ -138,6 +139,7 @@ export async function handleNewCommand(
       includeTaxLine: true,
       vendor: payload.payee,
       business: payload.business, // NEW: pass business context
+      type: payload.type || "expense", // NEW: pass transaction type
       mapAccount: mapAccountWithHybridAI, // NEW: use AI-enhanced account mapping
     });
 

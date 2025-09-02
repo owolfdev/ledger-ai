@@ -7,6 +7,7 @@ export type AIAccountMapperOptions = {
   price?: number;
   business?: string;
   useAI?: boolean;
+  type?: string; // NEW: transaction type
 };
 
 export class HybridDatabaseMapper {
@@ -23,7 +24,8 @@ export class HybridDatabaseMapper {
     description: string,
     vendor?: string,
     businessContext?: string,
-    userId?: string
+    userId?: string,
+    type?: string
   ): Promise<MappingResult> {
     try {
       // Try database mapping first
@@ -31,7 +33,8 @@ export class HybridDatabaseMapper {
         description,
         vendor,
         businessContext,
-        userId
+        userId,
+        type
       );
 
       // If database mapping has good confidence, use it
@@ -43,11 +46,12 @@ export class HybridDatabaseMapper {
       const staticAccount = mapAccountStatic(description, {
         vendor,
         business: businessContext || "Personal",
+        type: type || "expense",
       });
 
       return {
         account: staticAccount,
-        account_type: "expense", // Static mapper only handles expenses
+        account_type: type || "expense", // Use the actual transaction type
         confidence: 0.4, // Lower confidence for static fallback
         source: "static_fallback",
         business_context: businessContext,
@@ -59,11 +63,12 @@ export class HybridDatabaseMapper {
       const staticAccount = mapAccountStatic(description, {
         vendor,
         business: businessContext || "Personal",
+        type: type || "expense",
       });
 
       return {
         account: staticAccount,
-        account_type: "expense",
+        account_type: type || "expense", // Use the actual transaction type
         confidence: 0.3,
         source: "static_fallback",
         business_context: businessContext,
@@ -115,7 +120,9 @@ export async function mapAccountWithHybridAI(
     const result = await hybridDatabaseMapper.mapAccount(
       description,
       opts.vendor,
-      business
+      business,
+      undefined, // userId
+      opts.type // type parameter
     );
 
     return result.account;
@@ -126,6 +133,7 @@ export async function mapAccountWithHybridAI(
     return mapAccountStatic(description, {
       vendor: opts.vendor,
       business,
+      type: opts.type || "expense",
     });
   }
 }

@@ -94,6 +94,7 @@ export const NewCommandPayloadSchema = z.object({
     .optional()
     .nullable(),
   business: BusinessName.optional(), // NEW: business context
+  type: z.string().optional(), // NEW: transaction type
   postings: z
     .array(
       z.object({

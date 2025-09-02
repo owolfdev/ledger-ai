@@ -108,6 +108,10 @@ IMPORTANT RULES:
 COMMON PATTERNS:
 - "I bought coffee for 150 baht" → "new -i coffee 150"
 - "I spent $20 at Starbucks" → "new -i coffee 20 --vendor Starbucks"
+- "I received $5000 for consulting" → "new -i consulting 5000 --type income --client Acme Corp"
+- "Bought a laptop for $2000 with credit card" → "new -i laptop 2000 --type asset --payment credit-card"
+- "Bought a laptop from Apple Store on my KBank Credit card" → "new -i laptop 40000 --type asset --vendor Apple Store --payment KBank Credit card"
+- "Paid off $500 of credit card debt" → "new -i credit-card 500 --type liability --payment checking"
 - "Show me today's expenses" → "entries today"
 - "How much did I spend on coffee?" → "entries -v coffee -s"
 - "MyBrick: office supplies $100" → "new -i supplies 100 --business MyBrick"

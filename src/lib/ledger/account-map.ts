@@ -5,18 +5,81 @@ export type MapAccountOptions = {
   vendor?: string;
   price?: number; // for future threshold-based routing
   business?: string; // NEW: business context for account hierarchy
+  type?: string; // NEW: transaction type (expense, income, asset, liability, transfer)
 };
 
 // Business rules - maps description patterns to account categories (without business prefix)
 const DESC_CATEGORY_RULES: Array<{ pattern: RegExp; category: string }> = [
-  // Professional Services (NEW - fixes legal fee issue)
+  // Income patterns (NEW)
   {
-    pattern: /(legal|lawyer|attorney|legal\s*fee|legal\s*service|law\s*firm)/i,
-    category: "Professional:Legal",
+    pattern: /(salary|wage|payroll|employment|job)/i,
+    category: "Employment:Salary",
+  },
+  {
+    pattern: /(freelance|freelancing|contract|contracting|design|designing)/i,
+    category: "Freelance:Services",
   },
   {
     pattern: /(consulting|consultant|professional\s*service)/i,
     category: "Professional:Consulting",
+  },
+  {
+    pattern: /(investment|dividend|interest|capital\s*gains)/i,
+    category: "Investment:Returns",
+  },
+  {
+    pattern: /(rental|rent\s*income|property\s*income)/i,
+    category: "Rental:Income",
+  },
+  {
+    pattern: /(business\s*income|revenue|sales)/i,
+    category: "Business:Revenue",
+  },
+
+  // Asset patterns (NEW)
+  {
+    pattern: /(laptop|computer|desktop|macbook|pc)/i,
+    category: "Electronics:Computer",
+  },
+  {
+    pattern: /(phone|iphone|android|mobile)/i,
+    category: "Electronics:Phone",
+  },
+  {
+    pattern: /(car|vehicle|automobile|truck)/i,
+    category: "Transportation:Vehicle",
+  },
+  {
+    pattern: /(furniture|desk|chair|table)/i,
+    category: "Office:Furniture",
+  },
+  {
+    pattern: /(equipment|machinery|tools)/i,
+    category: "Business:Equipment",
+  },
+
+  // Liability patterns (NEW)
+  {
+    pattern: /(credit\s*card|debt|loan|mortgage)/i,
+    category: "Debt:CreditCard",
+  },
+  {
+    pattern: /(student\s*loan|education\s*loan)/i,
+    category: "Debt:Education",
+  },
+  {
+    pattern: /(car\s*loan|auto\s*loan|vehicle\s*loan)/i,
+    category: "Debt:Vehicle",
+  },
+  {
+    pattern: /(home\s*loan|house\s*loan|mortgage)/i,
+    category: "Debt:Mortgage",
+  },
+
+  // Professional Services (NEW - fixes legal fee issue)
+  {
+    pattern: /(legal|lawyer|attorney|legal\s*fee|legal\s*service|law\s*firm)/i,
+    category: "Professional:Legal",
   },
   {
     pattern: /(architect|architectural|design\s*service)/i,
@@ -584,13 +647,30 @@ const VENDOR_CONTAINS: Array<{ pattern: RegExp; category: string }> = [
   { pattern: /elc\s*school/i, category: "Education:Tuition" },
 ];
 
-function buildAccountFromCategory(category: string, business: string): string {
+function buildAccountFromCategory(
+  category: string,
+  business: string,
+  type: string = "expense"
+): string {
   // Special case: Taxes don't use business prefix
   if (category.startsWith("Taxes:")) {
     return `Expenses:${category}`;
   }
 
-  return `Expenses:${business}:${category}`;
+  // Build account based on transaction type
+  switch (type) {
+    case "income":
+      return `Income:${business}:${category}`;
+    case "asset":
+      return `Assets:${business}:${category}`;
+    case "liability":
+      return `Liabilities:${business}:${category}`;
+    case "transfer":
+      // Transfers might need special handling, but for now treat as expense
+      return `Expenses:${business}:${category}`;
+    default: // expense
+      return `Expenses:${business}:${category}`;
+  }
 }
 
 function findVendorCategory(vendor?: string): string | undefined {
@@ -619,21 +699,22 @@ export function mapAccount(
 ): string {
   const desc = description.toLowerCase().trim();
   const business = opts.business || "Personal";
+  const type = opts.type || "expense";
 
   // Description-based mapping (PRIORITY 1)
   const descCategory = findDescriptionCategory(desc);
   if (descCategory) {
-    return buildAccountFromCategory(descCategory, business);
+    return buildAccountFromCategory(descCategory, business, type);
   }
 
   // Vendor-based mapping (PRIORITY 2 - fallback only)
   const vendorCategory = findVendorCategory(opts.vendor);
   if (vendorCategory) {
-    return buildAccountFromCategory(vendorCategory, business);
+    return buildAccountFromCategory(vendorCategory, business, type);
   }
 
-  // Fallback to Misc
-  return `Expenses:${business}:Misc`;
+  // Fallback based on type
+  return buildAccountFromCategory("Misc", business, type);
 }
 
 // Helper function to get available business names (for future business management)

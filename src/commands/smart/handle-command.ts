@@ -252,6 +252,10 @@ NEW COMMAND EXAMPLES (Flag-based syntax):
 - "MyBrick: office supplies for $100" → "new -i supplies 100 --business MyBrick"
 - "Bought gas $50 with credit card" → "new -i gas 50 --payment credit card"
 - "Coffee and pastry at Starbucks" → "new -i coffee 6 pastry 4 --vendor Starbucks"
+- "I received $5000 for consulting work" → "new -i consulting 5000 --type income --client Acme Corp"
+- "Bought a laptop for $2000 with credit card" → "new -i laptop 2000 --type asset --payment credit-card"
+- "Bought a laptop from Apple Store on my KBank Credit card" → "new -i laptop 40000 --type asset --vendor Apple Store --payment KBank Credit card"
+- "Paid off $500 of credit card debt" → "new -i credit-card 500 --type liability --payment checking"
 
 ENTRIES COMMAND EXAMPLES:
 - "Show my expenses from today" → "entries today"

@@ -27,24 +27,66 @@ export type BuildOpts = {
   includeTaxLine?: boolean; // if true and tax present, split out SalesTax
   vendor?: string; // pass vendor context to mapper
   business?: string; // pass business context to mapper
+  type?: string; // transaction type (expense, income, asset, liability, transfer)
 };
 
 const DEFAULT_PAYMENT = "Assets:Cash";
 
 export type Posting = { account: string; amount: number; currency: string };
 
-export async function buildPostingsFromReceipt(
+/**
+ * Map payment method to proper account structure
+ */
+function mapPaymentMethodToAccount(
+  paymentMethod: string,
+  business: string = "Personal"
+): string {
+  const payment = paymentMethod.toLowerCase();
+
+  // Credit card patterns (check first - more specific)
+  if (payment.includes("credit") || payment.includes("card")) {
+    return `Liabilities:${business}:Debt:CreditCard`;
+  }
+
+  // Bank account patterns (check after credit card)
+  if (
+    payment.includes("bank") ||
+    payment.includes("kasikorn") ||
+    payment.includes("kbank")
+  ) {
+    return `Assets:Bank:${
+      payment.includes("kasikorn") || payment.includes("kbank")
+        ? "Kasikorn"
+        : "Bank"
+    }:${business}`;
+  }
+
+  // Cash patterns
+  if (payment.includes("cash") || payment.includes("money")) {
+    return `Assets:Cash`;
+  }
+
+  // Default to cash
+  return `Assets:Cash`;
+}
+
+/**
+ * Build postings based on transaction type
+ */
+export async function buildPostingsByType(
   receipt: ReceiptShape,
+  type: string,
   opts: BuildOpts = {}
 ): Promise<Posting[]> {
   const currency = opts.currency || "THB";
-  const pay = opts.paymentAccount || DEFAULT_PAYMENT;
+  const business = opts.business || "Personal";
   const map = opts.mapAccount || defaultMapAccount;
 
   // Build context object for mapAccount calls
   const mapContext: MapAccountOptions = {
     vendor: opts.vendor,
-    business: opts.business,
+    business,
+    type,
   };
 
   // Map all items concurrently for better performance
@@ -61,7 +103,6 @@ export async function buildPostingsFromReceipt(
 
   // Handle tax line if needed
   if (opts.includeTaxLine && receipt.tax && receipt.tax > 0) {
-    // Tax account doesn't use business context (always goes to Expenses:Taxes:Sales)
     const taxAccount = await map("tax", mapContext);
     positives.push({
       account: taxAccount,
@@ -72,41 +113,77 @@ export async function buildPostingsFromReceipt(
 
   const sumPos = +positives.reduce((s, p) => s + p.amount, 0).toFixed(2);
   const total = receipt.total ?? receipt.subtotal ?? sumPos;
-  const negative: Posting = { account: pay, amount: -total, currency };
 
-  const postings = [...positives, negative];
-  const sum = +postings.reduce((s, p) => s + p.amount, 0).toFixed(2);
+  // Build postings based on transaction type
+  switch (type) {
+    case "income":
+      return [
+        {
+          account: opts.paymentAccount
+            ? mapPaymentMethodToAccount(opts.paymentAccount, business)
+            : "Assets:Cash",
+          amount: +total,
+          currency,
+        }, // Cash increase (debit)
+        ...positives.map((p) => ({ ...p, amount: -p.amount })), // Income accounts (credits)
+      ];
 
-  // Balance adjustment if needed
-  if (Math.abs(sum) > 0.005) {
-    const diff = -sum;
-    let idx = -1;
-    let min = Number.POSITIVE_INFINITY;
+    case "asset":
+      return [
+        ...positives, // Asset accounts (positive amounts)
+        {
+          account: opts.paymentAccount
+            ? mapPaymentMethodToAccount(opts.paymentAccount, business)
+            : "Liabilities:Personal:Debt:CreditCard",
+          amount: -total,
+          currency,
+        }, // Payment method decrease
+      ];
 
-    for (let i = 0; i < positives.length; i++) {
-      if (positives[i].amount < min) {
-        min = positives[i].amount;
-        idx = i;
-      }
-    }
+    case "liability":
+      return [
+        ...positives, // Liability accounts (positive amounts for payments)
+        {
+          account: opts.paymentAccount
+            ? mapPaymentMethodToAccount(opts.paymentAccount, business)
+            : "Assets:Cash",
+          amount: -total,
+          currency,
+        }, // Cash decrease
+      ];
 
-    if (idx >= 0) {
-      positives[idx] = {
-        ...positives[idx],
-        amount: +(positives[idx].amount + diff).toFixed(2),
-      };
-    } else {
-      // Use business context for fallback account too
-      const fallbackAccount = opts.business
-        ? `Expenses:${opts.business}:Misc`
-        : "Expenses:Personal:Misc";
-      positives.push({
-        account: fallbackAccount,
-        amount: +diff.toFixed(2),
-        currency,
-      });
-    }
+    case "transfer":
+      // Transfers need special handling - for now treat as expense
+      return [
+        ...positives, // Expense accounts
+        {
+          account: opts.paymentAccount
+            ? mapPaymentMethodToAccount(opts.paymentAccount, business)
+            : "Assets:Cash",
+          amount: -total,
+          currency,
+        },
+      ];
+
+    default: // expense
+      return [
+        ...positives, // Expense accounts
+        {
+          account: opts.paymentAccount
+            ? mapPaymentMethodToAccount(opts.paymentAccount, business)
+            : "Assets:Cash",
+          amount: -total,
+          currency,
+        }, // Cash decrease
+      ];
   }
+}
 
-  return [...positives, negative];
+export async function buildPostingsFromReceipt(
+  receipt: ReceiptShape,
+  opts: BuildOpts = {}
+): Promise<Posting[]> {
+  // Use the new type-based logic
+  const type = opts.type || "expense";
+  return buildPostingsByType(receipt, type, opts);
 }

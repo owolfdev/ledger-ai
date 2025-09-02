@@ -40,6 +40,7 @@ interface StructuredInput {
   paymentAccount?: string;
   imageUrl?: string | null;
   business?: string;
+  type?: string; // NEW: transaction type
   useAI?: boolean;
 }
 
@@ -52,11 +53,48 @@ interface ProcessingResult {
   memo?: string | null;
   imageUrl?: string | null;
   business?: string;
+  type?: string; // NEW: transaction type
   useAI?: boolean;
 }
 
 // Client-side posting generation (pre-resolved accounts)
 type ClientPosting = { account: string; amount: number; currency: string };
+
+/**
+ * Map payment method to proper account structure
+ */
+function mapPaymentMethodToAccount(
+  paymentMethod: string,
+  business: string = "Personal"
+): string {
+  const payment = paymentMethod.toLowerCase();
+
+  // Credit card patterns
+  if (payment.includes("credit") || payment.includes("card")) {
+    return `Liabilities:${business}:Debt:CreditCard`;
+  }
+
+  // Bank account patterns
+  if (
+    payment.includes("bank") ||
+    payment.includes("kasikorn") ||
+    payment.includes("kbank")
+  ) {
+    return `Assets:Bank:${
+      payment.includes("kasikorn") || payment.includes("kbank")
+        ? "Kasikorn"
+        : "Bank"
+    }:${business}`;
+  }
+
+  // Cash patterns
+  if (payment.includes("cash") || payment.includes("money")) {
+    return `Assets:Cash`;
+  }
+
+  // Default to cash
+  return `Assets:Cash`;
+}
 
 function generateDefaultMemo(receipt: ReceiptShape): string | null {
   if (!receipt.items || receipt.items.length === 0) return null;
@@ -79,6 +117,7 @@ async function generateClientPostings(
     paymentAccount: string;
     business?: string;
     vendor?: string;
+    type?: string; // NEW: transaction type
     useAI: boolean;
   }
 ): Promise<ClientPosting[]> {
@@ -95,6 +134,7 @@ async function generateClientPostings(
         const result = await mapAccountWithHybridAI(item.description, {
           vendor,
           business,
+          type: opts.type || "expense",
         });
         account = result;
 
@@ -106,7 +146,9 @@ async function generateClientPostings(
           const mappingResult = await hybridDatabaseMapper.mapAccount(
             item.description,
             vendor,
-            business
+            business,
+            undefined, // userId
+            opts.type || "expense" // type parameter
           );
           mappingSource = mappingResult.source;
         } catch (error) {
@@ -114,7 +156,11 @@ async function generateClientPostings(
           mappingSource = "static_fallback";
         }
       } else {
-        account = mapAccount(item.description, { vendor, business });
+        account = mapAccount(item.description, {
+          vendor,
+          business,
+          type: opts.type || "expense",
+        });
         mappingSource = "static";
       }
 
@@ -171,17 +217,33 @@ async function generateClientPostings(
     });
   }
 
-  // Add payment account (negative amount)
+  // Add payment account based on transaction type
   const total =
     receipt.total ??
     receipt.subtotal ??
     postings.reduce((sum, p) => sum + p.amount, 0);
 
-  postings.push({
-    account: paymentAccount,
-    amount: -total,
-    currency,
-  });
+  const type = opts.type || "expense";
+
+  if (type === "income") {
+    // For income: cash increases (positive), income accounts are credited (negative)
+    postings.push({
+      account: mapPaymentMethodToAccount(paymentAccount, business),
+      amount: +total,
+      currency,
+    });
+    // Flip the signs of the income accounts to make them credits
+    for (let i = 0; i < postings.length - 1; i++) {
+      postings[i].amount = -postings[i].amount;
+    }
+  } else {
+    // For expenses/assets/liabilities: payment account decreases (negative)
+    postings.push({
+      account: mapPaymentMethodToAccount(paymentAccount, business),
+      amount: -total,
+      currency,
+    });
+  }
 
   // Balance check and adjustment
   const sum = +postings.reduce((s, p) => s + p.amount, 0).toFixed(2);
@@ -264,6 +326,7 @@ function processStructuredInput(structured: StructuredInput): ProcessingResult {
     memo: structured.memo ?? null,
     imageUrl: structured.imageUrl ?? null,
     business: structured.business,
+    type: structured.type || "expense", // NEW: default to expense
     useAI: structured.useAI ?? true,
   };
 }
@@ -286,6 +349,7 @@ function toPayload(
     memo: result.memo ?? null,
     imageUrl: result.imageUrl ?? null,
     business: result.business,
+    type: result.type, // NEW: include transaction type
     postings: postings, // NEW: include the generated postings
   };
 }
@@ -400,6 +464,7 @@ async function processAndSaveEntry(
       paymentAccount: result.paymentAccount || DEFAULT_CONFIG.paymentAccount,
       business: result.business,
       vendor: result.payee,
+      type: result.type || "expense",
       useAI: result.useAI !== false,
     });
 
@@ -467,6 +532,7 @@ async function processAndSaveEntry(
             result.paymentAccount || DEFAULT_CONFIG.paymentAccount,
           business: result.business,
           vendor: result.payee,
+          type: result.type || "expense",
           useAI: false, // Force rule-based
         });
 
@@ -568,6 +634,7 @@ export async function handleNew(
       memo: parsed.memo ?? null,
       imageUrl: parsed.imageUrl ?? null,
       business: parsed.business,
+      type: parsed.type, // NEW: include transaction type
       useAI,
     };
 

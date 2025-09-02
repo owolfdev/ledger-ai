@@ -86,7 +86,8 @@ export class DatabaseAccountMapper {
     description: string,
     vendor?: string,
     businessContext?: string,
-    userId?: string
+    userId?: string,
+    type?: string
   ): Promise<MappingResult> {
     const normalizedDescription = description.toLowerCase().trim();
     const normalizedVendor = vendor?.toLowerCase().trim();
@@ -133,9 +134,27 @@ export class DatabaseAccountMapper {
           }
         }
 
+        // If a specific type is requested, override the pattern's account type
+        const finalAccountType = type || patternMapping.account_type;
+
+        // If the type is different from the pattern's type, rebuild the account path
+        let finalAccountPath = accountPath;
+        if (type && type !== patternMapping.account_type) {
+          // Rebuild the account path with the correct type
+          const pathParts = accountPath.split(":");
+          if (pathParts.length >= 2) {
+            // Replace the first part (Expenses/Income/Assets/Liabilities) with the correct type
+            pathParts[0] =
+              type.charAt(0).toUpperCase() +
+              type.slice(1) +
+              (type === "liability" ? "ies" : "s");
+            finalAccountPath = pathParts.join(":");
+          }
+        }
+
         return {
-          account: accountPath,
-          account_type: patternMapping.account_type,
+          account: finalAccountPath,
+          account_type: finalAccountType,
           confidence: 0.8,
           source: "pattern",
           business_context: patternMapping.business_context || businessContext,
@@ -165,9 +184,27 @@ export class DatabaseAccountMapper {
             }
           }
 
+          // If a specific type is requested, override the vendor's account type
+          const finalAccountType = type || vendorMapping.account_type;
+
+          // If the type is different from the vendor's type, rebuild the account path
+          let finalAccountPath = accountPath;
+          if (type && type !== vendorMapping.account_type) {
+            // Rebuild the account path with the correct type
+            const pathParts = accountPath.split(":");
+            if (pathParts.length >= 2) {
+              // Replace the first part (Expenses/Income/Assets/Liabilities) with the correct type
+              pathParts[0] =
+                type.charAt(0).toUpperCase() +
+                type.slice(1) +
+                (type === "liability" ? "ies" : "s");
+              finalAccountPath = pathParts.join(":");
+            }
+          }
+
           return {
-            account: accountPath,
-            account_type: vendorMapping.account_type,
+            account: finalAccountPath,
+            account_type: finalAccountType,
             confidence: 0.7, // Lower confidence since it's a fallback
             source: "vendor",
             business_context: vendorMapping.business_context || businessContext,
@@ -175,15 +212,48 @@ export class DatabaseAccountMapper {
         }
       }
 
-      // Fallback to business default
+      // Fallback to static account mapping
+      const { mapAccount: mapAccountStatic } = await import("./account-map");
+      const staticAccount = mapAccountStatic(description, {
+        vendor,
+        business: businessContext || "Personal",
+        type: type || "expense",
+      });
+
+      return {
+        account: staticAccount,
+        account_type: type || "expense",
+        confidence: 0.4,
+        source: "static_fallback",
+        business_context: businessContext,
+      };
+
+      // Fallback to business default (this code is now unreachable, but keeping for safety)
       if (businessContext) {
         const businessDefault = await this.getBusinessDefaultAccountType(
           businessContext
         );
         if (businessDefault) {
+          const fallbackType = type || businessDefault;
+          let fallbackAccount: string;
+
+          switch (fallbackType) {
+            case "income":
+              fallbackAccount = `Income:${businessContext}:Misc`;
+              break;
+            case "asset":
+              fallbackAccount = `Assets:${businessContext}:Misc`;
+              break;
+            case "liability":
+              fallbackAccount = `Liabilities:${businessContext}:Misc`;
+              break;
+            default:
+              fallbackAccount = `Expenses:${businessContext}:Misc`;
+          }
+
           return {
-            account: `Expenses:${businessContext}:Misc`,
-            account_type: businessDefault,
+            account: fallbackAccount,
+            account_type: fallbackType,
             confidence: 0.5,
             source: "business_default",
             business_context: businessContext,
@@ -191,19 +261,55 @@ export class DatabaseAccountMapper {
         }
       }
 
-      // Final fallback
+      // Final fallback - use type to determine account structure
+      const fallbackType = type || "expense";
+      const business = businessContext || "Personal";
+      let fallbackAccount: string;
+
+      switch (fallbackType) {
+        case "income":
+          fallbackAccount = `Income:${business}:Misc`;
+          break;
+        case "asset":
+          fallbackAccount = `Assets:${business}:Misc`;
+          break;
+        case "liability":
+          fallbackAccount = `Liabilities:${business}:Misc`;
+          break;
+        default:
+          fallbackAccount = `Expenses:${business}:Misc`;
+      }
+
       return {
-        account: "Expenses:Misc",
-        account_type: "expense",
+        account: fallbackAccount,
+        account_type: fallbackType,
         confidence: 0.3,
         source: "pattern",
       };
     } catch (error) {
       console.error("Error in mapAccount:", error);
       // Return safe fallback on any error
+      const fallbackType = type || "expense";
+      const business = businessContext || "Personal";
+      let fallbackAccount: string;
+
+      switch (fallbackType) {
+        case "income":
+          fallbackAccount = `Income:${business}:Misc`;
+          break;
+        case "asset":
+          fallbackAccount = `Assets:${business}:Misc`;
+          break;
+        case "liability":
+          fallbackAccount = `Liabilities:${business}:Misc`;
+          break;
+        default:
+          fallbackAccount = `Expenses:${business}:Misc`;
+      }
+
       return {
-        account: "Expenses:Misc",
-        account_type: "expense",
+        account: fallbackAccount,
+        account_type: fallbackType,
         confidence: 0.1,
         source: "pattern",
       };

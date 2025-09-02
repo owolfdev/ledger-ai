@@ -769,23 +769,41 @@ export const commandRegistry: Record<string, CommandMeta> = {
   new: {
     content: "__LEDGER_NEW_ENTRY__",
     description:
-      "Create a new double-entry ledger transaction from natural language or receipt images. Uses unified flag-based syntax with -i for items and --flags for options. Both manual entry and automated OCR parsing use the same syntax for consistency. Automatically categorizes expenses and supports multiple businesses with AI-powered categorization.",
+      "Create a new double-entry ledger transaction from natural language or receipt images. Uses unified flag-based syntax with -i for items and --flags for options. Supports expenses (default), income, assets, and liabilities with --type flag. Both manual entry and automated OCR parsing use the same syntax for consistency. Automatically categorizes transactions and supports multiple businesses with AI-powered categorization.",
 
     // NEW: Natural language support
     intent: "action",
     priority: 10,
     naturalLanguage: [
+      // Expense patterns
       "i just bought",
       "i purchased",
       "i spent money on",
       "i had",
-      "i got",
       "i paid for",
       "bought",
       "purchased",
       "spent",
       "paid for",
       "expense",
+      // Income patterns
+      "i received",
+      "i got paid",
+      "i earned",
+      "payment received",
+      "income",
+      "salary",
+      "freelance",
+      "consulting",
+      // Asset patterns
+      "i bought",
+      "purchased",
+      "acquired",
+      // Liability patterns
+      "i paid off",
+      "debt payment",
+      "loan payment",
+      // General
       "transaction",
     ],
     examples: [
@@ -831,6 +849,50 @@ export const commandRegistry: Record<string, CommandMeta> = {
           'new -i supplies 500 coffee 150 --business MyBrick --memo "team meeting"',
         description: "Multiple items with business context and memo",
       },
+      // NEW: Income examples
+      {
+        input: "I received $5000 for consulting work",
+        output: "new -i consulting 5000 --type income --client Acme Corp",
+        description: "Income entry with client",
+      },
+      {
+        input: "Freelance payment of $2000",
+        output: "new -i freelance 2000 --type income --client Client ABC",
+        description: "Freelance income",
+      },
+      {
+        input: "Salary payment of $8000",
+        output: "new -i salary 8000 --type income --client My Company",
+        description: "Salary income",
+      },
+      // NEW: Asset examples
+      {
+        input: "Bought a laptop for $2000 with credit card",
+        output: "new -i laptop 2000 --type asset --payment credit-card",
+        description: "Asset purchase with payment method",
+      },
+      {
+        input: "Bought a laptop from Apple Store on my KBank Credit card",
+        output:
+          "new -i laptop 40000 --type asset --vendor Apple Store --payment KBank Credit card",
+        description: "Asset purchase with vendor and credit card",
+      },
+      {
+        input: "Purchased office furniture for $1500",
+        output: "new -i furniture 1500 --type asset --business MyBrick",
+        description: "Business asset purchase",
+      },
+      // NEW: Liability examples
+      {
+        input: "Paid off $500 of credit card debt",
+        output: "new -i credit-card 500 --type liability --payment checking",
+        description: "Liability payment",
+      },
+      {
+        input: "Student loan payment of $1000",
+        output: "new -i student-loan 1000 --type liability --payment savings",
+        description: "Student loan payment",
+      },
     ],
     categories: ["expense", "finance", "accounting"],
     aliases: ["expense", "spend", "buy", "purchase"],
@@ -841,12 +903,14 @@ export const commandRegistry: Record<string, CommandMeta> = {
     
     **Core Options:**
     • \`--items <item1> <price1> <item2> <price2>...\` / \`-i <item1> <price1> <item2> <price2>...\` — Items and prices (required)
+    • \`--type <type>\` / \`-t <type>\`            — Transaction type: expense (default), income, asset, liability, transfer
     • \`--business <name>\` / \`-b <name>\`     — Set business context
-    • \`--vendor <name>\` / \`-v <name>\`        — Set vendor/merchant name
+    • \`--vendor <name>\` / \`-v <name>\`        — Set vendor/merchant name (expenses)
+    • \`--client <name>\` / \`-c <name>\`        — Set client name (income)
     • \`--payment <method>\` / \`-p <method>\`   — Payment method (cash, credit card, etc.)
     • \`--memo <text>\` / \`-m <text>\`          — Add memo/note
     • \`--date <date>\` / \`-d <date>\`          — Set transaction date
-    • \`--image <url>\` / \`-i <url>\`            — Attach image URL
+    • \`--image <url>\` / \`-I <url>\`            — Attach image URL
     
     **AI Categorization:**
     • \`--use-ai\` / \`-u\`                      — Force AI categorization (default)

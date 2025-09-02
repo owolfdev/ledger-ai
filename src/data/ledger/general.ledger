@@ -306,8 +306,8 @@
     Assets:Bank:Kasikorn:Personal                   ฿-1500.00
 
 2025/08/27 Bangkok Bank
-    Expenses:MadameViraj:Misc       ฿50000.00
-    Assets:Bank:Kasikorn:Personal                   ฿-50000.00
+    Expenses:MadameViraj:Misc      50,000.00฿
+    Assets:Bank:Kasikorn:Personal -50,000.00฿
 
 2025/08/27 Kami-Kami
     Expenses:Personal:Misc         ฿600.00
@@ -521,4 +521,42 @@
 2025/09/02 Starbucks
     Expenses:Personal:Food:Coffee  5.00฿
     Assets:Bank:Kasikorn:Personal -5.00฿
+
+2025/09/02 Vista Cafe
+    Expenses:Personal:Misc         95.00฿
+    Expenses:Personal:Misc         75.00฿
+    Expenses:Personal:Misc         300.00฿
+    Assets:Bank:Kasikorn:Personal -470.00฿
+
+2025/09/02 trash removal
+    Expenses:Personal:TrashCollection 1,000.00฿
+    Assets:Bank:Kasikorn:Personal -1,000.00฿
+
+2025/09/03 Apple Store
+    Assets:Personal:Personal:Electronics:Computer 40,000.00฿
+    Liabilities:Personal:Debt:CreditCard-40,000.00฿
+
+2025/09/03 Apple Store
+    Assets:Personal:Personal:Electronics:Computer 40,000.00฿
+    Liabilities:Personal:Debt:CreditCard-40,000.00฿
+
+2025/09/03 Apple Store
+    Assets:Personal:Personal:Electronics:Computer 40,000.00฿
+    Liabilities:Personal:Debt:CreditCard
+
+2025/09/03 Apple Store
+    Assets:Personal:Personal:Electronics:Computer 40,000.00฿
+    Liabilities:Personal:Debt:CreditCard
+
+2025/09/03 Grocery Store
+    Expenses:Personal:Food:Fruits  300.00฿
+    Assets:Bank:Kasikorn:Personal -300.00฿
+
+2025/09/03 Apple Store
+    Assets:Personal:Personal:Electronics:Computer 40,000.00฿
+    Liabilities:Personal:Debt:CreditCard
+
+2025/09/03 Company X
+    Income:Personal:Freelance:Services
+    Assets:Bank:Kasikorn:Personal  50,000.00฿
 

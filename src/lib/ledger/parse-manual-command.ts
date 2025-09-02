@@ -230,6 +230,7 @@ function extractFlags(tokens: string[]): {
   date?: string;
   imageUrl?: string;
   items?: string[];
+  type?: string;
   tokens: string[];
 } {
   const updatedTokens: string[] = [];
@@ -240,6 +241,7 @@ function extractFlags(tokens: string[]): {
   let date: string | undefined;
   let imageUrl: string | undefined;
   let items: string[] | undefined;
+  let type: string | undefined;
 
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
@@ -264,7 +266,12 @@ function extractFlags(tokens: string[]): {
       // Process the flag based on its name
       if (flagName === "business" || flagName === "b") {
         business = flagValue.join(" ");
-      } else if (flagName === "vendor" || flagName === "v") {
+      } else if (
+        flagName === "vendor" ||
+        flagName === "v" ||
+        flagName === "client" ||
+        flagName === "c"
+      ) {
         vendor = flagValue.join(" ");
       } else if (flagName === "payment" || flagName === "p") {
         payment = flagValue.join(" ");
@@ -284,6 +291,9 @@ function extractFlags(tokens: string[]): {
       } else if (flagName === "items" || flagName === "i") {
         // Items flag: collect all values as item/price pairs
         items = flagValue;
+      } else if (flagName === "type" || flagName === "t") {
+        // Type flag: transaction type (expense, income, asset, liability, transfer)
+        type = flagValue.join(" ").toLowerCase();
       }
 
       // Skip all the value tokens we just processed
@@ -303,6 +313,7 @@ function extractFlags(tokens: string[]): {
     date,
     imageUrl,
     items,
+    type,
     tokens: updatedTokens,
   };
 }
@@ -394,6 +405,42 @@ function mapPaymentMethod(method: string): string {
   return accountPath || getDefaultPaymentMethod();
 }
 
+/**
+ * Map payment method to proper account structure
+ */
+function mapPaymentMethodToAccount(
+  paymentMethod: string,
+  business: string = "Personal"
+): string {
+  const payment = paymentMethod.toLowerCase();
+
+  // Credit card patterns (check first - more specific)
+  if (payment.includes("credit") || payment.includes("card")) {
+    return `Liabilities:${business}:Debt:CreditCard`;
+  }
+
+  // Bank account patterns (check after credit card)
+  if (
+    payment.includes("bank") ||
+    payment.includes("kasikorn") ||
+    payment.includes("kbank")
+  ) {
+    return `Assets:Bank:${
+      payment.includes("kasikorn") || payment.includes("kbank")
+        ? "Kasikorn"
+        : "Bank"
+    }:${business}`;
+  }
+
+  // Cash patterns
+  if (payment.includes("cash") || payment.includes("money")) {
+    return `Assets:Cash`;
+  }
+
+  // Default to cash
+  return `Assets:Cash`;
+}
+
 // Enhanced grammar:
 // new -i <item1> <price1> <item2> <price2>... [--flags]
 //
@@ -413,6 +460,7 @@ export function parseManualNewCommand(input: string): {
   business?: string;
   vendor?: string;
   imageUrl?: string;
+  type: string;
 } {
   const normalizedInput = normalizeMultiLineCommand(input);
 
@@ -420,7 +468,7 @@ export function parseManualNewCommand(input: string): {
   const tokens = tokenize(normalizedInput);
   console.log("Tokenized input:", tokens);
 
-  // 2) Extract flags (--business, --vendor, --payment, --memo, --date, --image, --items)
+  // 2) Extract flags (--business, --vendor, --payment, --memo, --date, --image, --items, --type)
   const {
     business,
     vendor,
@@ -429,6 +477,7 @@ export function parseManualNewCommand(input: string): {
     date: flagDate,
     imageUrl,
     items: itemsFlag,
+    type,
     tokens: remainingTokens,
   } = extractFlags(tokens);
 
@@ -440,13 +489,18 @@ export function parseManualNewCommand(input: string): {
     date: flagDate,
     imageUrl,
     itemsFlag,
+    type,
     remainingTokens,
   });
 
   // 3) Use flag date if provided, otherwise default to today
   const finalDate = flagDate || formatLocalDate(new Date());
 
-  // 4) Parse items - prioritize items flag over legacy token parsing
+  // 4) Validate and set transaction type (default to expense for backward compatibility)
+  const validTypes = ["expense", "income", "asset", "liability", "transfer"];
+  const transactionType = type && validTypes.includes(type) ? type : "expense";
+
+  // 5) Parse items - prioritize items flag over legacy token parsing
   let parsedItems: ParsedItem[] = [];
   if (itemsFlag && itemsFlag.length > 0) {
     // Use the new structured items flag
@@ -470,9 +524,9 @@ export function parseManualNewCommand(input: string): {
   // 5) Set vendor/payee (now from flags)
   const payee = vendor || "Unknown Vendor";
 
-  // 9) Map payment method
+  // 9) Map payment method using the new mapping function
   const paymentAccount = payment
-    ? mapPaymentMethod(payment)
+    ? mapPaymentMethodToAccount(payment, normalizeBusiness(business))
     : getDefaultPaymentMethod();
 
   // 10) Build receipt totals
@@ -497,6 +551,7 @@ export function parseManualNewCommand(input: string): {
     memo: memo || undefined,
     paymentAccount,
     business: normalizeBusiness(business),
-    imageUrl: imageUrl || undefined, // 👈 ADD THIS TO RETURN
+    imageUrl: imageUrl || undefined,
+    type: transactionType,
   };
 }

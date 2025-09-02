@@ -20,10 +20,24 @@ export function renderLedger(
 
   const lines = [
     `${ymd} ${payee}`,
-    ...postings.map(
-      (p) =>
-        `    ${p.account.padEnd(30)}${pad(p.amount, p.currency || currency)}`
-    ),
+    ...postings.map((p) => {
+      // For income accounts with negative amounts, render without the amount (Ledger convention)
+      if (p.account.startsWith("Income:") && p.amount < 0) {
+        return `    ${p.account}`;
+      }
+      // For liability accounts with negative amounts, render without the amount (Ledger convention)
+      if (p.account.startsWith("Liabilities:") && p.amount < 0) {
+        return `    ${p.account}`;
+      }
+      // For equity accounts with negative amounts, render without the amount (Ledger convention)
+      if (p.account.startsWith("Equity:") && p.amount < 0) {
+        return `    ${p.account}`;
+      }
+      return `    ${p.account.padEnd(30)}${pad(
+        p.amount,
+        p.currency || currency
+      )}`;
+    }),
   ];
   return lines.join("\n");
 }
