@@ -2,6 +2,11 @@ import { DatabaseAccountMapper } from "./database-account-mapper";
 import { mapAccount as mapAccountStatic } from "./account-map";
 import type { MappingResult, AccountType } from "@/types/account-mappings";
 
+// Helper function to validate AccountType
+function isValidAccountType(type: string): type is AccountType {
+  return ["expense", "asset", "liability", "income", "equity"].includes(type);
+}
+
 export type AIAccountMapperOptions = {
   vendor?: string;
   price?: number;
@@ -51,7 +56,8 @@ export class HybridDatabaseMapper {
 
       return {
         account: staticAccount,
-        account_type: type || "expense", // Use the actual transaction type
+        account_type:
+          type && isValidAccountType(type) ? (type as AccountType) : "expense", // Use the actual transaction type
         confidence: 0.4, // Lower confidence for static fallback
         source: "static_fallback",
         business_context: businessContext,
@@ -63,12 +69,14 @@ export class HybridDatabaseMapper {
       const staticAccount = mapAccountStatic(description, {
         vendor,
         business: businessContext || "Personal",
-        type: type || "expense",
+        type:
+          type && isValidAccountType(type) ? (type as AccountType) : "expense",
       });
 
       return {
         account: staticAccount,
-        account_type: type || "expense", // Use the actual transaction type
+        account_type:
+          type && isValidAccountType(type) ? (type as AccountType) : "expense", // Use the actual transaction type
         confidence: 0.3,
         source: "static_fallback",
         business_context: businessContext,

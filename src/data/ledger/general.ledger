@@ -560,3 +560,15 @@
     Income:Personal:Freelance:Services
     Assets:Bank:Kasikorn:Personal  50,000.00฿
 
+2025/09/03 Company X
+    Income:Personal:Freelance:Services
+    Assets:Bank:Kasikorn:Personal  50,000.00฿
+
+2025/09/03 Apple Store
+    Assets:Personal:Personal:Electronics:Computer 40,000.00฿
+    Liabilities:Personal:Debt:CreditCard
+
+2025/09/03 Grocery Store
+    Expenses:Personal:Food:Fruits  300.00฿
+    Assets:Bank:Kasikorn:Personal -300.00฿
+

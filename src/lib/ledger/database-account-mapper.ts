@@ -16,6 +16,11 @@ import type {
   InsertUserMapping,
 } from "@/types/account-mappings";
 
+// Helper function to validate AccountType
+function isValidAccountType(type: string): type is AccountType {
+  return ["expense", "asset", "liability", "income", "equity"].includes(type);
+}
+
 // Define database schema types for better type safety
 interface Database {
   public: {
@@ -135,7 +140,10 @@ export class DatabaseAccountMapper {
         }
 
         // If a specific type is requested, override the pattern's account type
-        const finalAccountType = type || patternMapping.account_type;
+        const finalAccountType: AccountType =
+          type && isValidAccountType(type)
+            ? (type as AccountType)
+            : patternMapping.account_type;
 
         // If the type is different from the pattern's type, rebuild the account path
         let finalAccountPath = accountPath;
@@ -185,7 +193,10 @@ export class DatabaseAccountMapper {
           }
 
           // If a specific type is requested, override the vendor's account type
-          const finalAccountType = type || vendorMapping.account_type;
+          const finalAccountType: AccountType =
+            type && isValidAccountType(type)
+              ? (type as AccountType)
+              : vendorMapping.account_type;
 
           // If the type is different from the vendor's type, rebuild the account path
           let finalAccountPath = accountPath;
@@ -217,12 +228,14 @@ export class DatabaseAccountMapper {
       const staticAccount = mapAccountStatic(description, {
         vendor,
         business: businessContext || "Personal",
-        type: type || "expense",
+        type:
+          type && isValidAccountType(type) ? (type as AccountType) : "expense",
       });
 
       return {
         account: staticAccount,
-        account_type: type || "expense",
+        account_type:
+          type && isValidAccountType(type) ? (type as AccountType) : "expense",
         confidence: 0.4,
         source: "static_fallback",
         business_context: businessContext,
@@ -231,10 +244,13 @@ export class DatabaseAccountMapper {
       // Fallback to business default (this code is now unreachable, but keeping for safety)
       if (businessContext) {
         const businessDefault = await this.getBusinessDefaultAccountType(
-          businessContext
+          businessContext!
         );
         if (businessDefault) {
-          const fallbackType = type || businessDefault;
+          const fallbackType: AccountType =
+            type && isValidAccountType(type!)
+              ? (type as AccountType)
+              : (businessDefault as AccountType);
           let fallbackAccount: string;
 
           switch (fallbackType) {
@@ -262,7 +278,8 @@ export class DatabaseAccountMapper {
       }
 
       // Final fallback - use type to determine account structure
-      const fallbackType = type || "expense";
+      const fallbackType: AccountType =
+        type && isValidAccountType(type!) ? (type as AccountType) : "expense";
       const business = businessContext || "Personal";
       let fallbackAccount: string;
 
@@ -289,7 +306,8 @@ export class DatabaseAccountMapper {
     } catch (error) {
       console.error("Error in mapAccount:", error);
       // Return safe fallback on any error
-      const fallbackType = type || "expense";
+      const fallbackType: AccountType =
+        type && isValidAccountType(type) ? (type as AccountType) : "expense";
       const business = businessContext || "Personal";
       let fallbackAccount: string;
 
