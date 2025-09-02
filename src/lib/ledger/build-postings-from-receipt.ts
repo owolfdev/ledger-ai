@@ -82,6 +82,59 @@ export async function buildPostingsByType(
   const business = opts.business || "Personal";
   const map = opts.mapAccount || defaultMapAccount;
 
+  // Check for opening balance patterns BEFORE any item processing
+  const isOpeningBalance = receipt.items?.some(
+    (item) =>
+      item.description.toLowerCase().includes("opening") ||
+      item.description.toLowerCase().includes("initial") ||
+      item.description.toLowerCase().includes("starting") ||
+      item.description.toLowerCase().includes("opening_balance") ||
+      item.description.toLowerCase().includes("initial_balance")
+  );
+
+  console.log("🔍 Server-side early opening balance detection:", {
+    isOpeningBalance,
+    type,
+    items: receipt.items?.map((i) => i.description),
+    total: receipt.total ?? receipt.subtotal,
+  });
+
+  // Skip ALL item processing for opening balances - they only need payment account + equity
+  if (
+    isOpeningBalance &&
+    (type === "asset" ||
+      type === "opening_balance" ||
+      type === "initial_balance")
+  ) {
+    const total = receipt.total ?? receipt.subtotal ?? 0;
+
+    // Normalize business name for consistent account paths
+    const { normalizeBusinessNameSync } = await import("./business-normalizer");
+    const normalizedBusiness = normalizeBusinessNameSync(
+      business || "Personal"
+    );
+
+    const postings: Posting[] = [
+      {
+        account: opts.paymentAccount
+          ? mapPaymentMethodToAccount(
+              opts.paymentAccount,
+              normalizedBusiness.accountPrefix
+            )
+          : "Assets:Cash",
+        amount: +total,
+        currency,
+      },
+      {
+        account: `Equity:${normalizedBusiness.accountPrefix}:Opening-Balances`,
+        amount: -total,
+        currency,
+      },
+    ];
+    console.log("✅ Server-side created opening balance postings:", postings);
+    return postings;
+  }
+
   // Build context object for mapAccount calls
   const mapContext: MapAccountOptions = {
     vendor: opts.vendor,

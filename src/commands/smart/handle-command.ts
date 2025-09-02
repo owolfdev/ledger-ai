@@ -256,6 +256,7 @@ NEW COMMAND EXAMPLES (Flag-based syntax):
 - "Bought a laptop for $2000 with credit card" → "new -i laptop 2000 --type asset --payment credit-card"
 - "Bought a laptop from Apple Store on my KBank Credit card" → "new -i laptop 40000 --type asset --vendor Apple Store --payment KBank Credit card"
 - "Paid off $500 of credit card debt" → "new -i credit-card 500 --type liability --payment checking"
+- "Opening balance of 1000000 in my Kasikorn bank account" → "new -i opening_balance 1000000 --type asset --payment Kasikorn Bank"
 
 ENTRIES COMMAND EXAMPLES:
 - "Show my expenses from today" → "entries today"

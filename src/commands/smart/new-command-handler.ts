@@ -122,6 +122,55 @@ async function generateClientPostings(
   }
 ): Promise<ClientPosting[]> {
   const { currency, paymentAccount, business, vendor, useAI } = opts;
+  const type = opts.type || "expense";
+
+  // Check for opening balance patterns BEFORE any item processing
+  const isOpeningBalance = receipt.items?.some(
+    (item) =>
+      item.description.toLowerCase().includes("opening") ||
+      item.description.toLowerCase().includes("initial") ||
+      item.description.toLowerCase().includes("starting") ||
+      item.description.toLowerCase().includes("opening_balance") ||
+      item.description.toLowerCase().includes("initial_balance")
+  );
+
+  console.log("🔍 Early opening balance detection:", {
+    isOpeningBalance,
+    type,
+    items: receipt.items?.map((i) => i.description),
+    total: receipt.total ?? receipt.subtotal,
+  });
+
+  // Skip ALL item processing for opening balances - they only need payment account + equity
+  if (isOpeningBalance && type === "asset") {
+    const total = receipt.total ?? receipt.subtotal ?? 0;
+
+    // Normalize business name for consistent account paths
+    const { normalizeBusinessNameSync } = await import(
+      "@/lib/ledger/business-normalizer"
+    );
+    const normalizedBusiness = normalizeBusinessNameSync(
+      business || "Personal"
+    );
+
+    const postings: ClientPosting[] = [
+      {
+        account: mapPaymentMethodToAccount(
+          paymentAccount,
+          normalizedBusiness.accountPrefix
+        ),
+        amount: +total,
+        currency,
+      },
+      {
+        account: `Equity:${normalizedBusiness.accountPrefix}:Opening-Balances`,
+        amount: -total,
+        currency,
+      },
+    ];
+    console.log("✅ Created opening balance postings:", postings);
+    return postings;
+  }
 
   // Map all items to accounts (with AI if enabled)
   const itemMappings = await Promise.all(
@@ -222,8 +271,6 @@ async function generateClientPostings(
     receipt.total ??
     receipt.subtotal ??
     postings.reduce((sum, p) => sum + p.amount, 0);
-
-  const type = opts.type || "expense";
 
   if (type === "income") {
     // For income: cash increases (positive), income accounts are credited (negative)

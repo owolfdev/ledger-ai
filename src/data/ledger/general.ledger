@@ -532,43 +532,49 @@
     Expenses:Personal:TrashCollection 1,000.00฿
     Assets:Bank:Kasikorn:Personal -1,000.00฿
 
-2025/09/03 Apple Store
-    Assets:Personal:Personal:Electronics:Computer 40,000.00฿
-    Liabilities:Personal:Debt:CreditCard-40,000.00฿
+2025/09/03 Unknown Vendor
+    Expenses:Kehasrisuk:Misc       1,000,000.00฿
+    Assets:Bank:Kasikorn:Kehasrisuk-1,000,000.00฿
 
-2025/09/03 Apple Store
-    Assets:Personal:Personal:Electronics:Computer 40,000.00฿
-    Liabilities:Personal:Debt:CreditCard-40,000.00฿
+2025/09/03 Unknown Vendor
+    Expenses:Kehasrisuk:Misc       1,000,000.00฿
+    Assets:Bank:Kasikorn:Kehasrisuk-1,000,000.00฿
 
-2025/09/03 Apple Store
-    Assets:Personal:Personal:Electronics:Computer 40,000.00฿
-    Liabilities:Personal:Debt:CreditCard
+2025/09/03 Mi
+    Expenses:Kehasrisuk:Misc       1,000,000.00฿
+    Assets:Bank:Kasikorn:Kehasrisuk-1,000,000.00฿
 
-2025/09/03 Apple Store
-    Assets:Personal:Personal:Electronics:Computer 40,000.00฿
-    Liabilities:Personal:Debt:CreditCard
-
-2025/09/03 Grocery Store
-    Expenses:Personal:Food:Fruits  300.00฿
-    Assets:Bank:Kasikorn:Personal -300.00฿
-
-2025/09/03 Apple Store
-    Assets:Personal:Personal:Electronics:Computer 40,000.00฿
-    Liabilities:Personal:Debt:CreditCard
+2025/09/03 Unknown Vendor
+    Assets:Personal:Misc           1,000,000.00฿
+    Assets:Bank:Kasikorn:Personal -1,000,000.00฿
 
 2025/09/03 Company X
-    Income:Personal:Freelance:Services
-    Assets:Bank:Kasikorn:Personal  50,000.00฿
+    Income:Personal:Misc
+    Assets:Bank:Kasikorn:Personal  5,000.00฿
 
-2025/09/03 Company X
-    Income:Personal:Freelance:Services
-    Assets:Bank:Kasikorn:Personal  50,000.00฿
+2025/09/03 Unknown Vendor
+    Assets:Personal:Misc           1,000,000.00฿
+    Assets:Bank:Kasikorn:Personal -1,000,000.00฿
+
+2025/09/03 Keha Srisuk
+    Assets:Personal:Misc           0.00฿
+    Assets:Bank:Kasikorn:Personal  1,000,000.00฿
+    Equity:undefined:Opening-Balances
 
 2025/09/03 Apple Store
-    Assets:Personal:Personal:Electronics:Computer 40,000.00฿
-    Liabilities:Personal:Debt:CreditCard
+    Assets:Personal:Personal:Electronics:Computer 50,000.00฿
+    Assets:Bank:Kasikorn:Personal -50,000.00฿
 
-2025/09/03 Grocery Store
-    Expenses:Personal:Food:Fruits  300.00฿
-    Assets:Bank:Kasikorn:Personal -300.00฿
+2025/09/03 Unknown Vendor
+    Assets:Kaha Srisuk company:Misc 0.00฿
+    Assets:Bank:Kasikorn:Kaha Srisuk company 1,000,000.00฿
+    Equity:Kaha Srisuk company:Opening-Balances
+
+2025/09/03 Unknown Vendor
+    Assets:Bank:Kasikorn:Kaha Srisuk company account 1,000,000.00฿
+    Equity:Kaha Srisuk company account:Opening-Balances
+
+2025/09/03 Unknown Vendor
+    Assets:Bank:Kasikorn:KehaSrisuk 1,000,000.00฿
+    Equity:KehaSrisuk:Opening-Balances
 

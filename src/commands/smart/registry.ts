@@ -803,6 +803,11 @@ export const commandRegistry: Record<string, CommandMeta> = {
       "i paid off",
       "debt payment",
       "loan payment",
+      // Opening balance patterns
+      "opening balance",
+      "initial balance",
+      "starting balance",
+      "beginning balance",
       // General
       "transaction",
     ],
@@ -892,6 +897,18 @@ export const commandRegistry: Record<string, CommandMeta> = {
         input: "Student loan payment of $1000",
         output: "new -i student-loan 1000 --type liability --payment savings",
         description: "Student loan payment",
+      },
+      // NEW: Opening balance examples
+      {
+        input: "Opening balance of 1000000 in my Kasikorn bank account",
+        output:
+          "new -i opening_balance 1000000 --type asset --payment Kasikorn Bank",
+        description: "Opening balance entry",
+      },
+      {
+        input: "Initial balance of $50000 in checking account",
+        output: "new -i initial_balance 50000 --type asset --payment checking",
+        description: "Initial balance entry",
       },
     ],
     categories: ["expense", "finance", "accounting"],

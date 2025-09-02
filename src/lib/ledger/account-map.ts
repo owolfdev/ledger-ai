@@ -1,6 +1,8 @@
 // /lib/ledger/account-map.ts
 // Deterministic description→account mapper with business context support
 
+import { normalizeBusinessNameSync } from "./business-normalizer";
+
 export type MapAccountOptions = {
   vendor?: string;
   price?: number; // for future threshold-based routing
@@ -657,19 +659,22 @@ function buildAccountFromCategory(
     return `Expenses:${category}`;
   }
 
+  // Normalize business name for consistency
+  const normalizedBusiness = normalizeBusinessNameSync(business);
+
   // Build account based on transaction type
   switch (type) {
     case "income":
-      return `Income:${business}:${category}`;
+      return `Income:${normalizedBusiness.accountPrefix}:${category}`;
     case "asset":
-      return `Assets:${business}:${category}`;
+      return `Assets:${normalizedBusiness.accountPrefix}:${category}`;
     case "liability":
-      return `Liabilities:${business}:${category}`;
+      return `Liabilities:${normalizedBusiness.accountPrefix}:${category}`;
     case "transfer":
       // Transfers might need special handling, but for now treat as expense
-      return `Expenses:${business}:${category}`;
+      return `Expenses:${normalizedBusiness.accountPrefix}:${category}`;
     default: // expense
-      return `Expenses:${business}:${category}`;
+      return `Expenses:${normalizedBusiness.accountPrefix}:${category}`;
   }
 }
 
@@ -701,20 +706,31 @@ export function mapAccount(
   const business = opts.business || "Personal";
   const type = opts.type || "expense";
 
+  // Normalize business name for consistency
+  const normalizedBusiness = normalizeBusinessNameSync(business);
+
   // Description-based mapping (PRIORITY 1)
   const descCategory = findDescriptionCategory(desc);
   if (descCategory) {
-    return buildAccountFromCategory(descCategory, business, type);
+    return buildAccountFromCategory(
+      descCategory,
+      normalizedBusiness.normalized,
+      type
+    );
   }
 
   // Vendor-based mapping (PRIORITY 2 - fallback only)
   const vendorCategory = findVendorCategory(opts.vendor);
   if (vendorCategory) {
-    return buildAccountFromCategory(vendorCategory, business, type);
+    return buildAccountFromCategory(
+      vendorCategory,
+      normalizedBusiness.normalized,
+      type
+    );
   }
 
   // Fallback based on type
-  return buildAccountFromCategory("Misc", business, type);
+  return buildAccountFromCategory("Misc", normalizedBusiness.normalized, type);
 }
 
 // Helper function to get available business names (for future business management)
