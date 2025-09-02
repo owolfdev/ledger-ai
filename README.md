@@ -1,51 +1,85 @@
-# 📟 Ledger App — Terminal Command System
+# 📟 Ledger AI — Smart Terminal Accounting System
 
-**Technical Reference — Updated August 2025**
+possible rename: TerminalEx
+
+**Production-Ready Multi-Tenant SaaS — Updated January 2025**
 
 ---
 
 ## **1. Overview**
 
-The Ledger App is a **React-based smart terminal** for quickly creating, managing, and editing financial ledger entries.
-It combines **structured parsing**, **AI-assisted inference**, **Supabase-backed persistence**, and **comprehensive entry management** with optional **Ledger CLI integration** for development workflows.
+Ledger AI is a **smart terminal-based double-entry accounting system** that combines the power of Ledger CLI with modern web technology. It allows users to quickly record financial transactions through natural language commands with AI assistance for categorization and account mapping. The system learns from user patterns to automatically suggest correct accounts, supports multiple businesses and currencies, and syncs data to standard .ledger files for compatibility with professional accounting tools.
 
-### **🎯 Recent Improvements (August 2025)**
+**Target Market**: Developers, freelancers, and small business owners who want the precision of double-entry accounting with the speed and convenience of a modern terminal interface.
 
-**Command Syntax Standardization:**
+### **🎯 Production Roadmap (2025)**
 
-- ✅ **Eliminated mixed syntax** - No more `@` vendor symbols or `business:` prefixes
-- ✅ **Consistent flag system** - All commands now use standard `--flag` syntax
-- ✅ **Short flag support** - Added `-b`, `-v`, `-D`, `-m`, `-d`, `-t`, `-p` abbreviations
-- ✅ **Improved UX** - Commands are now intuitive and follow CLI best practices
-- ✅ **Better consistency** - Unified syntax across all commands and aliases
+**Phase 1: Enhanced Command System (Weeks 1-4)**
 
-**Examples of improvements:**
+- ✅ **Type-specific commands** - `ex` (expense), `in` (income), `as` (asset), `li` (liability), `tr` (transfer)
+- ✅ **Account normalization** - Smart learning system for consistent account mapping
+- ✅ **Enhanced AI integration** - Two-tier natural language processing
+- ✅ **Ledger CLI compatibility** - Remote server hosting with full CLI functionality
+
+**Phase 2: Multi-Tenant Architecture (Weeks 5-8)**
+
+- 🔄 **Tenant isolation** - Secure multi-user database architecture
+- 🔄 **Subscription management** - Stripe integration with tiered pricing
+- 🔄 **User management** - Role-based access control and permissions
+- 🔄 **Data portability** - Standard .ledger file export and import
+
+**Phase 3: Production Infrastructure (Weeks 9-12)**
+
+- 🔄 **Cloud deployment** - Kubernetes, auto-scaling, monitoring
+- 🔄 **Performance optimization** - Redis caching, query optimization
+- 🔄 **Security hardening** - Audit logging, rate limiting, compliance
+- 🔄 **Testing suite** - Comprehensive unit, integration, and E2E tests
+
+**Phase 4: Business Features & Launch (Weeks 13-16)**
+
+- 🔄 **Marketing website** - Landing page, pricing, SEO (http://myapp.com)
+- 🔄 **Payment integration** - Stripe subscriptions, billing management
+- 🔄 **Advanced reporting** - P&L, balance sheets, custom reports
+- 🔄 **API access** - RESTful API for integrations
+- 🔄 **Mobile optimization** - Progressive Web App features
+- 🔄 **Launch preparation** - Documentation, testing, user onboarding
+
+**Examples of new command system:**
 
 ```bash
-# OLD (confusing mixed syntax)
-new MyBrick: supplies 500 @ HomeDepot
-edit-entry 323 --business MyBrick
-
-# NEW (consistent flag-based syntax)
-new -i supplies 500 --vendor HomeDepot --business MyBrick
-edit-entry 323 -b MyBrick
+# Type-specific commands for clarity
+ex -i coffee 100 -v Starbucks          # Expense
+in -i consultancy 5000 -c "Acme Corp"  # Income
+as -i laptop 2000 -p credit-card       # Asset
+li -i credit-card 500 -p bank          # Liability
+tr -f checking -t savings 1000         # Transfer
 ```
 
 ---
 
 ## **2. Core Features**
 
-- **Smart Command Parser**
+- **Two-Tier Natural Language System**
 
-  - Supports structured JSON, natural "manual" commands (`new coffee $5 --vendor Starbucks --payment credit-card`), **and OCR-assisted entry with review workflow**
-  - Automatic detection of:
-    - Date (absolute or relative: `2025-08-10`, `yesterday`)
-    - Items & prices (with optional category overrides)
-    - Payment account mapping (`credit card` → `Liabilities:CreditCard`)
-    - Memo extraction (`--memo "Lunch meeting"`)
-    - Currency detection (`$` → `USD`, `฿` → `THB`)
-    - Business context (`--business MyBrick` or `--business Personal`)
-  - Extensible regex mapping for expense categories
+  - **Tier 1: Intent Detection** - AI processes natural language and generates structured commands
+  - **Tier 2: Command Processing** - Structured commands create proper database entries
+  - **Seamless Integration** - Commands auto-populate in terminal for user review
+  - **Learning System** - AI learns user patterns for better account suggestions
+
+- **Type-Specific Command System**
+
+  - **`ex`** - Expenses (money going out): `ex -i coffee 100 -v Starbucks`
+  - **`in`** - Income (money coming in): `in -i consultancy 5000 -c "Acme Corp"`
+  - **`as`** - Assets (purchasing valuable items): `as -i laptop 2000 -p credit-card`
+  - **`li`** - Liabilities (paying off debt): `li -i credit-card 500 -p bank`
+  - **`tr`** - Transfers (moving money between accounts): `tr -f checking -t savings 1000`
+
+- **Smart Account Learning**
+
+  - **Account Normalization** - Consistent account mapping regardless of input variations
+  - **User Pattern Learning** - System learns from corrections and preferences
+  - **Context-Aware Suggestions** - Business-specific account recommendations
+  - **Effortless User Experience** - Minimal confirmation prompts after learning
 
 - **Entry Management System**
 
@@ -64,500 +98,775 @@ edit-entry 323 -b MyBrick
   - **Command population**: Generated commands automatically appear in terminal input field for easy execution
   - **Brief feedback**: Clean one-line responses like `✓ Generated: \`new -i coffee 100 --vendor Starbucks\``
 
-- **Supabase Storage**
+- **Multi-Tenant Database Architecture**
 
-  - Primary persistence layer for:
-    - Normalized ledger entries (`ledger_entries`)
-    - Individual account postings (`ledger_postings`)
-    - Business metadata (`businesses`)
-    - Receipt images (Supabase Storage bucket)
-  - **Account-based business context** stored in expense account hierarchy
-  - All numeric amounts stored without currency symbols; currency stored as ISO code
+  - **Tenant Isolation** - Secure data separation with proper access controls
+  - **Scalable Schema** - Optimized for multi-user, multi-business scenarios
+  - **Account Management** - Dynamic account discovery from transaction data
+  - **Data Portability** - Standard .ledger file export for professional compatibility
 
-- **Modern Next.js Architecture**
+- **Remote Ledger CLI Integration**
 
-  - **Server actions** for data mutations (create, update entries)
-  - **Optimistic updates** with `useTransition` and `revalidatePath`
-  - **Type-safe** operations with Zod validation
-  - **Image processing** with Sharp for receipt optimization
+  - **Cloud-Hosted CLI** - Ledger CLI commands available through web interface
+  - **Standard Format** - Data stored in industry-standard .ledger format
+  - **Professional Compatibility** - Works with any Ledger CLI-compatible software
+  - **No Vendor Lock-in** - Export data anytime in standard format
 
-- **Ledger File Sync (Dev Mode)**
+- **Production-Ready Infrastructure**
 
-  - Optional `.ledger` file sync for compatibility with [Ledger CLI](https://www.ledger-cli.org/)
-  - Controlled by `.env` → `LOCAL_LEDGER_WRITE=true`
-  - Auto-converts Supabase entries into canonical CLI syntax with correct currency symbol
-  - **One-way sync**: Supabase → File (never the reverse)
-
-- **Ledger CLI Integration (Dev Only)**
-  - Terminal can run `ledger register`, `ledger balance`, etc., against local file
-  - Disabled in production for security and scalability
+  - **Progressive Web App** - Works offline, installable on any device
+  - **Cloud Deployment** - Kubernetes, auto-scaling, monitoring
+  - **Performance Optimization** - Redis caching, query optimization
+  - **Security Hardening** - Audit logging, rate limiting, compliance
 
 ---
 
-## **3. Input Methods**
+## **3. Natural Language Processing**
 
-The Ledger App provides three ways to create entries, all converging on the same processing pipeline:
+The system provides a seamless two-tier natural language processing pipeline:
 
-### **Method 1: Manual Terminal Entry**
-
-```
-User types: "new -i coffee 5 --vendor Starbucks"
-    ↓
-new command handler processes input
-    ↓
-Creates ledger entry in database
-    ↓
-Later: sync to .ledger file
-```
-
-### **Method 2: OCR Image Upload (with Review)**
+### **Tier 1: Intent Detection & Command Generation**
 
 ```
-User uploads receipt image
+User: "I just bought a coffee from Starbucks for $5"
     ↓
-OCR processing extracts data
+AI processes natural language
     ↓
-AI builds equivalent command: "new -i coffee 5 --vendor Starbucks"
+System: ✓ Generated: ex -i coffee 5 -v Starbucks
     ↓
-Command populates terminal input for user review/editing
-    ↓
-User can add --business flags, fix errors, add memo
-    ↓
-User presses Enter → same new command handler
-    ↓
-Creates ledger entry in database
-    ↓
-Later: sync to .ledger file
+Command is injected into terminal input
 ```
 
-### **Method 3: Structured JSON (API/Advanced)**
+### **Tier 2: Command Processing & Database Entry**
 
 ```
-Direct JSON input with receipt structure
+Terminal: ex -i coffee 5 -v Starbucks
     ↓
-Same new command handler processes
+Command parser processes structured input
     ↓
-Creates ledger entry in database
+System creates database entry:
+- date: 2025-01-15
+- memo: "Coffee at Starbucks"
+- postings: [
+    { account: "Expenses:Personal:Food:Coffee", amount: 5.00 },
+    { account: "Assets:Bank:Kasikorn:Personal", amount: -5.00 }
+  ]
     ↓
-Later: sync to .ledger file
+Syncs to remote .ledger file
 ```
 
-**Key Architecture Benefit:** All three methods use the same validation, categorization, and storage logic, ensuring consistency regardless of input source.
+### **Smart Account Learning Flow**
+
+```
+First time: "ex -i coffee 5 -v bkk bank"
+    ↓
+System: "I don't know 'bkk bank' yet"
+    ↓
+System: "I created account 'Assets:Bank:BangkokBank:Personal' for 'bkk bank'"
+    ↓
+User: "y" (accepts)
+    ↓
+System: "✓ Learned! 'bkk bank' → Assets:Bank:BangkokBank:Personal"
+
+Next time: "ex -i coffee 5 -v bangkok bank"
+    ↓
+System: "I think you mean 'Assets:Bank:BangkokBank:Personal' (used for 'bkk bank')"
+    ↓
+User: "y" (accepts)
+    ↓
+System: "✓ Learned! 'bangkok bank' → Assets:Bank:BangkokBank:Personal"
+
+Future: "ex -i coffee 5 -v bkk bank" or "ex -i coffee 5 -v bangkok bank"
+    ↓
+No confirmation needed - system knows the mapping
+```
+
+**Key Architecture Benefit:** All input methods converge on the same validation, categorization, and storage logic, ensuring consistency and enabling the learning system to work across all entry types.
 
 ---
 
-## **4. Payment Methods**
+## **4. Multi-Tenant Architecture**
 
-The system supports multiple payment methods with automatic account mapping:
+The system is designed for production-scale multi-tenant SaaS deployment:
 
-### **Available Payment Methods**
+### **Database Schema**
 
-- **`kasikorn`** → `Assets:Bank:Kasikorn:Personal` (default)
-- **`kbank`** → `Assets:Bank:Kasikorn:Personal`
-- **`thai bank`** → `Assets:Bank:Kasikorn:Personal`
-- **`bank`** → `Assets:Bank:Kasikorn:Personal`
-- **`cash`** → `Assets:Cash`
-- **`credit card`** → `Liabilities:CreditCard`
-- **`bank card`** → `Assets:Bank:Checking`
-- **`paypal`** → `Assets:PayPal`
+```sql
+-- Core multi-tenant tables
+CREATE TABLE tenants (
+  id UUID PRIMARY KEY,
+  name TEXT NOT NULL,
+  subscription_tier TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
 
-### **Usage Examples**
+CREATE TABLE users (
+  id UUID PRIMARY KEY,
+  tenant_id UUID REFERENCES tenants(id),
+  email TEXT UNIQUE NOT NULL,
+  role TEXT DEFAULT 'user',
+  created_at TIMESTAMP DEFAULT NOW()
+);
 
-```bash
-# Use default (Kasikorn Bank)
-new coffee ฿1500 --vendor EmQuartier
+CREATE TABLE ledger_entries (
+  id SERIAL PRIMARY KEY,
+  tenant_id UUID REFERENCES tenants(id),
+  user_id UUID REFERENCES users(id),
+  entry_date DATE,
+  description TEXT,
+  entry_text TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
 
-# Explicitly specify payment method
-new coffee ฿1500 --vendor EmQuartier --payment kasikorn
-new coffee ฿1500 --vendor EmQuartier --payment cash
-new coffee ฿1500 --vendor EmQuartier --payment credit card
-new coffee ฿1500 --vendor EmQuartier --payment bkk bank
-new coffee ฿1500 --vendor EmQuartier --payment "channel 60"
+CREATE TABLE ledger_postings (
+  id SERIAL PRIMARY KEY,
+  entry_id INTEGER REFERENCES ledger_entries(id),
+  account TEXT,     -- This IS your account data
+  amount DECIMAL,
+  currency TEXT,
+  sort_order INTEGER
+);
+
+-- Account learning system
+CREATE TABLE account_mappings (
+  id SERIAL PRIMARY KEY,
+  tenant_id UUID REFERENCES tenants(id),
+  user_input TEXT,
+  account_name TEXT,
+  confidence_score DECIMAL,
+  usage_count INTEGER DEFAULT 1,
+  created_at TIMESTAMP DEFAULT NOW()
+);
 ```
 
-**✨ Smart Flag Parsing:** Multi-word payment methods like `bkk bank` and `credit card` work without quotes! The system automatically groups words until it finds the next flag.
+### **Tenant Isolation**
+
+- **Row-Level Security** - All queries automatically filtered by tenant_id
+- **Secure API** - JWT tokens include tenant context
+- **Data Portability** - Each tenant can export their complete .ledger file
+- **Scalable Architecture** - Supports thousands of concurrent users
 
 ---
 
-## **5. Data Flow Examples**
+## **5. Production Deployment Architecture**
 
-### **Manual Entry Example**
-
-User types:
-
-```bash
-new -i coffee 4 pastry 5 --vendor Starbucks --payment "credit card" --memo "pumpkin latte not good" --date yesterday
-```
-
-**Step-by-step processing:**
-
-1. **Enhanced Tokenization & Parsing**
-
-   - Detects date (`yesterday`)
-   - Extracts items: `coffee $4`, `pastry $5`
-   - Detects vendor (`--vendor Starbucks`)
-   - Maps payment method to `Liabilities:CreditCard`
-   - Extracts memo and business context
-   - Detects currency (`USD`)
-
-2. **Receipt Shape Normalization**
-
-   ```json
-   {
-     "items": [
-       { "description": "coffee", "price": 4 },
-       { "description": "pastry", "price": 5 }
-     ],
-     "subtotal": 9,
-     "tax": null,
-     "total": 9
-   }
-   ```
-
-3. **Posting Generation with Business Context**
-
-   ```ledger
-   2025/08/13 Starbucks
-       Expenses:Personal:Food:Coffee  $4.00
-       Expenses:Personal:Food:Pastry  $5.00
-       Liabilities:CreditCard        $-9.00
-   ```
-
-4. **Supabase Save with Posting Details**
-
-   - Entry stored in `ledger_entries` with business context in account names
-   - Individual postings stored in `ledger_postings` with sort order
-   - Currency as `"USD"`, raw input in `entry_raw`, canonical text in `entry_text`
-
-5. **Entry Management**
-   - Accessible via `/ledger/entry/{id}` for viewing and editing
-   - Full edit capabilities including image upload and posting modification
-
-### **OCR-Assisted Entry Example**
-
-User uploads Starbucks receipt image:
-
-1. **OCR Processing** → Extracts text from image using Tesseract.js with multiple optimization strategies
-2. **AI Command Generation** → Creates: `new -i coffee 5.67 pastry 3.25 --vendor Starbucks --date 2025-08-17`
-3. **Terminal Input Population** → Command appears in terminal input field for user review
-4. **User Review & Edit** → User adds: `--business Channel60 --memo "client meeting"`
-5. **Same Processing Pipeline** → Identical to manual entry from this point forward
-
----
-
-## **6. Key Files & Responsibilities**
-
-| File / Path                                        | Purpose                                                                                           |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| **Command Processing**                             |
-| `/commands/smart/new-command-handler.ts`           | Main orchestration for `new` terminal commands — handles both structured JSON and manual commands |
-| `/lib/ledger/parse-manual-command.ts`              | Enhanced tokenizer supporting flags, business context, and vendor syntax                          |
-| `/lib/ledger/build-postings-from-receipt.ts`       | Converts parsed receipt into Ledger CLI postings with business-aware accounts                     |
-| `/lib/ledger/render-ledger.ts`                     | Renders date, payee, and postings into canonical `.ledger` text                                   |
-| **Entry Management**                               |
-| `/app/ledger/entry/[id]/page.tsx`                  | Individual entry detail page with view/edit capabilities                                          |
-| `/app/ledger/entry/[id]/editable-ledger-entry.tsx` | Comprehensive entry editor with basic/advanced modes                                              |
-| `/app/ledger/entry/[id]/image-upload.tsx`          | Receipt image upload and management component                                                     |
-| **Data Layer**                                     |
-| `/app/actions/ledger/create-ledger-entry.ts`       | Creates new ledger entries with posting details                                                   |
-| `/app/actions/ledger/update-ledger-entry.ts`       | Updates existing entries including postings and images                                            |
-| `/app/actions/ledger/sync-ledger-file.ts`          | Pulls Supabase entries and writes to local `.ledger` file in dev mode                             |
-| **Configuration**                                  |
-| `/lib/ledger/account-map.ts`                       | Maps keywords and descriptions to business-aware expense/asset accounts                           |
-| `/lib/ledger/schemas.ts`                           | Zod schemas for validating structured ledger input and updates                                    |
-| **Image Processing**                               |
-| `/app/api/receipt-image/route.ts`                  | Handles receipt upload, Sharp processing, and Supabase Storage                                    |
-| `/components/terminal/terminal-image-upload.tsx`   | OCR processing and AI command generation with terminal input population                           |
-| **Terminal System**                                |
-| `/components/terminal/terminal.tsx`                | Core terminal interface with input handling and command execution                                 |
-| `/components/terminal/smart-terminal.tsx`          | Context-aware terminal wrapper with command registry and user management                          |
-| `/commands/smart/handle-command.ts`                | Command routing and execution with AI fallback                                                    |
-| `/commands/smart/registry.ts`                      | Complete command registry with usage documentation and examples                                   |
-| **Ledger CLI Integration**                         |
-| `/commands/smart/ledger-cli-command.ts`            | Client-side Ledger CLI command interface                                                          |
-| `/app/api/ledger-cli/route.ts`                     | Server-side Ledger CLI execution with security controls                                           |
-
----
-
-## **7. Entry Management Features**
-
-### **Individual Entry Pages (`/ledger/entry/{id}`)**
-
-- **Full entry details** with business context, postings, and receipt images
-- **Edit button** to enter modification mode
-- **Image display** with full-size view links
-
-### **In-Place Editing System**
-
-- **Basic Mode**: Edit description, date, memo, cleared status, and images
-- **Advanced Mode**: Full posting editor with add/remove/balance capabilities
-- **Real-time validation** ensuring transactions remain balanced
-- **Auto-balance button** to automatically balance the last posting
-- **Account suggestions** with business-aware examples
-- **Enhanced UX** with clear loading states and professional toast notifications
-
-### **Image Management**
-
-- **Receipt upload** with automatic Sharp optimization (grayscale, resize, compress)
-- **Replace/remove** functionality with database synchronization
-- **Supabase Storage** integration with user-specific paths
-- **Preview and full-size viewing**
-
----
-
-## **8. Business Context Architecture**
-
-**Account-Based Approach:**
-
-- Business context embedded in account hierarchy: `Expenses:Personal:Food:Coffee`
-- No foreign key relationships required
-- Self-contained ledger entries compatible with standard accounting tools
-- Business filtering via account name pattern matching
-
-**Supported Business Operations:**
-
-- `new coffee $6` → Personal business (default)
-- `new supplies $50 --business MyBrick` → MyBrick business (flag syntax)
-- `new coffee $6 --business Channel60` → Channel60 business (flag syntax)
-
-**Important Account Naming Rule:**
-
-- Account names **cannot contain spaces** (Ledger CLI requirement)
-- `Studio Shodwe` → `StudioShodwe` or `Studio-Shodwe`
-- System automatically converts business names with spaces
-
----
-
-## **9. AI Fallback System**
-
-The Ledger App features a sophisticated two-tier AI system for processing natural language input:
-
-### **Tier 1: Natural Language Processing (Structured Inputs)**
-
-For inputs like `coffee starbucks 100` or `apples from Safeway 200`:
-
-1. **Intent Detection**: `IntentDetector` analyzes input using patterns:
-
-   - Noun phrases with amounts: `/^[a-z]+\s+[a-z]+\s+\d+/i`
-   - Expense patterns: `bought`, `spent`, `paid`, etc.
-   - Command keywords: `entries`, `new`, `edit-entry`
-
-2. **Command Generation**: `CommandGenerator` creates structured commands:
-
-   - Input: `coffee starbucks 100`
-   - Output: `new -i coffee 100 --vendor Starbucks`
-
-3. **Command Population**: Generated command appears in input field
-4. **Brief Feedback**: Shows `✓ Generated: \`new -i coffee 100 --vendor Starbucks\``
-
-### **Tier 2: General AI Fallback (Complex Queries)**
-
-For more complex natural language like `apples from Safeway 200`:
-
-1. **AI Analysis**: General AI processes the request
-2. **Response Generation**: Creates explanatory response with command
-3. **Command Extraction**: System extracts command from AI response
-4. **Input Population**: Command populates terminal input field
-
-### **Key Features**
-
-- **Consistent Syntax**: All AI-generated commands use new flag-based syntax
-- **Command Population**: No copy-paste needed - commands appear in input field
-- **Brief Feedback**: Clean, minimal responses for better UX
-- **Proper Formatting**: Spacing after code blocks for readability
-
-### **Examples**
-
-```bash
-# Natural Language Processing
-coffee starbucks 100
-→ ✓ Generated: `new -i coffee 100 --vendor Starbucks`
-
-# General AI Fallback
-apples from Safeway 200
-→ To add the entry for apples purchased from Safeway for 200, you can use the following command:
-
-new -i apples 200 --vendor Safeway
+### **Cloud Infrastructure**
 
 ```
-
----
-
-## **10. Terminal Command System**
-
-### **Available Commands**
-
-**Ledger Operations:**
-
-- `new` - Create new ledger entries with natural language or structured input
-- `entries` / `ent` - List, filter, and navigate ledger entries
-- `edit-entry` / `editent` - Edit existing entries (business, vendor, date, memo)
-- `ledger` - Execute Ledger CLI commands against synced file (dev only)
-- `bal` / `reg` - Shortcuts for Ledger CLI balance and register commands
-
-**Navigation & Utility:**
-
-- `go <page>` - Navigate to pages with fuzzy matching
-- `clear` / `clearall` - Clear terminal history
-- `user` / `logout` - Authentication management
-- `help` - Comprehensive command documentation
-
-**AI Integration:**
-
-- Automatic fallback to OpenAI for unrecognized commands
-- Context-aware responses based on page content
-- Rate limiting and usage tracking
-
-### **Command Syntax & Usage**
-
-**NEW Command - Create Ledger Entries**
-
-```bash
-# Basic syntax
-new -i <item1> <price1> <item2> <price2>... [--options]
-
-# Examples
-new -i coffee 150                        # Simple expense (Personal business)
-new -i supplies 500 --business MyBrick   # Business context with flag
-new -i coffee 150 --vendor Starbucks     # With vendor using flag
-new -i coffee $6 pastry $4 --vendor Starbucks --memo "team meeting"  # Multiple items with vendor and memo
-new -i "coffee mug" 200 croissant 150   # Multi-word items with quotes
-
-# Available flags
---items <item1> <price1> <item2> <price2>... / -i <item1> <price1> <item2> <price2>...  # Items and prices (required)
---business <name> / -b <name>            # Set business context
---vendor <name> / -v <name>              # Set vendor/merchant name
---payment <method> / -p <method>         # Payment method (cash, credit card, etc.)
---memo <text> / -m <text>                # Add memo/note
---date <date> / -d <date>                # Set transaction date
---image <url> / -i <url>                 # Attach image URL
---use-ai / -u                            # Force AI categorization (default)
---no-ai / -n                             # Disable AI, use rule-based mapping
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Marketing     │    │   Web App        │    │   Database      │
+│   (http://myapp.com) │◄──►│   (http://app.myapp.com) │◄──►│   (Supabase)    │
+│   (Vercel)      │    │   (Next.js PWA)  │    │                 │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+         │                       │                       │
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   CDN           │    │   Ledger CLI     │    │   Redis Cache   │
+│   (Vercel)      │    │   (DO Droplet)   │    │   (Upstash)     │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+         │                       │                       │
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Stripe        │    │   API Gateway    │    │   Monitoring    │
+│   (Payments)    │    │   (Kubernetes)   │    │   (Logging)     │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
 
-**ENTRIES Command - List & Filter Entries**
+### **Subscription Tiers**
 
-```bash
-# Basic syntax
-entries [options]
+**Starter ($9/month)**
 
-# Examples
-entries today                              # Today's entries
-entries -v coffee -s -m august            # Coffee expenses with totals for current month
-entries -b Personal -s -m july            # Business filter with totals for specific month
-entries -c USD -l 20                      # Currency filter with limit
-entries -t coffee                          # Filter by coffee tag
+- Up to 100 transactions/month
+- Basic reporting
+- Standard .ledger export
+- Email support
 
-# Available flags
---business <name> / -b <name>             # Filter by business account
---vendor <name> / -v <name>               # Filter by vendor/description
---account <pattern> / -A <pattern>        # Filter by account name
---currency <code> / -c <code>             # Filter by currency (USD, THB, EUR)
+**Professional ($29/month)**
 
---sum / -s                                # Show totals
---limit <number> / -l <number>            # Limit results
---month <month> / -m <month>              # Filter by month (january, august, etc.)
+- Unlimited transactions
+- Advanced reporting (P&L, Balance Sheet)
+- API access
+- Priority support
+- Multi-business support
+
+**Enterprise ($99/month)**
+
+- White-label deployment
+- Custom integrations
+- Dedicated support
+- Advanced security features
+- Custom reporting
+
+### **Data Flow Example**
+
+```
+User: "I bought a laptop for $2000 with my credit card"
+    ↓
+AI: ✓ Generated: as -i laptop 2000 -p credit-card
+    ↓
+Command Parser: Validates and processes
+    ↓
+Database: Creates entry with tenant isolation
+    ↓
+Ledger CLI: Syncs to remote .ledger file
+    ↓
+User: Can run "ledger balance" through web interface
 ```
 
-**EDIT-ENTRY Command - Modify Existing Entries**
+### **Two-Product Architecture**
 
-```bash
-# Basic syntax
-edit-entry <id> [--options]
+**Marketing Site (http://myapp.com)**
 
-# Examples
-edit-entry 323 --business MyBrick         # Change business context
-edit-entry 330 --vendor "Starbucks"       # Update vendor name
-edit-entry 325 --date yesterday           # Fix transaction date
-edit-entry 340 --memo "client meeting"    # Add memo to entry
+- Landing page with value propositions
+- Pricing and subscription management
+- Documentation and blog
+- SEO-optimized content
+- Static site (Vercel/Netlify)
 
-edit-entry 340 --delete                   # Delete the entry
+**Application (http://app.myapp.com)**
 
-# Available flags
---business <name> / -b <name>             # Change business context
---vendor <name> / -v <name>               # Update vendor/description
---date <date> / -D <date>                 # Change transaction date
---memo <text> / -m <text>                 # Add or update memo
---delete / -d                              # Delete the entry
---posting <id> / -p <id>                  # Specify posting ID for posting-level operations
+- Progressive Web App (PWA)
+- Terminal interface and command system
+- Multi-tenant database access
+- Real-time AI processing
+- Dynamic Next.js application
+
+---
+
+## **6. Production Implementation Plan**
+
+### **Phase 1: Enhanced Command System (Weeks 1-4)**
+
+**Week 1-2: Type-Specific Commands**
+
+- Implement `ex`, `in`, `as`, `li`, `tr` command handlers
+- Create enhanced command parser with transaction type detection
+- Build account normalization system
+- Add smart account learning database schema
+
+**Week 3-4: AI Integration Enhancement**
+
+- Implement two-tier natural language processing
+- Create intent detection system
+- Build command generation pipeline
+- Add user pattern learning algorithms
+
+### **Phase 2: Multi-Tenant Architecture (Weeks 5-8)**
+
+**Week 5-6: Database Migration**
+
+- Implement tenant isolation with Row-Level Security
+- Create user management system
+- Build subscription management with Stripe
+- Add account mapping learning tables
+
+**Week 7-8: Security & Access Control**
+
+- Implement JWT-based authentication
+- Add role-based permissions
+- Create secure API endpoints
+- Build data export functionality
+
+### **Phase 3: Production Infrastructure (Weeks 9-12)**
+
+**Week 9-10: Cloud Deployment**
+
+- Set up Kubernetes cluster
+- Implement auto-scaling
+- Add monitoring and logging
+- Create CI/CD pipeline
+
+**Week 11-12: Performance & Security**
+
+- Implement Redis caching
+- Add rate limiting
+- Create audit logging
+- Build comprehensive test suite
+
+### **Phase 4: Business Features & Launch (Weeks 13-16)**
+
+**Week 13-14: Marketing Site & Payment Integration**
+
+- Build marketing website (http://myapp.com)
+- Implement Stripe subscription management
+- Create pricing and billing pages
+- Add payment failure handling
+- Build landing page with value propositions
+- Implement SEO optimization
+
+**Week 15-16: Advanced Features & Launch Preparation**
+
+- Build P&L and Balance Sheet reports
+- Create RESTful API and webhook system
+- Implement mobile optimization
+- Launch preparation and testing
+- Documentation and user onboarding
+
+---
+
+## **7. Marketing & Positioning**
+
+### **Target Market**
+
+**Primary: Developers & Tech Professionals**
+
+- Love terminal interfaces and CLI tools
+- Need proper accounting for freelance work
+- Value data portability and open standards
+- Appreciate automation and AI assistance
+
+**Secondary: Small Business Owners**
+
+- Frustrated with complex accounting software
+- Want professional-grade double-entry books
+- Need multi-business support
+- Value the .ledger file standard
+
+**Tertiary: Accounting Professionals**
+
+- Want modern tools for clients
+- Appreciate Ledger CLI compatibility
+- Need efficient data entry methods
+- Value audit trails and data integrity
+
+### **Value Propositions**
+
+**"The Developer's Accounting System"**
+
+- Terminal-first interface for developers
+- Natural language processing for speed
+- Standard .ledger file format for portability
+- AI-powered categorization and learning
+
+**"Natural Language Meets Professional Accounting"**
+
+- Type "I bought coffee for $5" → proper double-entry books
+- AI learns your patterns for consistent accounts
+- Export to any Ledger CLI-compatible software
+- No vendor lock-in, your data is always portable
+
+**"Accounting That Doesn't Suck"**
+
+- Modern web interface with terminal power
+- AI assistance for categorization
+- Multi-business support
+- Professional reporting and compliance
+
+---
+
+## **8. Technical Architecture**
+
+### **Core Technologies**
+
+**Frontend**
+
+- Next.js 15 with App Router
+- TypeScript for type safety
+- Tailwind CSS for styling
+- shadcn/ui for components
+- Progressive Web App capabilities
+
+**Backend**
+
+- Supabase for database and authentication
+- Server Actions for data mutations
+- Redis for caching and session management
+- Ledger CLI for accounting operations
+
+**AI Integration**
+
+- OpenAI GPT-4 for natural language processing
+- Custom intent detection algorithms
+- Pattern learning for account mapping
+- Command generation and validation
+
+**Infrastructure**
+
+- Kubernetes for container orchestration
+- DigitalOcean for cloud hosting
+- Vercel for CDN and edge functions
+- Stripe for subscription management
+
+### **Data Flow Architecture**
+
+```
+User Input → AI Processing → Command Generation → Database → Ledger CLI → .ledger File
+     ↓              ↓              ↓              ↓           ↓           ↓
+Natural Language → Intent Detection → Structured Command → Supabase → Remote CLI → Standard Format
 ```
 
----
+### **Security Model**
 
-## **11. Modern Next.js Integration**
-
-- **Server Actions** for all data mutations (no API routes needed for internal operations)
-- **TypeScript throughout** with strict type checking and Zod validation
-- **Optimistic UI updates** with automatic revalidation
-- **Error handling** with user-friendly feedback
-- **Image processing** with Sharp for optimal receipt storage
-- **Client-server separation** for Ledger CLI commands via API routes
-- **Toast notifications** with shadcn/ui for better user feedback
+- **Tenant Isolation** - Row-level security in database
+- **JWT Authentication** - Secure token-based auth
+- **Rate Limiting** - API protection against abuse
+- **Audit Logging** - Complete transaction history
+- **Data Encryption** - At rest and in transit
 
 ---
 
-## **12. Best Practices**
+## **9. Competitive Analysis**
 
-- **Always save to Supabase first**, then sync to local file if enabled
-- **Account-based business context** eliminates need for complex foreign key relationships
-- **Real-time validation** prevents unbalanced transactions
-- **Image optimization** reduces storage costs and improves performance
-- **Server actions** provide type-safe, modern data operations
-- **OCR review workflow** enables speed of automation with precision of manual review
-- **Single processing pipeline** ensures consistency across all input methods
-- **Enhanced editing UX** with clear loading states and success feedback
-- **Professional toast system** for all user operations (save, delete, edit)
-- **Consistent command syntax** follows CLI standards for better usability
+### **Current Market Landscape**
+
+**Traditional Accounting Software**
+
+- QuickBooks: Complex, expensive, vendor lock-in
+- Xero: Good but lacks developer-friendly features
+- FreshBooks: Simple but limited accounting features
+
+**Developer Tools**
+
+- Beancount: Command-line only, no web interface
+- Ledger CLI: Powerful but requires technical expertise
+- GnuCash: Desktop-only, complex interface
+
+### **Our Competitive Advantages**
+
+**1. Best of Both Worlds**
+
+- Modern web interface + terminal power
+- Professional accounting + developer-friendly
+- AI assistance + manual control
+- Cloud convenience + data portability
+
+**2. Unique Value Propositions**
+
+- Natural language processing for accounting
+- AI-powered account learning
+- Standard .ledger file format
+- Multi-tenant SaaS architecture
+- Progressive Web App capabilities
+
+**3. Market Positioning**
+
+- "The Developer's Accounting System"
+- "Natural Language Meets Professional Accounting"
+- "Accounting That Doesn't Suck"
+- "No Vendor Lock-in, Ever"
+
+### **Go-to-Market Strategy**
+
+**Phase 1: Developer Community**
+
+- Launch on Hacker News, Reddit, GitHub
+- Target freelance developers and consultants
+- Build community around terminal-based accounting
+- Create educational content about double-entry accounting
+
+**Phase 2: Small Business Expansion**
+
+- Partner with accounting professionals
+- Create business-focused features
+- Build integrations with popular tools
+- Develop white-label solutions
+
+**Phase 3: Enterprise Features**
+
+- Advanced reporting and analytics
+- Custom integrations and APIs
+- Dedicated support and training
+- Compliance and audit features
 
 ---
 
-## **13. Extending the System**
+## **10. Success Metrics & KPIs**
 
-- **New Categories**: Add to `account-map.ts` patterns with business-aware mapping
-- **New Payment Methods**: Extend `PARSER_GRAMMAR.payment.map` in `parse-manual-command.ts`
-- **Alternate Currencies**: Adjust currency detection regex or accept explicit ISO codes
-- **Custom AI Rules**: Modify AI prompt in `/commands/smart/new-command-handler.ts`
-- **Additional Edit Features**: Extend `EditableLedgerEntry` component with new capabilities
-- **Image Processing**: Enhance Sharp pipeline in `/app/api/receipt-image/route.ts`
-- **Terminal Commands**: Add new commands to `/commands/smart/registry.ts` and appropriate command sets
-- **OCR Improvements**: Enhance Tesseract.js configurations in `terminal-image-upload.tsx`
-- **Command Syntax**: Follow the established `--flag` pattern for consistency
-- **Flag Abbreviations**: Add short forms (`-b`, `-v`, etc.) for all new flags
+### **Product Metrics**
 
----
+**User Engagement**
 
-## **14. Development Workflow**
+- Daily Active Users (DAU)
+- Monthly Active Users (MAU)
+- Session duration and frequency
+- Command usage patterns
+- AI interaction rates
 
-### **Local Development**
+**Feature Adoption**
 
-1. Set `LOCAL_LEDGER_WRITE=true` in `.env` to enable file sync
-2. Use terminal commands to create entries
-3. Run `ledger balance` to verify accounting accuracy
-4. Use `/ledger/entries` page for visual entry management
+- Natural language processing usage
+- Account learning system effectiveness
+- Multi-business feature adoption
+- Export functionality usage
+- Mobile app usage
 
-### **Production Deployment**
+**Quality Metrics**
 
-- Ledger CLI commands automatically disabled for security
-- File sync disabled - database remains single source of truth
-- All terminal functionality remains available except CLI integration
+- Command accuracy rate
+- AI suggestion acceptance rate
+- User error rates
+- System uptime and performance
+- Customer satisfaction scores
 
-### **Testing Entry Creation**
+### **Business Metrics**
 
-```bash
-# Test manual entry
-new -i coffee $5 --vendor Starbucks --business Personal --memo "morning fuel"
+**Revenue**
 
-# Test OCR workflow
-# Upload receipt image → review generated command → execute
+- Monthly Recurring Revenue (MRR)
+- Annual Recurring Revenue (ARR)
+- Customer Lifetime Value (CLV)
+- Average Revenue Per User (ARPU)
+- Churn rate and retention
 
-# Verify with Ledger CLI (dev only)
-ledger balance
-ledger register coffee
-```
+**Growth**
+
+- User acquisition cost (CAC)
+- Organic vs. paid acquisition
+- Viral coefficient
+- Market penetration
+- Geographic expansion
+
+**Operational**
+
+- Support ticket volume
+- System performance metrics
+- Security incident rate
+- Compliance audit results
+- Team productivity metrics
+
+## **11. Risk Assessment & Mitigation**
+
+### **Technical Risks**
+
+**AI Dependency Risk**
+
+- **Risk**: Over-reliance on AI for critical accounting functions
+- **Mitigation**: Always provide manual override options, maintain rule-based fallbacks
+- **Monitoring**: Track AI accuracy rates, user correction patterns
+
+**Data Integrity Risk**
+
+- **Risk**: Accounting errors due to system bugs or AI mistakes
+- **Mitigation**: Comprehensive testing, audit trails, user review workflows
+- **Monitoring**: Error rates, user feedback, automated validation
+
+**Scalability Risk**
+
+- **Risk**: System performance degradation with user growth
+- **Mitigation**: Cloud-native architecture, auto-scaling, performance monitoring
+- **Monitoring**: Response times, resource utilization, user experience metrics
+
+### **Business Risks**
+
+**Market Competition Risk**
+
+- **Risk**: Large players (QuickBooks, Xero) copying our approach
+- **Mitigation**: Focus on developer community, build strong moats
+- **Monitoring**: Competitive analysis, feature differentiation
+
+**Regulatory Risk**
+
+- **Risk**: Accounting compliance requirements changing
+- **Mitigation**: Stay updated on regulations, build compliance features
+- **Monitoring**: Regulatory updates, audit requirements
+
+**Customer Acquisition Risk**
+
+- **Risk**: High customer acquisition costs in competitive market
+- **Mitigation**: Focus on organic growth, developer community, content marketing
+- **Monitoring**: CAC trends, organic vs. paid acquisition ratios
+
+## **12. Conclusion**
+
+Ledger AI represents a unique opportunity to revolutionize accounting software by combining the power of Ledger CLI with modern web technology and AI assistance. Our approach addresses the fundamental pain points in current accounting software while maintaining the precision and portability that professionals demand.
+
+### **Key Success Factors**
+
+1. **Developer-First Approach** - Terminal interface and CLI compatibility
+2. **AI-Powered Learning** - Natural language processing with account normalization
+3. **Data Portability** - Standard .ledger file format ensures no vendor lock-in
+4. **Multi-Tenant Architecture** - Scalable SaaS platform for growth
+5. **Professional Grade** - Double-entry accounting with audit trails
+
+### **Next Steps**
+
+1. **Phase 1 Implementation** - Enhanced command system and AI integration
+2. **Phase 2 Development** - Multi-tenant architecture and security
+3. **Phase 3 Deployment** - Production infrastructure and performance
+4. **Phase 4 Growth** - Business features and market expansion
+
+### **Vision**
+
+To become the leading accounting platform for developers, freelancers, and small businesses who value precision, portability, and modern user experience. We believe that accounting software should be as powerful as the tools developers use every day, while remaining accessible to non-technical users through AI assistance.
+
+**"The Developer's Accounting System"** - Where natural language meets professional accounting, and your data is never trapped in proprietary formats.
 
 ---
 
 ## **Project Structure**
+
+The current codebase provides a solid foundation for the production-ready implementation. Key areas for enhancement include:
+
+### **Current Strengths**
+
+- ✅ **Modern Next.js 15 architecture** with App Router
+- ✅ **Comprehensive terminal system** with command parsing
+- ✅ **AI integration** for natural language processing
+- ✅ **Supabase integration** for database and authentication
+- ✅ **Ledger CLI compatibility** with file sync
+- ✅ **TypeScript throughout** with proper type safety
+
+### **Areas for Production Enhancement**
+
+- 🔄 **Multi-tenant architecture** - Add tenant isolation and user management
+- 🔄 **Enhanced command system** - Implement type-specific commands (ex, in, as, li, tr)
+- 🔄 **Account learning system** - Build smart account normalization
+- 🔄 **Production infrastructure** - Kubernetes, monitoring, security
+- 🔄 **Business features** - Reporting, API access, mobile optimization
+
+### **Implementation Priority**
+
+1. **Phase 1** - Enhanced command system and AI integration
+2. **Phase 2** - Multi-tenant architecture and security
+3. **Phase 3** - Production infrastructure and performance
+4. **Phase 4** - Business features and market expansion
+
+The foundation is solid and ready for the production transformation outlined in this roadmap.
+
+### **UI Component Integration Strategy**
+
+The current codebase includes a **professional shadcn/ui component system** that can be directly integrated into the rebuild, saving significant development time.
+
+#### **Reusable UI Components (100% Compatible)**
+
+```typescript
+// These components can be copied directly to the new app
+src/components/ui/
+├── button.tsx          // ✅ Perfect for actions and commands
+├── input.tsx           // ✅ Great for command input and forms
+├── card.tsx            // ✅ Perfect for displaying ledger entries
+├── command.tsx         // ✅ Excellent for terminal interface
+├── toast.tsx           // ✅ Professional notifications
+├── dialog.tsx          // ✅ For modals and confirmations
+├── select.tsx          // ✅ For dropdowns and account selection
+├── badge.tsx           // ✅ For status indicators and tags
+├── accordion.tsx       // ✅ For collapsible sections
+├── alert.tsx           // ✅ For system messages
+├── checkbox.tsx        // ✅ For form controls
+├── dropdown-menu.tsx   // ✅ For context menus
+├── label.tsx           // ✅ For form labels
+├── popover.tsx         // ✅ For tooltips and overlays
+├── sheet.tsx           // ✅ For side panels
+├── textarea.tsx        // ✅ For multi-line input
+└── toaster.tsx         // ✅ Toast notification system
+```
+
+#### **Design System (100% Reusable)**
+
+```css
+/* Complete theme system ready for production */
+src/app/globals.css     // ✅ CSS variables, theme tokens, dark mode
+components.json         // ✅ shadcn/ui configuration (New York style, neutral base)
+```
+
+#### **Integration Benefits**
+
+**Immediate Advantages:**
+
+- **Professional Design** - Polished, modern interface from day one
+- **Accessibility** - WCAG compliant components out of the box
+- **Consistency** - Unified design language across the entire app
+- **Developer Experience** - TypeScript, proper props, excellent documentation
+- **Time Savings** - 2-3 weeks of design and component development work
+
+#### **Terminal Interface Integration**
+
+The **Command component** is particularly valuable for the new terminal interface:
+
+```typescript
+// Perfect foundation for the new terminal system
+<Command>
+  <CommandInput placeholder="Type a command or natural language..." />
+  <CommandList>
+    <CommandGroup heading="Recent Commands">
+      <CommandItem>ex -i coffee 100 -v Starbucks</CommandItem>
+      <CommandItem>in -i consultancy 5000 -c "Acme Corp"</CommandItem>
+    </CommandGroup>
+    <CommandGroup heading="AI Suggestions">
+      <CommandItem>I bought coffee for $5</CommandItem>
+    </CommandGroup>
+  </CommandList>
+</Command>
+```
+
+#### **New Components to Build (Using Existing Primitives)**
+
+```typescript
+// New ledger-specific components using existing UI primitives
+src/components/ledger/
+├── ledger-entry-card.tsx     // Uses Card, Badge, Button
+├── account-suggestion.tsx    // Uses CommandItem, Badge
+├── transaction-form.tsx      // Uses Input, Select, Button
+├── balance-display.tsx       // Uses Card, Badge
+├── command-terminal.tsx      // Uses Command, Input, Toast
+├── subscription-billing.tsx  // Uses Card, Button, Badge
+└── dashboard-widgets.tsx     // Uses Card, Badge, Button
+```
+
+#### **Example Integration**
+
+```typescript
+// New ledger entry component using existing UI
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Badge,
+  Button,
+} from "@/components/ui";
+
+export function LedgerEntryCard({ entry }: { entry: LedgerEntry }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{entry.description}</CardTitle>
+        <Badge variant="outline">{entry.type}</Badge>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {entry.postings.map((posting) => (
+            <div key={posting.id} className="flex justify-between">
+              <span>{posting.account}</span>
+              <span>{posting.amount}</span>
+            </div>
+          ))}
+        </div>
+        <Button variant="outline" size="sm">
+          Edit
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+#### **Rebuild Integration Timeline**
+
+**Week 1: UI Foundation (1-2 days)**
+
+- Copy UI components directory
+- Copy design system (globals.css, components.json)
+- Set up theme and styling
+- Test component functionality
+
+**Week 2: Core Components (3-4 days)**
+
+- Build ledger-specific components using existing primitives
+- Create terminal interface using Command component
+- Implement form components using Input, Select, Button
+- Add notification system using Toast components
+
+**Week 3-4: Integration & Polish (1-2 days)**
+
+- Integrate components with new architecture
+- Add business-specific styling
+- Implement responsive design
+- Test accessibility and user experience
+
+### **Current Codebase Structure**
 
 tree /Users/wolf/Documents/Development/Projects/Ledger/ledger-app/src
 /Users/wolf/Documents/Development/Projects/Ledger/ledger-app/src
