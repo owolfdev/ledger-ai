@@ -4,7 +4,6 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "../../types/supabase";
 
 export interface BusinessMapping {
   normalized: string;
@@ -28,7 +27,7 @@ function getSupabase() {
     throw new Error("Supabase environment variables not configured");
   }
 
-  return createClient<Database>(supabaseUrl, supabaseKey);
+  return createClient(supabaseUrl, supabaseKey);
 }
 
 /**
