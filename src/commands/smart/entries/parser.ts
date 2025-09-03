@@ -163,6 +163,18 @@ export function parseArgs(raw?: string): EntriesArgs {
   let range: { start: string; end: string } | undefined;
   let entry: string | undefined;
 
+  // Created date filtering
+  let createdMonth: string | undefined;
+  let createdDay: string | undefined;
+  let createdYear: string | undefined;
+  let createdRange: { start: string; end: string } | undefined;
+
+  // Amount filtering
+  let amount: number | undefined;
+  let minAmount: number | undefined;
+  let maxAmount: number | undefined;
+  let amountRange: { min: number; max: number } | undefined;
+
   if (!raw) return { sort, dir, limit, sum, count };
 
   const parts = raw.trim().split(/\s+/).filter(Boolean);
@@ -295,6 +307,112 @@ export function parseArgs(raw?: string): EntriesArgs {
       i++;
       continue;
     }
+
+    // Created date filtering flags
+    if ((t === "--created-month" || t === "-cm") && i + 1 < parts.length) {
+      const monthArg = parts[i + 1];
+
+      // Check if it's already in YYYY-MM format
+      if (/^\d{4}-\d{2}$/.test(monthArg)) {
+        createdMonth = monthArg;
+      }
+      // Check if it's a month name
+      else if (MONTH_NAMES[monthArg.toLowerCase()]) {
+        createdMonth = parseMonthAlias(monthArg);
+      }
+      // Invalid format
+      else {
+        throw new Error(
+          `Invalid created month format: ${monthArg}. Use YYYY-MM or month name (e.g., "august", "aug")`
+        );
+      }
+
+      i++;
+      continue;
+    }
+
+    if ((t === "--created-day" || t === "-cd") && i + 1 < parts.length) {
+      createdDay = parts[i + 1];
+      i++;
+      continue;
+    }
+
+    if ((t === "--created-year" || t === "-cy") && i + 1 < parts.length) {
+      createdYear = parts[i + 1];
+      i++;
+      continue;
+    }
+
+    if ((t === "--created-range" || t === "-cr") && i + 2 < parts.length) {
+      try {
+        createdRange = parseRangeArguments([parts[i + 1], parts[i + 2]]);
+        i += 2;
+        continue;
+      } catch (error) {
+        throw new Error(
+          `Created range parsing error: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+      }
+    }
+
+    // Amount filtering flags
+    if ((t === "--amount" || t === "-amt") && i + 1 < parts.length) {
+      const amountArg = parts[i + 1];
+      const parsedAmount = parseFloat(amountArg);
+      if (isNaN(parsedAmount)) {
+        throw new Error(`Invalid amount: ${amountArg}. Must be a number.`);
+      }
+      amount = parsedAmount;
+      i++;
+      continue;
+    }
+
+    if ((t === "--min-amount" || t === "-min") && i + 1 < parts.length) {
+      const amountArg = parts[i + 1];
+      const parsedAmount = parseFloat(amountArg);
+      if (isNaN(parsedAmount)) {
+        throw new Error(`Invalid min amount: ${amountArg}. Must be a number.`);
+      }
+      minAmount = parsedAmount;
+      i++;
+      continue;
+    }
+
+    if ((t === "--max-amount" || t === "-max") && i + 1 < parts.length) {
+      const amountArg = parts[i + 1];
+      const parsedAmount = parseFloat(amountArg);
+      if (isNaN(parsedAmount)) {
+        throw new Error(`Invalid max amount: ${amountArg}. Must be a number.`);
+      }
+      maxAmount = parsedAmount;
+      i++;
+      continue;
+    }
+
+    if ((t === "--amount-range" || t === "-ar") && i + 2 < parts.length) {
+      const minArg = parts[i + 1];
+      const maxArg = parts[i + 2];
+      const parsedMin = parseFloat(minArg);
+      const parsedMax = parseFloat(maxArg);
+
+      if (isNaN(parsedMin) || isNaN(parsedMax)) {
+        throw new Error(
+          `Invalid amount range: ${minArg} ${maxArg}. Both values must be numbers.`
+        );
+      }
+
+      if (parsedMin > parsedMax) {
+        throw new Error(
+          `Invalid amount range: min (${parsedMin}) cannot be greater than max (${parsedMax}).`
+        );
+      }
+
+      amountRange = { min: parsedMin, max: parsedMax };
+      i += 2;
+      continue;
+    }
     if ((t === "--limit" || t === "-l") && i + 1 < parts.length) {
       const limitArg = parts[i + 1];
       if (/^\d+$/.test(limitArg)) {
@@ -358,7 +476,23 @@ export function parseArgs(raw?: string): EntriesArgs {
 
   // Smart limit logic: Increase limit for specific filters to show complete results
   if (!hasExplicitLimit) {
-    if (month || day || business || vendor || account || currency || range) {
+    if (
+      month ||
+      day ||
+      business ||
+      vendor ||
+      account ||
+      currency ||
+      range ||
+      createdMonth ||
+      createdDay ||
+      createdYear ||
+      createdRange ||
+      amount !== undefined ||
+      minAmount !== undefined ||
+      maxAmount !== undefined ||
+      amountRange !== undefined
+    ) {
       limit = 200;
     }
   }
@@ -379,5 +513,13 @@ export function parseArgs(raw?: string): EntriesArgs {
     go,
     range,
     entry,
+    createdMonth,
+    createdDay,
+    createdYear,
+    createdRange,
+    amount,
+    minAmount,
+    maxAmount,
+    amountRange,
   };
 }

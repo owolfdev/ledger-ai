@@ -18,6 +18,18 @@ export interface EntriesArgs {
   account?: string;
   currency?: string; // NEW: Currency filter
 
+  // Created date filtering
+  createdMonth?: string;
+  createdDay?: string;
+  createdYear?: string;
+  createdRange?: { start: string; end: string };
+
+  // Amount filtering
+  amount?: number;
+  minAmount?: number;
+  maxAmount?: number;
+  amountRange?: { min: number; max: number };
+
   go?: string;
   entry?: string; // NEW: Entry ID for viewing entry details
   range?: { start: string; end: string };

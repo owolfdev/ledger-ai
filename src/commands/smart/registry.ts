@@ -119,7 +119,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
 
   entries: {
     description:
-      "List and filter ledger entries with powerful search options including multi-currency support. Supports business filtering, vendor search, account filtering, currency filtering, date ranges with smart aliases, counting, and navigation to specific entries.",
+      "List and filter ledger entries with powerful search options including multi-currency support. Supports business filtering, vendor search, account filtering, currency filtering, date ranges with smart aliases, created date filtering, amount filtering, counting, and navigation to specific entries.",
     content: (
       arg?: string,
       pageCtx?: string,
@@ -170,40 +170,90 @@ export const commandRegistry: Record<string, CommandMeta> = {
         output: "entries -c USD -l 20",
         description: "Currency filter with limit",
       },
+      {
+        input: "Show me entries I created this month",
+        output: "entries --created-month 2024-01",
+        description: "Filter by creation date",
+      },
+      {
+        input: "What entries did I create yesterday?",
+        output: "entries --created-day 2024-01-15",
+        description: "Filter by specific creation date",
+      },
+      {
+        input: "Show me entries created in 2024",
+        output: "entries --created-year 2024",
+        description: "Filter by creation year",
+      },
+      {
+        input: "Show me my most recently created entries",
+        output: "entries --created",
+        description: "Sort by creation date (newest first)",
+      },
+      {
+        input: "Show me entries for exactly $50",
+        output: "entries --amount 50",
+        description: "Filter by exact amount",
+      },
+      {
+        input: "Show me entries over $100",
+        output: "entries --min-amount 100",
+        description: "Filter by minimum amount",
+      },
+      {
+        input: "Show me entries between $50 and $200",
+        output: "entries --amount-range 50 200",
+        description: "Filter by amount range",
+      },
     ],
     categories: ["query", "finance", "search"],
     aliases: ["ent", "e", "list", "show", "find"],
 
     usage: `entries [options]
-    
-    **📋 Quick Reference - All Available Flags:**
-    
-    **Filtering:**
-    • \`--business <name>\` / \`-b <name>\`     — Filter by business account
-    • \`--vendor <name>\` / \`-v <name>\`       — Filter by vendor/description
-    • \`--account <pattern>\` / \`-A <pattern>\` — Filter by account name
-    • \`--currency <code>\` / \`-c <code>\`     — Filter by currency (USD, THB, EUR)
-    
-    **Date & Display:**
-    • \`--date <date>\` / \`-d <date>\`         — Filter by specific date or alias (today, yesterday, august)
-    • \`--month <month>\` / \`-m <month>\`      — Filter by month (january, february, etc.)
-    • \`--limit <number>\` / \`-l <number>\`    — Limit number of results
-    • \`--summary\` / \`-s\`                    — Show totals and summaries
-    
-    **Navigation:**
-    • \`--goto <id>\` / \`-g <id>\`             — Navigate to specific entry
-    
-    **🚀 Smart Examples:**
-    • \`entries today\`                         — Today's entries
-    • \`entries -v Starbucks -s\`               — Starbucks expenses with totals
-    • \`entries -b Personal -m august -s\`      — Personal business expenses for August with totals
 
-    • \`entries -A Food -l 10\`                 — Food account entries, limit 10`,
+  **📋 Quick Reference - All Available Flags:**
+
+  **Filtering:**
+  • \`--business <name>\` / \`-b <name>\`     — Filter by business account
+  • \`--vendor <name>\` / \`-v <name>\`       — Filter by vendor/description
+  • \`--account <pattern>\` / \`-A <pattern>\` — Filter by account name
+  • \`--currency <code>\` / \`-c <code>\`     — Filter by currency (USD, THB, EUR)
+  • \`--amount <number>\` / \`-amt <number>\` — Filter by exact amount
+  • \`--min-amount <number>\` / \`-min <number>\` — Filter by minimum amount
+  • \`--max-amount <number>\` / \`-max <number>\` — Filter by maximum amount
+  • \`--amount-range <min> <max>\` / \`-ar <min> <max>\` — Filter by amount range
+
+  **Date & Display:**
+  • \`--date <date>\` / \`-d <date>\`         — Filter by specific date or alias (today, yesterday, august)
+  • \`--month <month>\` / \`-m <month>\`      — Filter by month (january, february, etc.)
+  • \`--created\` / \`-C\`                    — Sort by creation date (newest first)
+  • \`--created-day <date>\` / \`-cd <date>\` — Filter by creation date (YYYY-MM-DD)
+  • \`--created-month <month>\` / \`-cm <month>\` — Filter by creation month (YYYY-MM or month name)
+  • \`--created-year <year>\` / \`-cy <year>\` — Filter by creation year (YYYY)
+  • \`--created-range <start> <end>\` / \`-cr <start> <end>\` — Filter by creation date range
+  • \`--limit <number>\` / \`-l <number>\`    — Limit number of results
+  • \`--summary\` / \`-s\`                    — Show totals and summaries
+
+  **Navigation:**
+  • \`--goto <id>\` / \`-g <id>\`             — Navigate to specific entry
+
+  **🚀 Smart Examples:**
+  • \`entries today\`                         — Today's entries
+  • \`entries -v Starbucks -s\`               — Starbucks expenses with totals
+  • \`entries -b Personal -m august -s\`      — Personal business expenses for August with totals
+  • \`entries --created-month 2024-01\`       — Entries created in January 2024
+  • \`entries -cm august\`                    — Entries created in August (current year)
+  • \`entries --created-day 2024-01-15\`      — Entries created on specific date
+  • \`entries -cr 2024-01-01 2024-01-31\`     — Entries created in date range
+  • \`entries --amount 50\`                   — Entries for exactly $50
+  • \`entries --min-amount 100\`              — Entries over $100
+  • \`entries --amount-range 50 200\`         — Entries between $50-$200
+  • \`entries -A Food -l 10\`                 — Food account entries, limit 10`,
   },
 
   ent: {
     description:
-      "Alias for entries command with same functionality including smart date aliases, navigation, filtering (business, vendor, account, currency), multi-currency totals, and ranges",
+      "Alias for entries command with same functionality including smart date aliases, navigation, filtering (business, vendor, account, currency, amount), created date filtering, multi-currency totals, and ranges",
     content: (
       arg?: string,
       pageCtx?: string,
@@ -219,10 +269,19 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`--vendor <name>\` / \`-v <name>\`       — Filter by vendor/description
   • \`--account <pattern>\` / \`-A <pattern>\` — Filter by account name
   • \`--currency <code>\` / \`-c <code>\`     — Filter by currency (USD, THB, EUR)
+  • \`--amount <number>\` / \`-amt <number>\` — Filter by exact amount
+  • \`--min-amount <number>\` / \`-min <number>\` — Filter by minimum amount
+  • \`--max-amount <number>\` / \`-max <number>\` — Filter by maximum amount
+  • \`--amount-range <min> <max>\` / \`-ar <min> <max>\` — Filter by amount range
   
   **Date & Display:**
   • \`--date <date>\` / \`-d <date>\`         — Filter by specific date or alias (today, yesterday, august)
   • \`--month <month>\` / \`-m <month>\`      — Filter by month (january, february, etc.)
+  • \`--created\` / \`-C\`                    — Sort by creation date (newest first)
+  • \`--created-day <date>\` / \`-cd <date>\` — Filter by creation date (YYYY-MM-DD)
+  • \`--created-month <month>\` / \`-cm <month>\` — Filter by creation month (YYYY-MM or month name)
+  • \`--created-year <year>\` / \`-cy <year>\` — Filter by creation year (YYYY)
+  • \`--created-range <start> <end>\` / \`-cr <start> <end>\` — Filter by creation date range
   • \`--limit <number>\` / \`-l <number>\`    — Limit number of results
   • \`--summary\` / \`-s\`                    — Show totals and summaries
   
@@ -233,7 +292,10 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`ent today\`                              — Today's entries
   • \`ent -v Starbucks -s\`                    — Starbucks expenses with totals
   • \`ent -b Personal -m august -s\`           — Personal business expenses for August with totals
-
+  • \`ent --created\`                          — Sort by creation date (newest first)
+  • \`ent --amount 50\`                        — Entries for exactly $50
+  • \`ent --min-amount 100\`                   — Entries over $100
+  • \`ent --amount-range 50 200\`              — Entries between $50-$200
   • \`ent -A Food -l 10\`                      — Food account entries, limit 10
   
   **Date Filtering:**
@@ -297,7 +359,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   // --- Edit Entry ---
   e: {
     description:
-      "Short alias for entries - list and filter ledger entries with all the same features",
+      "Short alias for entries - list and filter ledger entries with all the same features including created date filtering and amount filtering",
     content: (arg, pageCtx, cmds, user) =>
       entriesListCommand(arg, pageCtx, cmds, user),
     usage: `e [options] - Quick reference for common flags:
@@ -307,6 +369,14 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`-v <name>\`     — Vendor filter  
   • \`-A <pattern>\`  — Account filter
   • \`-c <code>\`     — Currency filter
+  • \`-amt <number>\` — Amount filter
+  • \`-min <number>\` — Min amount filter
+  • \`-max <number>\` — Max amount filter
+  • \`-ar <min> <max>\` — Amount range filter
+  • \`-C\`            — Sort by created date
+  • \`-cd <date>\`    — Created date filter
+  • \`-cm <month>\`   — Created month filter
+  • \`-cy <year>\`    — Created year filter
   • \`-s\`            — Show totals
   • \`-n\`            — Count only
   • \`-g <id>\`       — Go to entry
@@ -321,6 +391,10 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`e -b Personal -s\`     — Personal entries with totals
   • \`e today -n\`            — Count today's entries
   • \`e -v Starbucks\`        — Starbucks purchases
+  • \`e -C\`                 — Sort by creation date
+  • \`e -amt 50\`            — Entries for exactly $50
+  • \`e -min 100\`           — Entries over $100
+  • \`e -ar 50 200\`         — Entries between $50-$200
   
   See \`help entries\` for full documentation and all options.`,
   },
