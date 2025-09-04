@@ -190,9 +190,9 @@ export function parseArgs(raw?: string): EntriesArgs {
       t === "--date" ||
       t === "--created" ||
       originalToken === "-D" ||
-      originalToken === "-C"
+      originalToken === "-ct"
     ) {
-      if (t === "--created" || originalToken === "-C") {
+      if (t === "--created" || originalToken === "-ct") {
         sort = "created";
         // Check if next argument is a direction (desc/asc)
         if (i + 1 < parts.length) {

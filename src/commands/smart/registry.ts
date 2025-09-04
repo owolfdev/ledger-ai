@@ -231,7 +231,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   **Date & Display:**
   • \`--date <date>\` / \`-d <date>\`         — Filter by specific date or alias (today, yesterday, august)
   • \`--month <month>\` / \`-m <month>\`      — Filter by month (january, february, etc.)
-  • \`--created [desc|asc]\` / \`-C [desc|asc]\` — Sort by creation date (desc=newest first, asc=oldest first, desc is default)
+  • \`--created [desc|asc]\` / \`-ct [desc|asc]\` — Sort by creation date (desc=newest first, asc=oldest first, desc is default)
   • \`--created-day <date>\` / \`-cd <date>\` — Filter by creation date (YYYY-MM-DD)
   • \`--created-month <month>\` / \`-cm <month>\` — Filter by creation month (YYYY-MM or month name)
   • \`--created-year <year>\` / \`-cy <year>\` — Filter by creation year (YYYY)
@@ -248,6 +248,8 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`entries -b Personal -m august -s\`      — Personal business expenses for August with totals
   • \`entries --created\`                      — Sort by creation date (newest first)
   • \`entries --created asc\`                  — Sort by creation date (oldest first)
+  • \`entries -ct\`                            — Sort by creation date (newest first)
+  • \`entries -ct asc\`                        — Sort by creation date (oldest first)
   • \`entries --created-month 2024-01\`       — Entries created in January 2024
   • \`entries -cm august\`                    — Entries created in August (current year)
   • \`entries --created-day 2024-01-15\`      — Entries created on specific date
@@ -284,7 +286,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   **Date & Display:**
   • \`--date <date>\` / \`-d <date>\`         — Filter by specific date or alias (today, yesterday, august)
   • \`--month <month>\` / \`-m <month>\`      — Filter by month (january, february, etc.)
-  • \`--created [desc|asc]\` / \`-C [desc|asc]\` — Sort by creation date (desc=newest first, asc=oldest first, desc is default)
+  • \`--created [desc|asc]\` / \`-ct [desc|asc]\` — Sort by creation date (desc=newest first, asc=oldest first, desc is default)
   • \`--created-day <date>\` / \`-cd <date>\` — Filter by creation date (YYYY-MM-DD)
   • \`--created-month <month>\` / \`-cm <month>\` — Filter by creation month (YYYY-MM or month name)
   • \`--created-year <year>\` / \`-cy <year>\` — Filter by creation year (YYYY)
@@ -301,6 +303,8 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`ent -b Personal -m august -s\`           — Personal business expenses for August with totals
   • \`ent --created\`                          — Sort by creation date (newest first)
   • \`ent --created asc\`                      — Sort by creation date (oldest first)
+  • \`ent -ct\`                                — Sort by creation date (newest first)
+  • \`ent -ct asc\`                            — Sort by creation date (oldest first)
   • \`ent --amount 50\`                        — Entries for exactly $50
   • \`ent --min-amount 100\`                   — Entries over $100
   • \`ent --amount-range 50 200\`              — Entries between $50-$200
@@ -381,7 +385,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`-min <number>\` — Min amount filter
   • \`-max <number>\` — Max amount filter
   • \`-ar <min> <max>\` — Amount range filter
-  • \`-C\`            — Sort by created date
+  • \`-ct\`           — Sort by created date
   • \`-cd <date>\`    — Created date filter
   • \`-cm <month>\`   — Created month filter
   • \`-cy <year>\`    — Created year filter
@@ -399,7 +403,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`e -b Personal -s\`     — Personal entries with totals
   • \`e today -n\`            — Count today's entries
   • \`e -v Starbucks\`        — Starbucks purchases
-  • \`e -C\`                 — Sort by creation date
+  • \`e -ct\`                — Sort by creation date
   • \`e -amt 50\`            — Entries for exactly $50
   • \`e -min 100\`           — Entries over $100
   • \`e -ar 50 200\`         — Entries between $50-$200
