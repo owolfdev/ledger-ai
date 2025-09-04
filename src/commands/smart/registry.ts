@@ -191,6 +191,11 @@ export const commandRegistry: Record<string, CommandMeta> = {
         description: "Sort by creation date (newest first)",
       },
       {
+        input: "Show me my oldest created entries",
+        output: "entries --created asc",
+        description: "Sort by creation date (oldest first)",
+      },
+      {
         input: "Show me entries for exactly $50",
         output: "entries --amount 50",
         description: "Filter by exact amount",
@@ -226,7 +231,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   **Date & Display:**
   • \`--date <date>\` / \`-d <date>\`         — Filter by specific date or alias (today, yesterday, august)
   • \`--month <month>\` / \`-m <month>\`      — Filter by month (january, february, etc.)
-  • \`--created\` / \`-C\`                    — Sort by creation date (newest first)
+  • \`--created [desc|asc]\` / \`-C [desc|asc]\` — Sort by creation date (desc=newest first, asc=oldest first, desc is default)
   • \`--created-day <date>\` / \`-cd <date>\` — Filter by creation date (YYYY-MM-DD)
   • \`--created-month <month>\` / \`-cm <month>\` — Filter by creation month (YYYY-MM or month name)
   • \`--created-year <year>\` / \`-cy <year>\` — Filter by creation year (YYYY)
@@ -241,6 +246,8 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`entries today\`                         — Today's entries
   • \`entries -v Starbucks -s\`               — Starbucks expenses with totals
   • \`entries -b Personal -m august -s\`      — Personal business expenses for August with totals
+  • \`entries --created\`                      — Sort by creation date (newest first)
+  • \`entries --created asc\`                  — Sort by creation date (oldest first)
   • \`entries --created-month 2024-01\`       — Entries created in January 2024
   • \`entries -cm august\`                    — Entries created in August (current year)
   • \`entries --created-day 2024-01-15\`      — Entries created on specific date
@@ -277,7 +284,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   **Date & Display:**
   • \`--date <date>\` / \`-d <date>\`         — Filter by specific date or alias (today, yesterday, august)
   • \`--month <month>\` / \`-m <month>\`      — Filter by month (january, february, etc.)
-  • \`--created\` / \`-C\`                    — Sort by creation date (newest first)
+  • \`--created [desc|asc]\` / \`-C [desc|asc]\` — Sort by creation date (desc=newest first, asc=oldest first, desc is default)
   • \`--created-day <date>\` / \`-cd <date>\` — Filter by creation date (YYYY-MM-DD)
   • \`--created-month <month>\` / \`-cm <month>\` — Filter by creation month (YYYY-MM or month name)
   • \`--created-year <year>\` / \`-cy <year>\` — Filter by creation year (YYYY)
@@ -293,6 +300,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`ent -v Starbucks -s\`                    — Starbucks expenses with totals
   • \`ent -b Personal -m august -s\`           — Personal business expenses for August with totals
   • \`ent --created\`                          — Sort by creation date (newest first)
+  • \`ent --created asc\`                      — Sort by creation date (oldest first)
   • \`ent --amount 50\`                        — Entries for exactly $50
   • \`ent --min-amount 100\`                   — Entries over $100
   • \`ent --amount-range 50 200\`              — Entries between $50-$200
