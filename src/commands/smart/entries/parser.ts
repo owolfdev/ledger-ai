@@ -192,7 +192,25 @@ export function parseArgs(raw?: string): EntriesArgs {
       originalToken === "-D" ||
       originalToken === "-C"
     ) {
-      sort = t === "--created" || originalToken === "-C" ? "created" : "date";
+      if (t === "--created" || originalToken === "-C") {
+        sort = "created";
+        // Check if next argument is a direction (desc/asc)
+        if (i + 1 < parts.length) {
+          const nextArg = parts[i + 1].toLowerCase();
+          if (nextArg === "desc" || nextArg === "asc") {
+            dir = nextArg as Dir;
+            i++; // Skip the direction argument
+          } else {
+            // Default to desc when --created is used without direction
+            dir = "desc";
+          }
+        } else {
+          // Default to desc when --created is used without direction
+          dir = "desc";
+        }
+      } else {
+        sort = "date";
+      }
       continue;
     }
     if (t === "--sort" && i + 1 < parts.length) {
