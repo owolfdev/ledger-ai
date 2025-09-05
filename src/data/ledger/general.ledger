@@ -1,623 +1,618 @@
 2025/08/01 The Mall Bangkapi
-    Expenses:Personal:Business:Supplies 28.00฿
-    Expenses:Personal:Misc         49.00฿
-    Assets:Bank:Kasikorn:Personal -77.00฿
+    Expenses:Personal:Business:Supplies    28.00฿
+    Expenses:Personal:Misc    49.00฿
+    Assets:Bank:Kasikorn:Personal    -77.00฿
 
 2025/08/04 Gourmet Market
-    Expenses:Personal:Food:Fruit:Mangoes 188.83฿
-    Expenses:Personal:Food:Fruit:Bananas 126.00฿
-    expenses:Personal:Food:chocolate 29.00฿
-    Assets:Bank:Kasikorn:Personal -343.83฿
+    Expenses:Personal:Food:Fruit:Mangoes    188.83฿
+    Expenses:Personal:Food:Fruit:Bananas    126.00฿
+    expenses:Personal:Food:chocolate    29.00฿
+    Assets:Bank:Kasikorn:Personal    -343.83฿
 
 2025/08/07 Vejthani Hospital
-    Expenses:Personal:Misc         750.00฿
-    Assets:Bank:Kasikorn:Personal -750.00฿
+    Expenses:Personal:Misc    750.00฿
+    Assets:Bank:Kasikorn:Personal    -750.00฿
 
 2025/08/11 Tops Silom Complex
-    Expenses:Personal:Food:Fruit:Apples 356.00฿
-    Expenses:Personal:Misc         160.00฿
-    Expenses:Taxes:Sales           5.00฿
-    Assets:Bank:Kasikorn:Personal -521.00฿
+    Expenses:Personal:Food:Fruit:Apples    356.00฿
+    Expenses:Personal:Misc    160.00฿
+    Expenses:Taxes:Sales    5.00฿
+    Assets:Bank:Kasikorn:Personal    -521.00฿
 
 2025/08/17 Birkenstock - Pacifica Max
-    Expenses:Personal:Misc         ฿5490.00
-    Expenses:Personal:Misc         ฿0.00
-    Assets:Bank:Kasikorn:Personal                   ฿-5490.00
-
-2025/08/18 Gourmet Market
-    Expenses:Personal:Food:Groceries ฿3041.00
-    Assets:Bank:Kasikorn:Personal                   ฿-3041.00
-
-2025/08/18 La Cabra Thailand
-    Expenses:Personal:Food:Coffee  ฿160.00
-    Assets:Bank:Kasikorn:Personal                   ฿-160.00
+    Expenses:Personal:Misc    5,490.00฿
+    Expenses:Personal:Misc    0.00฿
+    Assets:Bank:Kasikorn:Personal    -5,490.00฿
 
 2025/08/18 Vista Cafe
-    Expenses:Personal:Food:Coffee  ฿300.00
-    Expenses:Personal:Misc         ฿45.00
-    Assets:Bank:Kasikorn:Personal                   ฿-345.00
+    Expenses:Personal:Food:Coffee    300.00฿
+    Expenses:Personal:Misc    45.00฿
+    Assets:Bank:Kasikorn:Personal    -345.00฿
+
+2025/08/18 Gourmet Market
+    Expenses:Personal:Food:Groceries    3,041.00฿
+    Assets:Bank:Kasikorn:Personal    -3,041.00฿
 
 2025/08/18 J Value
-    Expenses:Personal:Misc         ฿100.00
-    Expenses:Taxes:Sales           ฿6.54
-    Assets:Bank:Kasikorn:Personal                   ฿-106.54
+    Expenses:Personal:Misc    65.00฿
+    Assets:Bank:Kasikorn:Personal    -65.00฿
+
+2025/08/18 J Value
+    Expenses:Personal:Misc    100.00฿
+    Expenses:Taxes:Sales    6.54฿
+    Assets:Bank:Kasikorn:Personal    -106.54฿
+
+2025/08/18 La Cabra Thailand
+    Expenses:Personal:Food:Coffee    160.00฿
+    Assets:Bank:Kasikorn:Personal    -160.00฿
+
+2025/08/18 J Value
+    Expenses:Personal:Misc    150.00฿
+    Expenses:Personal:Food:Fruit    75.00฿
+    Expenses:Personal:Food:Fruit    75.00฿
+    Expenses:Personal:Food:Fruit    75.00฿
+    Expenses:Personal:Misc    98.00฿
+    Assets:Bank:Kasikorn:Personal    -473.00฿
 
 2025/08/18 White Story
-    Expenses:Personal:Misc         ฿20.00
-    Expenses:Personal:Misc         ฿20.00
-    Expenses:Personal:Misc         ฿20.00
-    Expenses:Personal:Food:Fruit   ฿45.00
-    Assets:Bank:Kasikorn:Personal                   ฿-105.00
-
-2025/08/18 J Value
-    Expenses:Personal:Misc         ฿150.00
-    Expenses:Personal:Food:Fruit   ฿75.00
-    Expenses:Personal:Food:Fruit   ฿75.00
-    Expenses:Personal:Food:Fruit   ฿75.00
-    Expenses:Personal:Misc         ฿98.00
-    Assets:Bank:Kasikorn:Personal                   ฿-473.00
-
-2025/08/18 J Value
-    Expenses:Personal:Misc         ฿65.00
-    Assets:Bank:Kasikorn:Personal                   ฿-65.00
+    Expenses:Personal:Misc    20.00฿
+    Expenses:Personal:Misc    20.00฿
+    Expenses:Personal:Misc    20.00฿
+    Expenses:Personal:Food:Fruit    45.00฿
+    Assets:Bank:Kasikorn:Personal    -105.00฿
 
 2025/08/18 Ichiba Dining
-    Expenses:Personal:Misc         ฿180.00
-    Expenses:Personal:Misc         ฿150.00
-    Expenses:Personal:Misc         ฿140.00
-    Expenses:Personal:Food:Grains  ฿60.00
-    Expenses:Personal:Misc         ฿380.00
-    Expenses:Personal:Misc         ฿230.00
-    Expenses:Personal:Misc         ฿150.00
-    expenses:Personal:Misc         ฿60.00
-    expenses:Personal:Tax          ฿99.23
-    expenses:Personal:Misc         ฿67.50
-    Assets:Bank:Kasikorn:Personal                   ฿-1516.73
-
-2025/08/19 Nico Nico
-    Expenses:Personal:Food:Dairy   ฿70.00
-    Expenses:Personal:Food:Tea     ฿130.00
-    Expenses:Personal:Food:Coffee  ฿90.00
-    Expenses:Personal:Misc         ฿350.00
-    Expenses:Personal:Food:Dairy   ฿25.00
-    Expenses:Personal:Misc         ฿310.00
-    Expenses:Personal:Misc         ฿97.50
-    Assets:Bank:Kasikorn:Personal                   ฿-1072.50
-
-2025/08/19 7-Eleven
-    Expenses:Personal:Misc         ฿24.00
-    Expenses:Personal:Misc         ฿73.00
-    Expenses:Personal:Misc         ฿73.00
-    Expenses:Personal:Food:Dairy   ฿60.00
-    Expenses:Personal:Misc         ฿33.00
-    Expenses:Personal:Food:Fruit   ฿14.00
-    Assets:Bank:Kasikorn:Personal                   ฿-277.00
+    Expenses:Personal:Misc    180.00฿
+    Expenses:Personal:Misc    150.00฿
+    Expenses:Personal:Misc    140.00฿
+    Expenses:Personal:Food:Grains    60.00฿
+    Expenses:Personal:Misc    380.00฿
+    Expenses:Personal:Misc    230.00฿
+    Expenses:Personal:Misc    150.00฿
+    expenses:Personal:Misc    60.00฿
+    expenses:Personal:Tax    99.23฿
+    expenses:Personal:Misc    67.50฿
+    Assets:Bank:Kasikorn:Personal    -1,516.73฿
 
 2025/08/19 Value Co.
-    Expenses:Personal:Misc         ฿399.00
-    expenses:Personal:Misc         ฿420.00
-    expenses:Personal:Misc         ฿120.00
-    Assets:Bank:Kasikorn:Personal                   ฿-939.00
+    Expenses:Personal:Misc    399.00฿
+    expenses:Personal:Misc    420.00฿
+    expenses:Personal:Misc    120.00฿
+    Assets:Bank:Kasikorn:Personal    -939.00฿
+
+2025/08/19 Nico Nico
+    Expenses:Personal:Food:Dairy    70.00฿
+    Expenses:Personal:Food:Tea    130.00฿
+    Expenses:Personal:Food:Coffee    90.00฿
+    Expenses:Personal:Misc    350.00฿
+    Expenses:Personal:Food:Dairy    25.00฿
+    Expenses:Personal:Misc    310.00฿
+    Expenses:Personal:Misc    97.50฿
+    Assets:Bank:Kasikorn:Personal    -1,072.50฿
+
+2025/08/19 7-Eleven
+    Expenses:Personal:Misc    24.00฿
+    Expenses:Personal:Misc    73.00฿
+    Expenses:Personal:Misc    73.00฿
+    Expenses:Personal:Food:Dairy    60.00฿
+    Expenses:Personal:Misc    33.00฿
+    Expenses:Personal:Food:Fruit    14.00฿
+    Assets:Bank:Kasikorn:Personal    -277.00฿
+
+2025/08/20 Paleo Robbie
+    Expenses:Personal:Food:Beef:Steak    1,266.00฿
+    Assets:Bank:Kasikorn:Personal    -1,266.00฿
 
 2025/08/20 Conkey's Bakery
-    Expenses:Personal:Misc         ฿120.00
-    Expenses:Personal:Misc         ฿90.00
-    Expenses:Personal:Food:Grains  ฿160.00
-    Expenses:Personal:Food:Coffee  ฿100.00
-    Expenses:Personal:Food:Dairy   ฿60.00
-    Liabilities:Credit:KBank      ฿-530.00
+    Expenses:Personal:Misc    120.00฿
+    Expenses:Personal:Misc    90.00฿
+    Expenses:Personal:Food:Grains    160.00฿
+    Expenses:Personal:Food:Coffee    100.00฿
+    Expenses:Personal:Food:Dairy    60.00฿
+    Liabilities:Credit:KBank    -530.00฿
+
+2025/08/20 Paleo Robbie
+    Expenses:Personal:Food:Beef:Steak    1,208.00฿
+    Assets:Bank:Kasikorn:Personal    -1,208.00฿
 
 2025/08/20 Kalaprapeuk
-    Expenses:Personal:Misc         ฿1439.00
-    Assets:Bank:Kasikorn:Personal                   ฿-1439.00
-
-2025/08/20 Paleo Robbie
-    Expenses:Personal:Food:Beef:Steak 1,208.00฿
-    Assets:Bank:Kasikorn:Personal -1,208.00฿
-
-2025/08/20 Paleo Robbie
-    Expenses:Personal:Food:Beef:Steak 1,266.00฿
-    Assets:Bank:Kasikorn:Personal -1,266.00฿
+    Expenses:Personal:Misc    1,439.00฿
+    Assets:Bank:Kasikorn:Personal    -1,439.00฿
 
 2025/08/20 Foodland Huamark
-    Expenses:Personal:Food:Fruit   ฿59.00
-    Expenses:Personal:Misc         ฿15.00
-    Expenses:Personal:Misc         ฿75.00
-    Expenses:Personal:Misc         ฿109.00
-    Expenses:Personal:Misc         ฿20.00
-    expenses:Personal:Misc         ฿74.00
-    Assets:Bank:Kasikorn:Personal                   ฿-352.00
-
-2025/08/21 Shell
-    Expenses:Personal:Misc         ฿1000.00
-    Assets:Bank:Kasikorn:Personal                   ฿-1000.00
+    Expenses:Personal:Food:Fruit    59.00฿
+    Expenses:Personal:Misc    15.00฿
+    Expenses:Personal:Misc    75.00฿
+    Expenses:Personal:Misc    109.00฿
+    Expenses:Personal:Misc    20.00฿
+    expenses:Personal:Misc    74.00฿
+    Assets:Bank:Kasikorn:Personal    -352.00฿
 
 2025/08/21 La Cabra Thailand
-    Expenses:Personal:Food:Bakery  ฿100.00
-    Expenses:Personal:Food:Coffee  ฿140.00
-    Assets:Bank:Kasikorn:Personal                   ฿-240.00
+    Expenses:Personal:Food:Bakery    100.00฿
+    Expenses:Personal:Food:Coffee    140.00฿
+    Assets:Bank:Kasikorn:Personal    -240.00฿
 
-2025/08/21 Office Mate
-    Expenses:Personal:Misc         ฿105.00
-    Expenses:Personal:Misc         ฿80.00
-    Assets:Bank:Kasikorn:Personal                   ฿-185.00
+2025/08/21 Shell
+    Expenses:Personal:Misc    1,000.00฿
+    Assets:Bank:Kasikorn:Personal    -1,000.00฿
 
 2025/08/21 The White Story
-    Expenses:Personal:Food:Fruit   ฿80.00
-    Expenses:Personal:Food:Fruit   ฿40.00
-    Expenses:Taxes:Sales           ฿7.85
-    Assets:Bank:Kasikorn:Personal                   ฿-127.85
+    Expenses:Personal:Food:Fruit    80.00฿
+    Expenses:Personal:Food:Fruit    40.00฿
+    Expenses:Taxes:Sales    7.85฿
+    Assets:Bank:Kasikorn:Personal    -127.85฿
+
+2025/08/21 Office Mate
+    Expenses:Personal:Misc    105.00฿
+    Expenses:Personal:Misc    80.00฿
+    Assets:Bank:Kasikorn:Personal    -185.00฿
 
 2025/08/21 Villa Market
-    Expenses:Personal:Misc         ฿200.00
-    Expenses:Personal:Misc         ฿10.00
-    Expenses:Personal:Misc         ฿99.00
-    Expenses:Personal:Misc         ฿76.00
-    Expenses:Personal:Food:Vegetables ฿109.00
-    Expenses:Personal:Misc         ฿166.00
-    Expenses:Personal:Misc         ฿165.00
-    Expenses:Personal:Food:Fruit   ฿49.00
-    Expenses:Personal:Misc         ฿89.00
-    Assets:Bank:Kasikorn:Personal                   ฿-963.00
+    Expenses:Personal:Misc    200.00฿
+    Expenses:Personal:Misc    10.00฿
+    Expenses:Personal:Misc    99.00฿
+    Expenses:Personal:Misc    76.00฿
+    Expenses:Personal:Food:Vegetables    109.00฿
+    Expenses:Personal:Misc    166.00฿
+    Expenses:Personal:Misc    165.00฿
+    Expenses:Personal:Food:Fruit    49.00฿
+    Expenses:Personal:Misc    89.00฿
+    Assets:Bank:Kasikorn:Personal    -963.00฿
 
 2025/08/21 PASH Juices and Smoothies
-    Expenses:Personal:Food:Dairy   ฿130.00
-    Expenses:Taxes:Sales           ฿8.60
-    Assets:Bank:Kasikorn:Personal                   ฿-138.60
-
-2025/08/22 Derm
-    Expenses:Personal:Misc         ฿3500.00
-    Assets:Bank:Kasikorn:Personal                   ฿-3500.00
-
-2025/08/22 Lek
-    Expenses:Personal:Misc         ฿500.00
-    Assets:Bank:Kasikorn:Personal                   ฿-500.00
-
-2025/08/22 PTT Station Nana Tai
-    Expenses:Personal:Transport:Fuel ฿1940.00
-    Assets:Bank:Kasikorn:Personal                   ฿-1940.00
-
-2025/08/22 Bellerophon Lab
-    Expenses:Personal:Misc         ฿11461.84
-    Assets:Bank:Kasikorn:Personal                   ฿-11461.84
-
-2025/08/22 J Value Co.
-    Expenses:Personal:Misc         ฿125.00
-    Expenses:Taxes:Sales           ฿8.18
-    Assets:Bank:Kasikorn:Personal                   ฿-133.18
+    Expenses:Personal:Food:Dairy    130.00฿
+    Expenses:Taxes:Sales    8.60฿
+    Assets:Bank:Kasikorn:Personal    -138.60฿
 
 2025/08/22 Value Co.
-    Expenses:Personal:Misc         ฿119.00
-    Expenses:Taxes:Sales           ฿7.79
-    Assets:Bank:Kasikorn:Personal                   ฿-126.79
+    Expenses:Personal:Misc    119.00฿
+    Expenses:Taxes:Sales    7.79฿
+    Assets:Bank:Kasikorn:Personal    -126.79฿
+
+2025/08/22 Derm
+    Expenses:Personal:Misc    3,500.00฿
+    Assets:Bank:Kasikorn:Personal    -3,500.00฿
+
+2025/08/22 PTT Station Nana Tai
+    Expenses:Personal:Transport:Fuel    1,940.00฿
+    Assets:Bank:Kasikorn:Personal    -1,940.00฿
 
 2025/08/22 Lek
-    Expenses:Personal:Misc         ฿300.00
-    Assets:Bank:Kasikorn:Personal                   ฿-300.00
+    Expenses:Personal:Misc    500.00฿
+    Assets:Bank:Kasikorn:Personal    -500.00฿
 
-2025/08/23 MRT
-    Expenses:Personal:Misc         ฿27.00
-    Assets:Bank:Kasikorn:Personal                   ฿-27.00
+2025/08/22 Bellerophon Lab
+    Expenses:Personal:Misc    11,461.84฿
+    Assets:Bank:Kasikorn:Personal    -11,461.84฿
 
-2025/08/23 MRT
-    Expenses:Personal:Transport:Transit ฿84.00
-    Assets:Bank:Kasikorn:Personal                   ฿-84.00
+2025/08/22 J Value Co.
+    Expenses:Personal:Misc    125.00฿
+    Expenses:Taxes:Sales    8.18฿
+    Assets:Bank:Kasikorn:Personal    -133.18฿
+
+2025/08/22 Lek
+    Expenses:Personal:Misc    300.00฿
+    Assets:Bank:Kasikorn:Personal    -300.00฿
 
 2025/08/23 Lazada
-    Expenses:Personal:Misc         ฿691.00
-    Assets:Bank:Kasikorn:Personal                   ฿-691.00
-
-2025/08/23 Cholos Tacos
-    Expenses:Personal:Misc         ฿154.21
-    Expenses:Personal:Food:Meat    ฿224.30
-    Expenses:Taxes:Sales           ฿23.36
-    Assets:Bank:Kasikorn:Personal                   ฿-401.87
-
-2025/08/23 Trash Removal
-    Expenses:Personal:Misc         ฿3000.00
-    Assets:Bank:Kasikorn:Personal                   ฿-3000.00
+    Expenses:Personal:Misc    691.00฿
+    Assets:Bank:Kasikorn:Personal    -691.00฿
 
 2025/08/23 Gourmet Market
-    Expenses:Personal:Supplies:Packaging ฿19.00
-    Expenses:Personal:Food:Fruit   ฿140.00
-    Expenses:Personal:Misc         ฿50.00
-    Expenses:Personal:Food:Fruit   ฿100.00
-    Expenses:Personal:Food:Dairy   ฿99.00
-    Expenses:Personal:Food:Grains  ฿51.00
-    Expenses:Personal:Food:Dairy   ฿59.00
-    Expenses:Personal:Household:Supplies ฿139.00
-    Expenses:Personal:Food:Dairy   ฿25.00
-    Expenses:Personal:Supplies:Packaging ฿6.00
-    Expenses:Personal:Supplies:Packaging ฿6.00
-    Assets:Bank:Kasikorn:Personal                   ฿-694.00
+    Expenses:Personal:Supplies:Packaging    19.00฿
+    Expenses:Personal:Food:Fruit    140.00฿
+    Expenses:Personal:Misc    50.00฿
+    Expenses:Personal:Food:Fruit    100.00฿
+    Expenses:Personal:Food:Dairy    99.00฿
+    Expenses:Personal:Food:Grains    51.00฿
+    Expenses:Personal:Food:Dairy    59.00฿
+    Expenses:Personal:Household:Supplies    139.00฿
+    Expenses:Personal:Food:Dairy    25.00฿
+    Expenses:Personal:Supplies:Packaging    6.00฿
+    Expenses:Personal:Supplies:Packaging    6.00฿
+    Assets:Bank:Kasikorn:Personal    -694.00฿
+
+2025/08/23 MRT
+    Expenses:Personal:Misc    27.00฿
+    Assets:Bank:Kasikorn:Personal    -27.00฿
+
+2025/08/23 Cholos Tacos
+    Expenses:Personal:Misc    154.21฿
+    Expenses:Personal:Food:Meat    224.30฿
+    Expenses:Taxes:Sales    23.36฿
+    Assets:Bank:Kasikorn:Personal    -401.87฿
+
+2025/08/23 MRT
+    Expenses:Personal:Transport:Transit    84.00฿
+    Assets:Bank:Kasikorn:Personal    -84.00฿
+
+2025/08/23 Trash Removal
+    Expenses:Personal:Misc    3,000.00฿
+    Assets:Bank:Kasikorn:Personal    -3,000.00฿
 
 2025/08/24 Vet. Clinic 20
-    Expenses:Personal:Health       ฿5730.00
-    Assets:Bank:Kasikorn:Personal                   ฿-5730.00
-
-2025/08/24 La La Move
-    Expenses:Personal:Misc         ฿524.00
-    Assets:Bank:Kasikorn:Personal                   ฿-524.00
-
-2025/08/24 Vejthani Hospital
-    Expenses:Personal:Misc         ฿1984.00
-    Assets:Bank:Kasikorn:Personal                   ฿-1984.00
+    Expenses:Personal:Health    5,730.00฿
+    Assets:Bank:Kasikorn:Personal    -5,730.00฿
 
 2025/08/24 Grab
-    Expenses:Personal:Transport:Transit ฿600.00
-    Assets:Bank:Kasikorn:Personal                   ฿-600.00
+    Expenses:Personal:Transport:Transit    600.00฿
+    Assets:Bank:Kasikorn:Personal    -600.00฿
 
-2025/08/25 La Cabra Thailand
-    Expenses:Personal:Food:Coffee  ฿160.00
-    Expenses:Personal:Food:Bakery  ฿100.00
-    Expenses:Personal:Misc         ฿110.00
-    Expenses:Personal:Food:Dairy   ฿160.00
-    Assets:Bank:Kasikorn:Personal                   ฿-530.00
+2025/08/24 La La Move
+    Expenses:Personal:Misc    524.00฿
+    Assets:Bank:Kasikorn:Personal    -524.00฿
 
-2025/08/25 Lazada
-    Expenses:Personal:Health       ฿54.00
-    Assets:Bank:Kasikorn:Personal                   ฿-54.00
+2025/08/24 Vejthani Hospital
+    Expenses:Personal:Misc    1,984.00฿
+    Assets:Bank:Kasikorn:Personal    -1,984.00฿
 
 2025/08/25 Movers
-    Expenses:Personal:Misc         ฿7500.00
-    Assets:Bank:Kasikorn:Personal                   ฿-7500.00
+    Expenses:Personal:Misc    7,500.00฿
+    Assets:Bank:Kasikorn:Personal    -7,500.00฿
+
+2025/08/25 Lazada
+    Expenses:Personal:Health    54.00฿
+    Assets:Bank:Kasikorn:Personal    -54.00฿
+
+2025/08/25 La Cabra Thailand
+    Expenses:Personal:Food:Coffee    160.00฿
+    Expenses:Personal:Food:Bakery    100.00฿
+    Expenses:Personal:Misc    110.00฿
+    Expenses:Personal:Food:Dairy    160.00฿
+    Assets:Bank:Kasikorn:Personal    -530.00฿
 
 2025/08/25 Lek
-    Expenses:Personal:Misc         ฿400.00
-    Assets:Bank:Kasikorn:Personal                   ฿-400.00
+    Expenses:Personal:Misc    400.00฿
+    Assets:Bank:Kasikorn:Personal    -400.00฿
 
 2025/08/25 M Cartier
-    Expenses:Personal:Misc         ฿150.00
-    Assets:Bank:Kasikorn:Personal                   ฿-150.00
-
-2025/08/26 Kope HyaTaiKee
-    Expenses:Personal:Misc         ฿88.00
-    Expenses:Personal:Food:Seafood:Shrimp ฿168.00
-    Expenses:Personal:Food:Tea     ฿70.00
-    Expenses:Personal:Misc         ฿15.00
-    Expenses:Personal:Food:Tea     ฿70.00
-    Assets:Bank:Kasikorn:Personal                   ฿-411.00
+    Expenses:Personal:Misc    150.00฿
+    Assets:Bank:Kasikorn:Personal    -150.00฿
 
 2025/08/26 Kopi Hya Tai Ke
-    Expenses:Personal:Food:Dairy   ฿83.18
-    Expenses:Taxes:Sales           ฿5.82
-    Assets:Bank:Kasikorn:Personal                   ฿-89.00
+    Expenses:Personal:Food:Dairy    83.18฿
+    Expenses:Taxes:Sales    5.82฿
+    Assets:Bank:Kasikorn:Personal    -89.00฿
+
+2025/08/26 Kope HyaTaiKee
+    Expenses:Personal:Misc    88.00฿
+    Expenses:Personal:Food:Seafood:Shrimp    168.00฿
+    Expenses:Personal:Food:Tea    70.00฿
+    Expenses:Personal:Misc    15.00฿
+    Expenses:Personal:Food:Tea    70.00฿
+    Assets:Bank:Kasikorn:Personal    -411.00฿
 
 2025/08/26 Pin
-    Expenses:Personal:Misc         ฿25000.00
-    Assets:Bank:Kasikorn:Personal                   ฿-25000.00
-
-2025/08/26 Land Office
-    Expenses:Personal:Misc         ฿10000.00
-    Assets:Bank:Kasikorn:Personal                   ฿-10000.00
+    Expenses:Personal:Misc    25,000.00฿
+    Assets:Bank:Kasikorn:Personal    -25,000.00฿
 
 2025/08/26 Farm to Table Cafe
-    Expenses:Personal:Food:Dining  ฿200.00
-    Assets:Bank:Kasikorn:Personal                   ฿-200.00
-
-2025/08/26 Vista Cafe
-    Expenses:Personal:Food:Beverages:Coffee ฿655.00
-    Assets:Bank:Kasikorn:Personal                   ฿-655.00
+    Expenses:Personal:Food:Dining    200.00฿
+    Assets:Bank:Kasikorn:Personal    -200.00฿
 
 2025/08/26 Land Office
-    Expenses:KahaSrisuk:Misc       ฿223816.00
-    Assets:Bank:Kasikorn:Personal                   ฿-223816.00
+    Expenses:Personal:Misc    10,000.00฿
+    Assets:Bank:Kasikorn:Personal    -10,000.00฿
+
+2025/08/26 Vista Cafe
+    Expenses:Personal:Food:Beverages:Coffee    655.00฿
+    Assets:Bank:Kasikorn:Personal    -655.00฿
+
+2025/08/26 Land Office
+    Expenses:KahaSrisuk:Misc    223,816.00฿
+    Assets:Bank:Kasikorn:Personal    -223,816.00฿
 
 2025/08/26 Mi Silom 8
-    Expenses:Personal:Misc         ฿200000.00
-    Assets:Bank:Kasikorn:Personal                   ฿-200000.00
+    Expenses:Personal:Misc    200,000.00฿
+    Assets:Bank:Kasikorn:Personal    -200,000.00฿
 
 2025/08/26 EmQuartier
-    Expenses:Personal:Food:Meat:Poultry ฿1500.00
-    Assets:Bank:Kasikorn:Personal                   ฿-1500.00
-
-2025/08/27 Bangkok Bank
-    Expenses:MadameViraj:Misc      50,000.00฿
-    Assets:Bank:Kasikorn:Personal -50,000.00฿
-
-2025/08/27 Kami-Kami
-    Expenses:Personal:Misc         ฿600.00
-    Assets:Bank:Kasikorn:Personal                   ฿-600.00
+    Expenses:Personal:Food:Meat:Poultry    1,500.00฿
+    Assets:Bank:Kasikorn:Personal    -1,500.00฿
 
 2025/08/27 Mae Da
-    Expenses:Personal:Food:Fruit:Tropical ฿286.00
-    Assets:Bank:Kasikorn:Personal                   ฿-286.00
+    Expenses:Personal:Food:Fruit:Tropical    286.00฿
+    Assets:Bank:Kasikorn:Personal    -286.00฿
+
+2025/08/27 Kami-Kami
+    Expenses:Personal:Misc    600.00฿
+    Assets:Bank:Kasikorn:Personal    -600.00฿
 
 2025/08/27 Nico Nico
-    Expenses:Personal:Food:Dairy   ฿70.00
-    Expenses:Personal:Food:Bakery  ฿129.00
-    Expenses:Personal:Misc         ฿220.00
-    Expenses:Personal:Food:Fruit:Citrus ฿90.00
-    Expenses:Personal:Misc         ฿390.00
-    Expenses:Personal:Misc         ฿120.00
-    Expenses:Personal:Misc         ฿350.00
-    Expenses:Personal:Misc         ฿180.00
-    Expenses:Personal:Misc         ฿250.00
-    Expenses:Personal:Misc         ฿100.00
-    Expenses:Personal:Misc         ฿310.00
-    Expenses:Personal:Food:Grains  ฿380.00
-    Expenses:Personal:Misc         ฿235.20
-    Expenses:Taxes:Sales           ฿169.28
-    Assets:Bank:Kasikorn:Personal                   ฿-2993.48
+    Expenses:Personal:Food:Dairy    70.00฿
+    Expenses:Personal:Food:Bakery    129.00฿
+    Expenses:Personal:Misc    220.00฿
+    Expenses:Personal:Food:Fruit:Citrus    90.00฿
+    Expenses:Personal:Misc    390.00฿
+    Expenses:Personal:Misc    120.00฿
+    Expenses:Personal:Misc    350.00฿
+    Expenses:Personal:Misc    180.00฿
+    Expenses:Personal:Misc    250.00฿
+    Expenses:Personal:Misc    100.00฿
+    Expenses:Personal:Misc    310.00฿
+    Expenses:Personal:Food:Grains    380.00฿
+    Expenses:Personal:Misc    235.20฿
+    Expenses:Taxes:Sales    169.28฿
+    Assets:Bank:Kasikorn:Personal    -2,993.48฿
+
+2025/08/27 Bangkok Bank
+    Expenses:MadameViraj:Misc    50,000.00฿
+    Assets:Bank:Kasikorn:Personal    -50,000.00฿
 
 2025/08/28 Nico Nico
-    Expenses:Personal:Food:Dairy   70.00฿
-    Expenses:Personal:Misc         130.00฿
-    Expenses:Personal:Food:Coffee  90.00฿
-    Assets:Bank:Kasikorn:Personal -290.00฿
-
-2025/08/28 Nico Nico
-    Expenses:Personal:Food:Bakery  110.00฿
-    Assets:Bank:Kasikorn:Personal -110.00฿
+    Expenses:Personal:Food:Bakery    110.00฿
+    Assets:Bank:Kasikorn:Personal    -110.00฿
 
 2025/08/28 Curtain Up Drama
-    Expenses:Personal:Misc         7,700.00฿
-    Assets:Bank:Kasikorn:Personal -7,700.00฿
+    Expenses:Personal:Misc    7,700.00฿
+    Assets:Bank:Kasikorn:Personal    -7,700.00฿
 
 2025/08/28 Nami Massage
-    Expenses:Personal:Misc         700.00฿
-    Expenses:Personal:Misc         200.00฿
-    Assets:Bank:Kasikorn:Personal -900.00฿
+    Expenses:Personal:Misc    700.00฿
+    Expenses:Personal:Misc    200.00฿
+    Assets:Bank:Kasikorn:Personal    -900.00฿
 
 2025/08/28 Ichiba Dining
-    Expenses:Personal:Misc         380.00฿
-    Expenses:Personal:Misc         180.00฿
-    Expenses:Personal:Food:Meat:RedMeat 270.00฿
-    Expenses:Personal:Misc         41.50฿
-    Expenses:Taxes:Sales           61.01฿
-    Assets:Bank:Kasikorn:Personal -932.51฿
+    Expenses:Personal:Misc    380.00฿
+    Expenses:Personal:Misc    180.00฿
+    Expenses:Personal:Food:Meat:RedMeat    270.00฿
+    Expenses:Personal:Misc    41.50฿
+    Expenses:Taxes:Sales    61.01฿
+    Assets:Bank:Kasikorn:Personal    -932.51฿
 
 2025/08/28 J Value
-    Expenses:Personal:Misc         60.00฿
-    Expenses:Taxes:Sales          -60.00฿
+    Expenses:Personal:Misc    60.00฿
+    Expenses:Taxes:Sales    -60.00฿
+
+2025/08/28 Nico Nico
+    Expenses:Personal:Food:Dairy    70.00฿
+    Expenses:Personal:Misc    130.00฿
+    Expenses:Personal:Food:Coffee    90.00฿
+    Assets:Bank:Kasikorn:Personal    -290.00฿
 
 2025/08/28 J Value Co.
-    Expenses:Personal:Misc         504.00฿
-    Expenses:Personal:Food:Grains  120.00฿
-    Assets:Bank:Kasikorn:Personal -624.00฿
+    Expenses:Personal:Misc    504.00฿
+    Expenses:Personal:Food:Grains    120.00฿
+    Assets:Bank:Kasikorn:Personal    -624.00฿
 
 2025/08/29 Shell Station
-    Expenses:Personal:Misc         3,120.00฿
-    Assets:Bank:Kasikorn:Personal -3,120.00฿
-
-2025/08/29 Lemon Farm
-    Expenses:Personal:Misc         130.00฿
-    Assets:Bank:Kasikorn:Personal -130.00฿
-
-2025/08/29 Lemon Farm
-    Expenses:Personal:Food:Fruit:Apples 65.00฿
-    Expenses:Personal:Food:Fruit:Bananas 12.00฿
-    Assets:Bank:Kasikorn:Personal -77.00฿
-
-2025/08/29 La Cabra Thailand
-    Expenses:Personal:Food:Coffee  160.00฿
-    Expenses:Personal:Food:Butter  160.00฿
-    Assets:Bank:Kasikorn:Personal -320.00฿
-
-2025/08/29 ANRI Bakery
-    Expenses:Personal:Apple        396.00฿
-    Assets:Bank:Kasikorn:Personal -396.00฿
-
-2025/08/29 Rum Bakery
-    Expenses:Personal:Food:Noodles 200.00฿
-    Assets:Bank:Kasikorn:Personal -200.00฿
-
-2025/08/29 Kasemsubsiri Co.
-    Expenses:Personal:Transport:Parking 28.04฿
-    Expenses:Personal:Tax          1.96฿
-    Assets:Bank:Kasikorn:Personal -30.00฿
+    Expenses:Personal:Misc    3,120.00฿
+    Assets:Bank:Kasikorn:Personal    -3,120.00฿
 
 2025/08/29 Villa
     Expenses:Personal:Food:Wine    450.00฿
-    Assets:Bank:Kasikorn:Personal -450.00฿
+    Assets:Bank:Kasikorn:Personal    -450.00฿
+
+2025/08/29 Kasemsubsiri Co.
+    Expenses:Personal:Transport:Parking    28.04฿
+    Expenses:Personal:Tax    1.96฿
+    Assets:Bank:Kasikorn:Personal    -30.00฿
+
+2025/08/29 Lemon Farm
+    Expenses:Personal:Misc    130.00฿
+    Assets:Bank:Kasikorn:Personal    -130.00฿
 
 2025/08/29 Villa Market
-    Expenses:Personal:Misc         98.00฿
-    Expenses:Personal:Food:Vegetables:Carrots 72.25฿
-    Expenses:Personal:Food:Pantry:Oil 749.00฿
-    Expenses:Personal:Food:Vegetables:Tomatoes 170.00฿
-    Expenses:Personal:Misc         199.00฿
-    Expenses:Personal:Food:Butter  209.00฿
-    Expenses:Personal:Misc         132.00฿
-    Expenses:Personal:Food:Vegetables:Alliums 121.75฿
-    Expenses:Personal:Shopping:Bag 8.00฿
-    Expenses:Personal:Misc         169.00฿
-    Assets:Bank:Kasikorn:Personal -1,928.00฿
+    Expenses:Personal:Misc    98.00฿
+    Expenses:Personal:Food:Vegetables:Carrots    72.25฿
+    Expenses:Personal:Food:Pantry:Oil    749.00฿
+    Expenses:Personal:Food:Vegetables:Tomatoes    170.00฿
+    Expenses:Personal:Misc    199.00฿
+    Expenses:Personal:Food:Butter    209.00฿
+    Expenses:Personal:Misc    132.00฿
+    Expenses:Personal:Food:Vegetables:Alliums    121.75฿
+    Expenses:Personal:Shopping:Bag    8.00฿
+    Expenses:Personal:Misc    169.00฿
+    Assets:Bank:Kasikorn:Personal    -1,928.00฿
+
+2025/08/29 Lemon Farm
+    Expenses:Personal:Food:Fruit:Apples    65.00฿
+    Expenses:Personal:Food:Fruit:Bananas    12.00฿
+    Assets:Bank:Kasikorn:Personal    -77.00฿
 
 2025/08/29 Foodland Huamark
-    Expenses:Personal:Misc         154.00฿
-    Assets:Bank:Kasikorn:Personal -154.00฿
+    Expenses:Personal:Misc    154.00฿
+    Assets:Bank:Kasikorn:Personal    -154.00฿
 
 2025/08/29 Foodland
-    Expenses:Personal:Misc         56.00฿
-    Expenses:Personal:Misc         75.00฿
-    Expenses:Personal:Food:Dairy:Butter 206.00฿
-    Expenses:Personal:Food:Dairy:Milk 57.00฿
-    Expenses:Personal:Food:Dairy:Yogurt 269.00฿
-    Expenses:Personal:Food:Dairy:Yogurt 45.00฿
-    Expenses:Personal:Food:Dairy:Yogurt 45.00฿
-    Expenses:Personal:Misc         20.00฿
-    Expenses:Personal:Food:Dairy:Yogurt 28.00฿
-    Expenses:Personal:Food:Dairy:Yogurt 28.00฿
-    Expenses:Personal:Food:Dairy:Yogurt 28.00฿
-    Expenses:Personal:Food:Dairy:Yogurt 28.00฿
-    expenses:Personal:Misc         171.50฿
-    Assets:Bank:Kasikorn:Personal -1,056.50฿
+    Expenses:Personal:Misc    56.00฿
+    Expenses:Personal:Misc    75.00฿
+    Expenses:Personal:Food:Dairy:Butter    206.00฿
+    Expenses:Personal:Food:Dairy:Milk    57.00฿
+    Expenses:Personal:Food:Dairy:Yogurt    269.00฿
+    Expenses:Personal:Food:Dairy:Yogurt    45.00฿
+    Expenses:Personal:Food:Dairy:Yogurt    45.00฿
+    Expenses:Personal:Misc    20.00฿
+    Expenses:Personal:Food:Dairy:Yogurt    28.00฿
+    Expenses:Personal:Food:Dairy:Yogurt    28.00฿
+    Expenses:Personal:Food:Dairy:Yogurt    28.00฿
+    Expenses:Personal:Food:Dairy:Yogurt    28.00฿
+    expenses:Personal:Misc    171.50฿
+    Assets:Bank:Kasikorn:Personal    -1,056.50฿
+
+2025/08/29 La Cabra Thailand
+    Expenses:Personal:Food:Coffee    160.00฿
+    Expenses:Personal:Food:Butter    160.00฿
+    Assets:Bank:Kasikorn:Personal    -320.00฿
+
+2025/08/29 ANRI Bakery
+    Expenses:Personal:Apple    396.00฿
+    Assets:Bank:Kasikorn:Personal    -396.00฿
+
+2025/08/29 Rum Bakery
+    Expenses:Personal:Food:Noodles    200.00฿
+    Assets:Bank:Kasikorn:Personal    -200.00฿
+
+2025/08/30 Gourmet Market
+    Expenses:Personal:Shopping:Bag    72.00฿
+    Expenses:Personal:Shopping:Bag    72.00฿
+    Expenses:Personal:Shopping:Bag    72.00฿
+    Expenses:Personal:Shopping:Bag    72.00฿
+    Expenses:Personal:Shopping:Bag    72.00฿
+    expenses:Personal:Shopping:Bag    6.00฿
+    Assets:Bank:Kasikorn:Personal    -366.00฿
 
 2025/08/30 Lek
-    Expenses:Personal:Home:Handyman 15,000.00฿
-    Assets:Bank:Kasikorn:Personal -15,000.00฿
+    Expenses:Personal:Home:Handyman    15,000.00฿
+    Assets:Bank:Kasikorn:Personal    -15,000.00฿
 
 2025/08/30 AIS
-    Expenses:Personal:Business:Phone 2,220.00฿
-    Assets:Bank:Kasikorn:Personal -2,220.00฿
-
-2025/08/30 AIS
-    Expenses:Personal:Business:Phone 3,689.56฿
-    Assets:Bank:Kasikorn:Personal -3,689.56฿
-
-2025/08/30 Gourmet Market
-    Expenses:Personal:Food:Groceries 502.62฿
-    Assets:Bank:Kasikorn:Personal -502.62฿
-
-2025/08/30 Gourmet Market
-    Expenses:Personal:Shopping:Bag 72.00฿
-    Expenses:Personal:Shopping:Bag 72.00฿
-    Expenses:Personal:Shopping:Bag 72.00฿
-    Expenses:Personal:Shopping:Bag 72.00฿
-    Expenses:Personal:Shopping:Bag 72.00฿
-    expenses:Personal:Shopping:Bag 6.00฿
-    Assets:Bank:Kasikorn:Personal -366.00฿
+    Expenses:Personal:Business:Phone    2,220.00฿
+    Assets:Bank:Kasikorn:Personal    -2,220.00฿
 
 2025/08/30 Vejthani Hospital
-    Expenses:Personal:Misc         1,437.00฿
-    Expenses:Personal:Health:Medical 1,000.00฿
-    Expenses:Personal:Misc         150.00฿
-    Expenses:Personal:Health:Medical 200.00฿
-    Expenses:Personal:Misc         700.00฿
-    Assets:Bank:Kasikorn:Personal -3,487.00฿
+    Expenses:Personal:Misc    1,437.00฿
+    Expenses:Personal:Health:Medical    1,000.00฿
+    Expenses:Personal:Misc    150.00฿
+    Expenses:Personal:Health:Medical    200.00฿
+    Expenses:Personal:Misc    700.00฿
+    Assets:Bank:Kasikorn:Personal    -3,487.00฿
+
+2025/08/30 AIS
+    Expenses:Personal:Business:Phone    3,689.56฿
+    Assets:Bank:Kasikorn:Personal    -3,689.56฿
+
+2025/08/30 Gourmet Market
+    Expenses:Personal:Food:Groceries    502.62฿
+    Assets:Bank:Kasikorn:Personal    -502.62฿
 
 2025/08/31 Saitong
-    Expenses:Personal:Household:Maid 15,000.00฿
-    Assets:Bank:Kasikorn:Personal -15,000.00฿
+    Expenses:Personal:Household:Maid    15,000.00฿
+    Assets:Bank:Kasikorn:Personal    -15,000.00฿
 
 2025/08/31 Vista Cafe
-    Expenses:Personal:Food:CarrotCake 75.00฿
-    Expenses:Personal:Coffee       95.00฿
-    Expenses:Personal:Misc         300.00฿
-    Assets:Bank:Kasikorn:Personal -470.00฿
+    Expenses:Personal:Food:CarrotCake    75.00฿
+    Expenses:Personal:Coffee    95.00฿
+    Expenses:Personal:Misc    300.00฿
+    Assets:Bank:Kasikorn:Personal    -470.00฿
 
 2025/08/31 Decathlon Nawamin
-    Expenses:Personal:Health:Fitness 2,803.74฿
-    Expenses:Taxes:Sales           196.26฿
-    Assets:Bank:Kasikorn:Personal -3,000.00฿
+    Expenses:Personal:Health:Fitness    2,803.74฿
+    Expenses:Taxes:Sales    196.26฿
+    Assets:Bank:Kasikorn:Personal    -3,000.00฿
 
 2025/09/01 Lawyer Mr. Derm
-    Expenses:Personal:LegalFee     3,500.00฿
-    Assets:Bank:Kasikorn:Personal -3,500.00฿
-
-2025/09/01 Grab
-    Expenses:Personal:Transportation:RideSharing 55.00฿
-    Assets:Bank:Kasikorn:Personal -55.00฿
-
-2025/09/01 Fam Time
-    Expenses:Personal:Misc         95.00฿
-    Assets:Bank:Kasikorn:Personal -95.00฿
-
-2025/09/01 Vista Cafe
-    Expenses:Personal:Misc         325.00฿
-    Assets:Bank:Kasikorn:Personal -325.00฿
+    Expenses:Personal:LegalFee    3,500.00฿
+    Assets:Bank:Kasikorn:Personal    -3,500.00฿
 
 2025/09/01 Gourmet Market
-    Expenses:Personal:Misc         145.00฿
-    Expenses:Personal:Misc         98.00฿
-    Expenses:Personal:Misc         98.00฿
-    Expenses:Personal:Misc         120.00฿
-    Expenses:Personal:Misc         195.51฿
-    Assets:Bank:Kasikorn:Personal -656.51฿
+    Expenses:Personal:Misc    145.00฿
+    Expenses:Personal:Misc    98.00฿
+    Expenses:Personal:Misc    98.00฿
+    Expenses:Personal:Misc    120.00฿
+    Expenses:Personal:Misc    195.51฿
+    Assets:Bank:Kasikorn:Personal    -656.51฿
+
+2025/09/01 Grab
+    Expenses:Personal:Transportation:RideSharing    55.00฿
+    Assets:Bank:Kasikorn:Personal    -55.00฿
+
+2025/09/01 Fam Time
+    Expenses:Personal:Misc    95.00฿
+    Assets:Bank:Kasikorn:Personal    -95.00฿
 
 2025/09/01 ELC
-    Expenses:Personal:Education:Tuition 100,000.00฿
-    Assets:Bank:Kasikorn:Personal -100,000.00฿
+    Expenses:Personal:Education:Tuition    100,000.00฿
+    Assets:Bank:Kasikorn:Personal    -100,000.00฿
 
-2025/09/02 Bangkok Bank
-    Expenses:Personal:Misc         100,000.00฿
-    Assets:Bank:Kasikorn:Personal -100,000.00฿
-
-2025/09/02 Starbucks
-    Expenses:Personal:Food:Coffee  5.00฿
-    Assets:Bank:Kasikorn:Personal -5.00฿
+2025/09/01 Vista Cafe
+    Expenses:Personal:Misc    325.00฿
+    Assets:Bank:Kasikorn:Personal    -325.00฿
 
 2025/09/02 Vista Cafe
-    Expenses:Personal:Misc         95.00฿
-    Expenses:Personal:Misc         75.00฿
-    Expenses:Personal:Misc         300.00฿
-    Assets:Bank:Kasikorn:Personal -470.00฿
+    Expenses:Personal:Misc    95.00฿
+    Expenses:Personal:Misc    75.00฿
+    Expenses:Personal:Misc    300.00฿
+    Assets:Bank:Kasikorn:Personal    -470.00฿
 
 2025/09/02 trash removal
-    Expenses:Personal:TrashCollection 1,000.00฿
-    Assets:Bank:Kasikorn:Personal -1,000.00฿
+    Expenses:Personal:TrashCollection    1,000.00฿
+    Assets:Bank:Kasikorn:Personal    -1,000.00฿
 
-2025/09/03 Karo
-    Expenses:Personal:Food:Coffee  120.00฿
-    Assets:Bank:Kasikorn:Personal -120.00฿
+2025/09/02 Bangkok Bank
+    Expenses:Personal:Misc    100,000.00฿
+    Assets:Bank:Kasikorn:Personal    -100,000.00฿
 
-2025/09/03 Kanom Cafe
-    Expenses:Personal:Food:Dairy:Eggs 140.00฿
-    Assets:Bank:Kasikorn:Personal -140.00฿
-
-2025/09/03 Kanom Cafe
-    Expenses:Personal:Food:Tea     25.00฿
-    Expenses:Personal:Food:Meat:Beef 350.00฿
-    Expenses:Personal:Food:Dairy:Eggs 350.00฿
-    Expenses:Personal:Utilities:Water 20.00฿
-    Expenses:Personal:Food:Bakery  35.00฿
-    Expenses:Personal:Food:Beverages:Smoothie 140.00฿
-    Expenses:Personal:Food:Bakery  35.00฿
-    Expenses:Personal:Misc         92.00฿
-    Assets:Bank:Kasikorn:Personal -1,047.00฿
-
-2025/09/03 Nami Massage
-    Expenses:Personal:Health:Wellness 900.00฿
-    Expenses:Personal:Food:Tips    200.00฿
-    Assets:Bank:Kasikorn:Personal -1,100.00฿
+2025/09/02 Starbucks
+    Expenses:Personal:Food:Coffee    5.00฿
+    Assets:Bank:Kasikorn:Personal    -5.00฿
 
 2025/09/03 See Fah
-    Expenses:Personal:Food:Grains:Pasta 145.00฿
-    Expenses:Personal:Misc         175.00฿
-    Expenses:Personal:Food:Tea     70.00฿
-    Expenses:Personal:Misc         21.00฿
-    Assets:Bank:Kasikorn:Personal -411.00฿
+    Expenses:Personal:Food:Grains:Pasta    145.00฿
+    Expenses:Personal:Misc    175.00฿
+    Expenses:Personal:Food:Tea    70.00฿
+    Expenses:Personal:Misc    21.00฿
+    Assets:Bank:Kasikorn:Personal    -411.00฿
+
+2025/09/03 Karo
+    Expenses:Personal:Food:Coffee    120.00฿
+    Assets:Bank:Kasikorn:Personal    -120.00฿
 
 2025/09/03 Hong
-    Expenses:Personal:Misc         6,000.00฿
-    Assets:Bank:Kasikorn:Personal -6,000.00฿
+    Expenses:Personal:Misc    6,000.00฿
+    Assets:Bank:Kasikorn:Personal    -6,000.00฿
+
+2025/09/03 Kanom Cafe
+    Expenses:Personal:Food:Dairy:Eggs    140.00฿
+    Assets:Bank:Kasikorn:Personal    -140.00฿
 
 2025/09/03 J Value
-    Expenses:Personal:Food:Japanese 349.00฿
-    Assets:Bank:Kasikorn:Personal -349.00฿
+    Expenses:Personal:Food:Japanese    349.00฿
+    Assets:Bank:Kasikorn:Personal    -349.00฿
 
-2025/09/04 Corner X'Press The Mall
-    Expenses:Personal:Transport:Maintenance 250.00฿
-    Assets:Bank:Kasikorn:Personal -250.00฿
+2025/09/03 Kanom Cafe
+    Expenses:Personal:Food:Tea    25.00฿
+    Expenses:Personal:Food:Meat:Beef    350.00฿
+    Expenses:Personal:Food:Dairy:Eggs    350.00฿
+    Expenses:Personal:Utilities:Water    20.00฿
+    Expenses:Personal:Food:Bakery    35.00฿
+    Expenses:Personal:Food:Beverages:Smoothie    140.00฿
+    Expenses:Personal:Food:Bakery    35.00฿
+    Expenses:Personal:Misc    92.00฿
+    Assets:Bank:Kasikorn:Personal    -1,047.00฿
+
+2025/09/03 Nami Massage
+    Expenses:Personal:Health:Wellness    900.00฿
+    Expenses:Personal:Food:Tips    200.00฿
+    Assets:Bank:Kasikorn:Personal    -1,100.00฿
 
 2025/09/04 Dolly Churro
-    Expenses:Personal:Misc         65.00฿
-    Assets:Bank:Kasikorn:Personal -65.00฿
+    Expenses:Personal:Misc    65.00฿
+    Assets:Bank:Kasikorn:Personal    -65.00฿
 
 2025/09/04 Bapsang
-    Expenses:Personal:Misc         249.00฿
-    Assets:Bank:Kasikorn:Personal -249.00฿
+    Expenses:Personal:Misc    249.00฿
+    Assets:Bank:Kasikorn:Personal    -249.00฿
 
 2025/09/04 Sourced
     Expenses:Personal:Food:Beer    350.00฿
-    Expenses:Personal:Misc         35.00฿
-    Expenses:Personal:Financial:Taxes 25.19฿
-    Assets:Bank:Kasikorn:Personal -410.19฿
+    Expenses:Personal:Misc    35.00฿
+    Expenses:Personal:Financial:Taxes    25.19฿
+    Assets:Bank:Kasikorn:Personal    -410.19฿
+
+2025/09/04 Corner X'Press The Mall
+    Expenses:Personal:Transport:Maintenance    250.00฿
+    Assets:Bank:Kasikorn:Personal    -250.00฿
 
 2025/09/05 Bistro Asia
-    Expenses:Personal:Food:Bakery  55.00฿
-    Expenses:Personal:Food:Tea     185.00฿
-    Expenses:Personal:Misc         390.00฿
-    Expenses:Personal:Food:Beverages:Smoothie 115.00฿
-    Expenses:Personal:Misc         74.50฿
-    Expenses:Personal:Financial:Taxes 57.37฿
-    Assets:Bank:Kasikorn:Personal -876.87฿
+    Expenses:Personal:Food:Bakery    55.00฿
+    Expenses:Personal:Food:Tea    185.00฿
+    Expenses:Personal:Misc    390.00฿
+    Expenses:Personal:Food:Beverages:Smoothie    115.00฿
+    Expenses:Personal:Misc    74.50฿
+    Expenses:Personal:Financial:Taxes    57.37฿
+    Assets:Bank:Kasikorn:Personal    -876.87฿
 
 2025/09/05 Silom Village
-    Expenses:Personal:Food:Meat:Beef 280.00฿
-    Expenses:Personal:Food:Grains:Rice 40.00฿
-    Expenses:Personal:Food:Meat:Beef 300.00฿
+    Expenses:Personal:Food:Meat:Beef    280.00฿
+    Expenses:Personal:Food:Grains:Rice    40.00฿
+    Expenses:Personal:Food:Meat:Beef    300.00฿
     Expenses:Personal:Food:Thai    390.00฿
-    Expenses:Personal:Food:Beverages:Smoothie 120.00฿
-    Expenses:Personal:Financial:Taxes 78.40฿
-    Assets:Bank:Kasikorn:Personal -1,208.40฿
+    Expenses:Personal:Food:Beverages:Smoothie    120.00฿
+    Expenses:Personal:Financial:Taxes    78.40฿
+    Assets:Bank:Kasikorn:Personal    -1,208.40฿
 
 2025/09/05 Gateway Ekkamai
-    Expenses:Personal:Transportation:Parking 20.00฿
-    Assets:Bank:Kasikorn:Personal -20.00฿
-
-2025/09/06 Open AI
-    Expenses:Channel60:Subscription:Software 500.00฿
-    Assets:Bank:Kasikorn:Channel 60-500.00฿
-
+    Expenses:Personal:Transportation:Parking    20.00฿
+    Assets:Bank:Kasikorn:Personal    -20.00฿

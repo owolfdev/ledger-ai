@@ -9,7 +9,7 @@ import { syncLedgerFile } from "@/app/actions/ledger/sync-ledger-file";
 import { clearAllTerminalHistories } from "@/lib/utils/clear-terminal-histories";
 
 export interface EditEntryArgs {
-  entryId: string;
+  entryIds: string[]; // ✅ CHANGED: Support multiple entry IDs
   business?: string;
   vendor?: string;
   description?: string;
@@ -70,10 +70,33 @@ function parseArgs(raw?: string): EditEntryArgs | null {
   // Filter out empty parts
   const filteredParts = parts.filter(Boolean);
 
-  // First part must be the entry ID
-  const entryId = filteredParts[0];
-  if (!/^\d+$/.test(entryId)) {
-    throw new Error("Entry ID must be numeric");
+  // First part(s) must be entry ID(s) - support comma-separated
+  // Handle comma-separated entry IDs by joining parts until we hit a flag
+  let entryIdParts = [];
+  for (let i = 0; i < filteredParts.length; i++) {
+    const part = filteredParts[i];
+    if (part.startsWith("--") || part.startsWith("-")) {
+      // This is a flag, stop collecting entry IDs
+      break;
+    }
+    entryIdParts.push(part);
+  }
+
+  const entryIdString = entryIdParts.join(" ");
+  const entryIds = entryIdString
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+
+  // Validate all entry IDs are numeric
+  for (const entryId of entryIds) {
+    if (!/^\d+$/.test(entryId)) {
+      throw new Error(`Entry ID must be numeric: ${entryId}`);
+    }
+  }
+
+  if (entryIds.length === 0) {
+    throw new Error("At least one entry ID is required");
   }
 
   let business: string | undefined;
@@ -83,8 +106,8 @@ function parseArgs(raw?: string): EditEntryArgs | null {
   let memo: string | undefined;
   let deleteFlag = false; // ✅ NEW: Delete flag
 
-  // Parse flags
-  for (let i = 1; i < filteredParts.length; i++) {
+  // Parse flags (start after the entry ID parts)
+  for (let i = entryIdParts.length; i < filteredParts.length; i++) {
     const flag = filteredParts[i].toLowerCase();
 
     if (
@@ -118,7 +141,7 @@ function parseArgs(raw?: string): EditEntryArgs | null {
       continue;
     }
     // ✅ NEW: Delete flag parsing
-    if (flag === "--delete" || flag === "-d") {
+    if (flag === "--delete" || flag === "-del") {
       deleteFlag = true;
       i++;
       continue;
@@ -133,7 +156,7 @@ function parseArgs(raw?: string): EditEntryArgs | null {
   }
 
   return {
-    entryId,
+    entryIds,
     business,
     vendor: vendor || description,
     description: vendor || description,
@@ -283,149 +306,197 @@ export async function editEntryCommand(
   const supabase = createClient();
 
   try {
-    // Step 1: Fetch the existing entry to verify ownership and get current data
-    // console.log("Fetching entry:", args.entryId);
-    const { data: entry, error: fetchError } = await supabase
-      .from("ledger_entries")
-      .select("*")
-      .eq("id", args.entryId)
-      .eq("user_id", user.id)
-      .single();
+    const results: string[] = [];
+    const errors: string[] = [];
 
-    if (fetchError) {
-      console.error("Fetch error:", fetchError);
-      return `<my-alert message="Failed to fetch entry: ${fetchError.message}" />`;
-    }
-
-    if (!entry) {
-      return `<my-alert message="Entry ${args.entryId} not found or access denied" />`;
-    }
-
-    // ✅ NEW: Handle delete operation
-    if (args.delete) {
+    // Process each entry
+    for (const entryId of args.entryIds) {
       try {
-        await deleteEntry(args.entryId, user.id);
-        clearAllTerminalHistories(); // Clear all terminal histories
-        return `✅ **Entry ${args.entryId} deleted successfully**
+        // Step 1: Fetch the existing entry to verify ownership and get current data
+        const { data: entry, error: fetchError } = await supabase
+          .from("ledger_entries")
+          .select("*")
+          .eq("id", entryId)
+          .eq("user_id", user.id)
+          .single();
 
-The entry, all its postings, and any associated receipt images have been removed from your ledger.`;
-      } catch (error) {
-        console.error("Delete error:", error);
-        return `<my-alert message="Failed to delete entry: ${
-          error instanceof Error ? error.message : error
-        }" />`;
-      }
-    }
-
-    // Step 2: Build the update object (existing edit logic)
-    const updates: Record<string, unknown> = {};
-    const changes: string[] = [];
-
-    if (args.description !== undefined) {
-      updates.description = args.description;
-      changes.push(`description → "${args.description}"`);
-    }
-
-    if (args.date !== undefined) {
-      updates.entry_date = args.date;
-      changes.push(`date → ${args.date}`);
-    }
-
-    if (args.memo !== undefined) {
-      updates.memo = args.memo;
-      changes.push(`memo → "${args.memo}"`);
-    }
-
-    // Handle business change (most complex - updates entry_text)
-    if (args.business !== undefined) {
-      const updatedEntryText = updateAccountsForBusiness(
-        entry.entry_text || "",
-        args.business
-      );
-      updates.entry_text = updatedEntryText;
-      changes.push(`business → ${args.business}`);
-    }
-
-    // Step 3: Update the main entry
-    // console.log("Updating entry with:", updates);
-    const { error: updateError } = await supabase
-      .from("ledger_entries")
-      .update(updates)
-      .eq("id", args.entryId)
-      .eq("user_id", user.id);
-
-    if (updateError) {
-      console.error("Update error:", updateError);
-      return `<my-alert message="Failed to update entry: ${updateError.message}" />`;
-    }
-
-    // Step 4: Update individual postings as needed
-    // console.log("Updating postings...");
-
-    // Fetch all postings for this entry
-    const { data: postings, error: postingsError } = await supabase
-      .from("ledger_postings")
-      .select("*")
-      .eq("entry_id", args.entryId);
-
-    if (postingsError) {
-      console.error("Failed to fetch postings:", postingsError);
-      // Don't fail the whole operation, just warn
-    } else if (postings) {
-      // Update each posting
-      for (const posting of postings) {
-        const postingUpdates: Record<string, unknown> = {};
-
-        // Update account names if business changed
-        if (args.business !== undefined) {
-          const updatedAccount = posting.account?.replace(
-            /(Expenses|Income):([^:]+):/,
-            `$1:${args.business}:`
+        if (fetchError) {
+          console.error(`Fetch error for entry ${entryId}:`, fetchError);
+          errors.push(
+            `Entry ${entryId}: Failed to fetch - ${fetchError.message}`
           );
-          if (updatedAccount && updatedAccount !== posting.account) {
-            postingUpdates.account = updatedAccount;
-          }
+          continue;
         }
 
-        // Update memo if changed (applies to all postings)
-        if (args.memo !== undefined) {
-          postingUpdates.memo = args.memo;
+        if (!entry) {
+          errors.push(`Entry ${entryId}: Not found or access denied`);
+          continue;
         }
 
-        // Only update if there are changes
-        if (Object.keys(postingUpdates).length > 0) {
-          const { error: postingUpdateError } = await supabase
-            .from("ledger_postings")
-            .update(postingUpdates)
-            .eq("id", posting.id);
-
-          if (postingUpdateError) {
-            console.error(
-              `Failed to update posting ${posting.id}:`,
-              postingUpdateError
+        // ✅ NEW: Handle delete operation
+        if (args.delete) {
+          try {
+            await deleteEntry(entryId, user.id);
+            results.push(`✅ Entry ${entryId} deleted successfully`);
+            continue;
+          } catch (error) {
+            console.error(`Delete error for entry ${entryId}:`, error);
+            errors.push(
+              `Entry ${entryId}: Failed to delete - ${
+                error instanceof Error ? error.message : error
+              }`
             );
-            // Continue with other postings
+            continue;
           }
         }
+
+        // Step 2: Build the update object (existing edit logic)
+        const updates: Record<string, unknown> = {};
+        const changes: string[] = [];
+
+        if (args.description !== undefined) {
+          updates.description = args.description;
+          changes.push(`description → "${args.description}"`);
+        }
+
+        if (args.date !== undefined) {
+          updates.entry_date = args.date;
+          changes.push(`date → ${args.date}`);
+        }
+
+        if (args.memo !== undefined) {
+          updates.memo = args.memo;
+          changes.push(`memo → "${args.memo}"`);
+        }
+
+        // Handle business change (most complex - updates entry_text)
+        if (args.business !== undefined) {
+          const updatedEntryText = updateAccountsForBusiness(
+            entry.entry_text || "",
+            args.business
+          );
+          updates.entry_text = updatedEntryText;
+          changes.push(`business → ${args.business}`);
+        }
+
+        // Step 3: Update the main entry
+        const { error: updateError } = await supabase
+          .from("ledger_entries")
+          .update(updates)
+          .eq("id", entryId)
+          .eq("user_id", user.id);
+
+        if (updateError) {
+          console.error(`Update error for entry ${entryId}:`, updateError);
+          errors.push(
+            `Entry ${entryId}: Failed to update - ${updateError.message}`
+          );
+          continue;
+        }
+
+        // Step 4: Update individual postings as needed
+        // Fetch all postings for this entry
+        const { data: postings, error: postingsError } = await supabase
+          .from("ledger_postings")
+          .select("*")
+          .eq("entry_id", entryId);
+
+        if (postingsError) {
+          console.error(
+            `Failed to fetch postings for entry ${entryId}:`,
+            postingsError
+          );
+          errors.push(
+            `Entry ${entryId}: Failed to fetch postings - ${postingsError.message}`
+          );
+          continue;
+        } else if (postings) {
+          // Update each posting
+          for (const posting of postings) {
+            const postingUpdates: Record<string, unknown> = {};
+
+            // Update account names if business changed
+            if (args.business !== undefined) {
+              const updatedAccount = posting.account?.replace(
+                /(Expenses|Income):([^:]+):/,
+                `$1:${args.business}:`
+              );
+              if (updatedAccount && updatedAccount !== posting.account) {
+                postingUpdates.account = updatedAccount;
+              }
+            }
+
+            // Update memo if changed (applies to all postings)
+            if (args.memo !== undefined) {
+              postingUpdates.memo = args.memo;
+            }
+
+            // Only update if there are changes
+            if (Object.keys(postingUpdates).length > 0) {
+              const { error: postingUpdateError } = await supabase
+                .from("ledger_postings")
+                .update(postingUpdates)
+                .eq("id", posting.id);
+
+              if (postingUpdateError) {
+                console.error(
+                  `Failed to update posting ${posting.id} for entry ${entryId}:`,
+                  postingUpdateError
+                );
+                // Continue with other postings
+              }
+            }
+          }
+        }
+
+        // Success for this entry
+        const changeList = changes.join(", ");
+        results.push(`✅ Entry ${entryId}: ${changeList}`);
+      } catch (error) {
+        console.error(`Error processing entry ${entryId}:`, error);
+        errors.push(
+          `Entry ${entryId}: ${error instanceof Error ? error.message : error}`
+        );
       }
     }
 
-    // Step 5: Sync the ledger file if in development
+    // Step 5: Sync ledger file (only once at the end)
     try {
-      // console.log("Syncing ledger file...");
       await syncLedgerFile();
     } catch (syncError) {
       console.error("Failed to sync ledger file:", syncError);
       // Don't fail the operation, just log the error
     }
 
-    // Step 6: Return success message
-    const changesText = changes.join(", ");
-    return `✅ **Entry ${args.entryId} updated**
+    // Clear terminal histories if any entries were deleted
+    if (args.delete && results.length > 0) {
+      clearAllTerminalHistories();
+    }
 
-**Changes:** ${changesText}
+    // Step 6: Return consolidated results
+    let output = "";
 
-[View Updated Entry](/ledger/entry/${args.entryId})`;
+    if (results.length > 0) {
+      output += `**Successfully processed ${results.length} entr${
+        results.length === 1 ? "y" : "ies"
+      }:**\n\n`;
+      output += results.join("\n") + "\n\n";
+    }
+
+    if (errors.length > 0) {
+      output += `**Errors (${errors.length}):**\n\n`;
+      output += errors.join("\n") + "\n\n";
+    }
+
+    if (results.length > 0) {
+      output += "The entries have been updated in your ledger.";
+    } else {
+      output = `<my-alert message="No entries were successfully processed. ${
+        errors.length > 0 ? "See errors above." : ""
+      }" />`;
+    }
+
+    return output;
   } catch (error) {
     console.error("Unexpected error:", error);
     return `<my-alert message="Unexpected error: ${error}" />`;

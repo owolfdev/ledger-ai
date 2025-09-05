@@ -413,7 +413,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
 
   "edit-entry": {
     description:
-      "Edit a single ledger entry - change business, vendor, date, or memo. Requires login and entry ownership.",
+      "Edit one or more ledger entries - change business, vendor, date, or memo. Requires login and entry ownership.",
     content: (
       arg?: string,
       pageCtx?: string,
@@ -461,14 +461,20 @@ export const commandRegistry: Record<string, CommandMeta> = {
     categories: ["edit", "modify", "finance"],
     aliases: ["editent", "modify", "fix", "update"],
 
-    usage: `edit-entry id --[options]
+    usage: `edit-entry id[,id2,id3...] --[options]
   
-  **Basic Usage:**
+  **Single Entry Examples:**
   • \`edit-entry 323 --business MyBrick\` / \`edit-entry 323 -b MyBrick\` — Change business context
   • \`edit-entry 323 --vendor "Starbucks Coffee"\` / \`edit-entry 323 -v "Starbucks"\` — Update vendor name
   • \`edit-entry 323 --date 2025-08-15\` / \`edit-entry 323 -D 2025-08-15\` — Change transaction date
   • \`edit-entry 323 --memo "client meeting"\` / \`edit-entry 323 -m "client meeting"\` — Add or update memo
-  • \`edit-entry 323 --delete\` / \`edit-entry 323 -d\` — Delete the entry
+  • \`edit-entry 323 --delete\` / \`edit-entry 323 -del\` — Delete the entry
+  
+  **Multiple Entries Examples:**
+  • \`edit-entry 323,324,325 --business Personal\` — Change business for entries 323, 324, 325
+  • \`edit-entry 555,556,557 --vendor "Coffee Shop"\` — Update vendor for multiple entries
+  • \`edit-entry 100,101 --memo "team meeting"\` — Add memo to entries 100 and 101
+  • \`edit-entry 200,201,202 --delete\` — Delete entries 200, 201, 202
   
   **Combined Operations:**
   • \`edit-entry 323 --vendor "Coffee Shop" --memo "team meeting"\` — Update vendor and memo`,
@@ -491,7 +497,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`editent 323 --vendor "Starbucks"\` — Update vendor
   • \`editent 323 --date 2025-08-15\` — Change date
   • \`editent 323 --memo "note"\` — Add memo
-  • \`editent 323 --delete\` or \`editent 323 -d\` — Delete the entry
+  • \`editent 323 --delete\` or \`editent 323 -del\` — Delete the entry
   
   **Multiple changes:**
   • \`editent 323 --business Personal --vendor "Coffee Shop" --memo "team meeting"\`
@@ -503,21 +509,27 @@ export const commandRegistry: Record<string, CommandMeta> = {
 
   ee: {
     description:
-      "Short alias for edit-entry - edit a single ledger entry (business, vendor, date, memo)",
+      "Short alias for edit-entry - edit one or more ledger entries (business, vendor, date, memo)",
     content: (
       arg?: string,
       pageCtx?: string,
       cmds?: Record<string, CommandMeta>,
       user?: User | null
     ) => editEntryCommand(arg || "", pageCtx || "", cmds || {}, user || null),
-    usage: `ee id --[options]
+    usage: `ee id[,id2,id3...] --[options]
   
-  **Quick Examples:**
+  **Single Entry Examples:**
   • \`ee 323 --business MyBrick\` / \`ee 323 -b MyBrick\` — Change business
   • \`ee 323 --vendor "Starbucks"\` / \`ee 323 -v "Starbucks"\` — Update vendor
   • \`ee 323 --date 2025-08-15\` / \`ee 323 -D 2025-08-15\` — Change date
   • \`ee 323 --memo "note"\` / \`ee 323 -m "note"\` — Add memo
-  • \`ee 323 --delete\` / \`ee 323 -d\` — Delete the entry
+  • \`ee 323 --delete\` / \`ee 323 -del\` — Delete the entry
+  
+  **Multiple Entries Examples:**
+  • \`ee 323,324,325 --business Personal\` — Change business for entries 323, 324, 325
+  • \`ee 555,556,557 --vendor "Coffee Shop"\` — Update vendor for multiple entries
+  • \`ee 100,101 --memo "team meeting"\` — Add memo to entries 100 and 101
+  • \`ee 200,201,202 --delete\` — Delete entries 200, 201, 202
   
   **Multiple changes:**
   • \`ee 323 --business Personal --vendor "Coffee Shop" --memo "team meeting"\`

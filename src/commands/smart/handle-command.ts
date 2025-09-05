@@ -443,15 +443,6 @@ export function createHandleCommand(
     const [rawBase, ...rest] = trimmed.split(/[\s\n]+/);
     const base = (rawBase || "").toLowerCase();
 
-    console.log("Command parsing:", {
-      original: cmd,
-      trimmed: trimmed,
-      base: base,
-      rest: rest,
-      arg: rest.join(" "),
-      availableCommands: Object.keys(commands),
-    });
-
     const arg = rest.join(" ");
     // ----------- Side-effect/Imperative Commands ----------- //
 
@@ -1104,6 +1095,45 @@ export function createHandleCommand(
     // NEW: TIER 2 - NATURAL LANGUAGE COMMAND GENERATION
     // ==========================================
     // Insert this BEFORE the AI fallback section
+    // Skip natural language processing for direct commands
+    if (commands[base]) {
+      console.log(
+        "Skipping natural language processing for direct command:",
+        base
+      );
+      // Process the direct command
+      const cmdMeta = commands[base];
+      if (
+        typeof cmdMeta.content === "string" &&
+        cmdMeta.content.startsWith("__") &&
+        cmdMeta.content.endsWith("__")
+      ) {
+        // Handler token—show description or generic
+        setHistory([
+          ...(history ?? []),
+          { type: "input", content: cmd },
+          {
+            type: "output",
+            content: cmdMeta.description || "Command executed.",
+            format: "markdown",
+          },
+        ]);
+        return true;
+      } else {
+        // Normal command (string or function output)
+        const output =
+          typeof cmdMeta.content === "function"
+            ? await cmdMeta.content(arg, pageContext, commands, user)
+            : cmdMeta.content;
+        setHistory([
+          ...(history ?? []),
+          { type: "input", content: cmd },
+          { type: "output", content: output ?? "", format: "markdown" },
+        ]);
+        return true;
+      }
+    }
+
     console.log("Starting natural language processing for:", trimmed);
     try {
       const intentDetector = new IntentDetector(commands);
