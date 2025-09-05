@@ -24,9 +24,16 @@ export class IntentDetector {
     /^had\s+.*\s+at/i,
     /expense/i,
     /transaction/i,
+    // Subscription patterns (improved to handle complex vendor names and context)
+    /^subscription\s+.*\s+\d+/i, // "subscription [anything] [amount]"
+    /^subscription\s+\d+/i, // "subscription [amount]"
     // Noun phrase with amount (e.g., "coffee starbucks 100")
     /^[a-z]+\s+[a-z]+\s+\d+/i,
     /^[a-z]+\s+\d+/i,
+    // Patterns with @ symbol for vendor specification
+    /^[a-z]+\s+.*\s+@\s+.*/i, // "item [amount] @ vendor"
+    // Patterns with business context
+    /^[a-z]+\s+.*\s+business:\s+.*/i, // "item [amount], business: context"
   ];
 
   private readonly QUERY_PATTERNS = [
@@ -133,10 +140,15 @@ export class IntentDetector {
       this.nlCommands.new &&
       this.matchesAnyPattern(input, this.EXPENSE_PATTERNS)
     ) {
+      // Calculate dynamic confidence based on pattern match quality
+      const confidence = this.calculateRegexConfidence(
+        input,
+        this.EXPENSE_PATTERNS
+      );
       bestMatch = {
         patterns: this.EXPENSE_PATTERNS,
         command: "new",
-        confidence: 0.8,
+        confidence: Math.max(confidence, 0.6), // Minimum confidence for expense patterns
       };
     }
 
@@ -287,5 +299,40 @@ export class IntentDetector {
     }
 
     return Math.min(baseConfidence + 0.1, 1.0);
+  }
+
+  private calculateRegexConfidence(input: string, patterns: RegExp[]): number {
+    let bestConfidence = 0;
+
+    for (const pattern of patterns) {
+      const match = pattern.exec(input);
+      if (match) {
+        let confidence = 0.5; // Base confidence for regex match
+
+        // Boost confidence for specific patterns
+        if (pattern.source.includes("subscription")) {
+          confidence += 0.3; // High boost for subscription patterns
+        }
+
+        // Boost confidence if amount is present
+        if (/\d+/.test(input)) {
+          confidence += 0.2;
+        }
+
+        // Boost confidence for vendor indicators
+        if (/@|business:|vendor:/i.test(input)) {
+          confidence += 0.1;
+        }
+
+        // Boost confidence if pattern matches at the start
+        if (match.index === 0) {
+          confidence += 0.1;
+        }
+
+        bestConfidence = Math.max(bestConfidence, Math.min(confidence, 1.0));
+      }
+    }
+
+    return bestConfidence;
   }
 }

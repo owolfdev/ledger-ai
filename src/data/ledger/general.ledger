@@ -617,47 +617,7 @@
     Expenses:Personal:Transportation:Parking 20.00฿
     Assets:Bank:Kasikorn:Personal -20.00฿
 
-2025/09/06 Google
-    Expenses:Personal:Subscription:Software 200.00฿
-    Assets:Bank:Kasikorn:Personal -200.00฿
-
-2025/09/06 Google
-    Expenses:Personal:Personal:Care 200.00฿
-    Assets:Bank:Kasikorn:Personal -200.00฿
-
-2025/09/06 Google
-    Expenses:Personal:Subscription:Software 200.00฿
-    Assets:Bank:Kasikorn:Personal -200.00฿
-
-2025/09/06 Google
-    Expenses:Personal:Subscription:Software 200.00฿
-    Assets:Bank:Kasikorn:Personal -200.00฿
-
-2025/09/06 Unknown Vendor
-    Expenses:Personal:Entertainment:Streaming 200.00฿
-    Assets:Bank:Kasikorn:Personal -200.00฿
-
-2025/09/06 Netflix
-    Expenses:Personal:Subscription:Software 200.00฿
-    Assets:Bank:Kasikorn:Personal -200.00฿
-
-2025/09/06 Netflix
-    Expenses:Personal:Subscription:Entertainment 200.00฿
-    Assets:Bank:Kasikorn:Personal -200.00฿
-
-2025/09/06 Google Workspace
-    Expenses:Personal:Subscription:Software 400.00฿
-    Assets:Bank:Kasikorn:Personal -400.00฿
-
-2025/09/06 Apple Music
-    Expenses:Personal:Subscription:Entertainment 500.00฿
-    Assets:Bank:Kasikorn:Personal -500.00฿
-
-2025/09/06 Cursor AI
-    Expenses:Personal:Subscription:Software 1,000.00฿
-    Assets:Bank:Kasikorn:Personal -1,000.00฿
-
-2025/09/06 Cursor AI
-    Expenses:Channel60:Subscription:Software 1,000.00฿
-    Assets:Bank:Kasikorn:Channel 60-1,000.00฿
+2025/09/06 Open AI
+    Expenses:Channel60:Subscription:Software 500.00฿
+    Assets:Bank:Kasikorn:Channel 60-500.00฿
 
