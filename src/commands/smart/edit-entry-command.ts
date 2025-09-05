@@ -72,7 +72,7 @@ function parseArgs(raw?: string): EditEntryArgs | null {
 
   // First part(s) must be entry ID(s) - support comma-separated
   // Handle comma-separated entry IDs by joining parts until we hit a flag
-  let entryIdParts = [];
+  const entryIdParts = [];
   for (let i = 0; i < filteredParts.length; i++) {
     const part = filteredParts[i];
     if (part.startsWith("--") || part.startsWith("-")) {
