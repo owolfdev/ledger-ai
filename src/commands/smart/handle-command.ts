@@ -1104,6 +1104,7 @@ export function createHandleCommand(
       // Process the direct command
       const cmdMeta = commands[base];
       if (
+        cmdMeta &&
         typeof cmdMeta.content === "string" &&
         cmdMeta.content.startsWith("__") &&
         cmdMeta.content.endsWith("__")
@@ -1119,7 +1120,7 @@ export function createHandleCommand(
           },
         ]);
         return true;
-      } else {
+      } else if (cmdMeta) {
         // Normal command (string or function output)
         const output =
           typeof cmdMeta.content === "function"
