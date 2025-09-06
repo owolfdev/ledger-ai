@@ -6,7 +6,7 @@ import TerminalOutputRenderer from "./terminal-output-renderer";
 import { TerminalOutputRendererProps } from "@/types/terminal";
 import type { CommandMeta } from "@/commands/utils";
 import { usePathname } from "next/navigation";
-import TerminalImageUpload from "./terminal-image-upload";
+import TerminalImageUpload from "./terminal-image-upload-vision";
 import CommandLoading from "./command-loading";
 
 export type TerminalProps = {

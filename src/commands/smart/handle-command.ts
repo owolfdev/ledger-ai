@@ -1043,9 +1043,9 @@ export function createHandleCommand(
       // Don't display special handler tokens as output
       const cmdMeta = commands[base];
       if (
-        typeof cmdMeta.content === "string" &&
-        cmdMeta.content.startsWith("__") &&
-        cmdMeta.content.endsWith("__")
+        typeof (cmdMeta as CommandMeta).content === "string" &&
+        ((cmdMeta as CommandMeta).content as string).startsWith("__") &&
+        ((cmdMeta as CommandMeta).content as string).endsWith("__")
       ) {
         // Handler token—show description or generic
         setHistory([
@@ -1053,7 +1053,8 @@ export function createHandleCommand(
           { type: "input", content: cmd },
           {
             type: "output",
-            content: cmdMeta.description || "Command executed.",
+            content:
+              (cmdMeta as CommandMeta).description || "Command executed.",
             format: "markdown",
           },
         ]);
@@ -1061,13 +1062,24 @@ export function createHandleCommand(
       } else {
         // Normal command (string or function output)
         const output =
-          typeof cmdMeta.content === "function"
-            ? await cmdMeta.content(arg, pageContext, commands, user)
-            : cmdMeta.content;
+          typeof (cmdMeta as CommandMeta).content === "function"
+            ? await (
+                (cmdMeta as CommandMeta).content as (
+                  arg?: string,
+                  pageCtx?: string,
+                  cmds?: Record<string, CommandMeta>,
+                  user?: User | null
+                ) => string | Promise<string>
+              )(arg, pageContext, commands, user)
+            : (cmdMeta as CommandMeta).content;
         setHistory([
           ...(history ?? []),
           { type: "input", content: cmd },
-          { type: "output", content: output ?? "", format: "markdown" },
+          {
+            type: "output",
+            content: typeof output === "string" ? output : String(output ?? ""),
+            format: "markdown",
+          },
         ]);
         return true;
       }
@@ -1105,9 +1117,9 @@ export function createHandleCommand(
       const cmdMeta = commands[base];
       if (
         cmdMeta &&
-        typeof cmdMeta.content === "string" &&
-        cmdMeta.content.startsWith("__") &&
-        cmdMeta.content.endsWith("__")
+        typeof (cmdMeta as CommandMeta).content === "string" &&
+        ((cmdMeta as CommandMeta).content as string).startsWith("__") &&
+        ((cmdMeta as CommandMeta).content as string).endsWith("__")
       ) {
         // Handler token—show description or generic
         setHistory([
@@ -1115,7 +1127,8 @@ export function createHandleCommand(
           { type: "input", content: cmd },
           {
             type: "output",
-            content: cmdMeta.description || "Command executed.",
+            content:
+              (cmdMeta as CommandMeta).description || "Command executed.",
             format: "markdown",
           },
         ]);
@@ -1123,13 +1136,24 @@ export function createHandleCommand(
       } else if (cmdMeta) {
         // Normal command (string or function output)
         const output =
-          typeof cmdMeta.content === "function"
-            ? await cmdMeta.content(arg, pageContext, commands, user)
-            : cmdMeta.content;
+          typeof (cmdMeta as CommandMeta).content === "function"
+            ? await (
+                (cmdMeta as CommandMeta).content as (
+                  arg?: string,
+                  pageCtx?: string,
+                  cmds?: Record<string, CommandMeta>,
+                  user?: User | null
+                ) => string | Promise<string>
+              )(arg, pageContext, commands, user)
+            : (cmdMeta as CommandMeta).content;
         setHistory([
           ...(history ?? []),
           { type: "input", content: cmd },
-          { type: "output", content: output ?? "", format: "markdown" },
+          {
+            type: "output",
+            content: typeof output === "string" ? output : String(output ?? ""),
+            format: "markdown",
+          },
         ]);
         return true;
       }
