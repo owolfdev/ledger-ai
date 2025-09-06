@@ -58,12 +58,12 @@ export function getMDXComponents(overrides: MDXComponents = {}): MDXComponents {
       </h3>
     ),
     p: ({ children, ...props }) => (
-      <p className="mb-6 text-foreground [.terminal-entries_&]:mb-1" {...props}>
+      <p className="text-foreground" {...props}>
         {children}
       </p>
     ),
     div: ({ children, className = "", ...props }) => (
-      <div className={`${className} [.terminal-header]:mb-4`} {...props}>
+      <div className={className} {...props}>
         {children}
       </div>
     ),

@@ -254,14 +254,11 @@ export async function entriesListCommand(
     // Combine all parts with proper spacing for MDX component separation
     const parts = [
       header,
-      "", // Empty line after header
+      "", // Empty line after header for spacing
       ...formattedEntries,
-      "<div class='h-4'></div>",
     ];
 
-    return `<div class="terminal-entries">${
-      parts.join("\n\n") + accountSummary + totalsBlock
-    }</div>`; // Wrap in terminal-specific class
+    return parts.join("\n\n") + accountSummary + totalsBlock;
   } catch (error) {
     return `<custom-alert message="Unexpected error: ${error}" />`;
   }

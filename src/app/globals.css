@@ -253,3 +253,12 @@ html {
 .entry-item p {
   margin: 0 !important;
 }
+
+/* Terminal output - reduce paragraph spacing */
+.terminal-markdown p {
+  margin-bottom: 0.25rem !important;
+}
+
+.terminal-markdown p:first-child {
+  margin-bottom: 1rem !important;
+}

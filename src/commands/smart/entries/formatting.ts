@@ -106,5 +106,5 @@ export function createEntryListHeader(
   filterDescription: string = "",
   sortInfo: { sort: string; dir: string; limit: number }
 ): string {
-  return `<div class="terminal-header">Found **${count}** entries (sort: ${sortInfo.sort} ${sortInfo.dir}, limit: ${sortInfo.limit}${filterDescription})</div>`;
+  return `Found **${count}** entries (sort: ${sortInfo.sort} ${sortInfo.dir}, limit: ${sortInfo.limit}${filterDescription})`;
 }
