@@ -438,7 +438,7 @@ export async function editEntryCommand(
           );
 
           // Update the entry text to replace the payment account
-          let updatedEntryText = entry.entry_text || "";
+          const updatedEntryText = entry.entry_text || "";
 
           // Parse the ledger text and replace the payment account line
           const lines = updatedEntryText.split("\n");
