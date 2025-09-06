@@ -268,6 +268,7 @@ EDIT-ENTRY COMMAND EXAMPLES:
 - "Change entry 323 business to MyBrick" → "edit-entry 323 --business MyBrick"
 - "Fix the vendor name for entry 330 to Starbucks" → "edit-entry 330 --vendor Starbucks"
 - "Update entry 340 memo to client meeting" → "edit-entry 340 --memo client meeting"
+- "Change entry 350 payment to credit card" → "edit-entry 350 --payment credit card"
 
 FLAG SYNTAX RULES:
 - Use -i flag for items and prices: "new -i item1 price1 item2 price2"
@@ -275,7 +276,7 @@ FLAG SYNTAX RULES:
 - Use --business for business context: "--business MyBrick"
 - Use --date for dates: "--date 2025-01-15"
 - Use --memo for notes: "--memo meeting with client"
-- Use --payment for payment methods: "--payment credit card"
+- Use --payment for payment methods: "--payment credit card" (new/edit-entry commands)
 - Quote multi-word values: "--vendor \"Starbucks Coffee\""
 - Quote multi-word items: "new -i \"coffee mug\" 200"
 

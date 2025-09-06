@@ -8,6 +8,40 @@ import type { CommandMeta } from "./utils";
 import { syncLedgerFile } from "@/app/actions/ledger/sync-ledger-file";
 import { clearAllTerminalHistories } from "@/lib/utils/clear-terminal-histories";
 
+// Import payment account mapping function from new command handler
+function mapPaymentMethodToAccount(
+  paymentMethod: string,
+  business: string = "Personal"
+): string {
+  const payment = paymentMethod.toLowerCase();
+
+  // Credit card patterns
+  if (payment.includes("credit") || payment.includes("card")) {
+    return `Liabilities:${business}:Debt:CreditCard`;
+  }
+
+  // Bank account patterns
+  if (
+    payment.includes("bank") ||
+    payment.includes("kasikorn") ||
+    payment.includes("kbank")
+  ) {
+    return `Assets:Bank:${
+      payment.includes("kasikorn") || payment.includes("kbank")
+        ? "Kasikorn"
+        : "Bank"
+    }:${business}`;
+  }
+
+  // Cash patterns
+  if (payment.includes("cash") || payment.includes("money")) {
+    return `Assets:Cash`;
+  }
+
+  // Default to cash
+  return `Assets:Cash`;
+}
+
 export interface EditEntryArgs {
   entryIds: string[]; // ✅ CHANGED: Support multiple entry IDs
   business?: string;
@@ -15,6 +49,7 @@ export interface EditEntryArgs {
   description?: string;
   date?: string;
   memo?: string;
+  payment?: string; // ✅ NEW: Payment method flag
   delete?: boolean; // ✅ NEW: Delete flag
 }
 
@@ -104,6 +139,7 @@ function parseArgs(raw?: string): EditEntryArgs | null {
   let description: string | undefined;
   let date: string | undefined;
   let memo: string | undefined;
+  let payment: string | undefined; // ✅ NEW: Payment method
   let deleteFlag = false; // ✅ NEW: Delete flag
 
   // Parse flags (start after the entry ID parts)
@@ -140,6 +176,15 @@ function parseArgs(raw?: string): EditEntryArgs | null {
       i++;
       continue;
     }
+    // ✅ NEW: Payment flag parsing
+    if (
+      (flag === "--payment" || flag === "-p") &&
+      i + 1 < filteredParts.length
+    ) {
+      payment = filteredParts[i + 1];
+      i++;
+      continue;
+    }
     // ✅ NEW: Delete flag parsing
     if (flag === "--delete" || flag === "-del") {
       deleteFlag = true;
@@ -149,9 +194,17 @@ function parseArgs(raw?: string): EditEntryArgs | null {
   }
 
   // ✅ UPDATED: Delete flag is valid on its own
-  if (!deleteFlag && !business && !vendor && !description && !date && !memo) {
+  if (
+    !deleteFlag &&
+    !business &&
+    !vendor &&
+    !description &&
+    !date &&
+    !memo &&
+    !payment
+  ) {
     throw new Error(
-      "At least one field must be specified to edit (--business, --vendor, --date, --memo) or use --delete/-d to remove entry"
+      "At least one field must be specified to edit (--business, --vendor, --date, --memo, --payment) or use --delete/-d to remove entry"
     );
   }
 
@@ -162,6 +215,7 @@ function parseArgs(raw?: string): EditEntryArgs | null {
     description: vendor || description,
     date,
     memo,
+    payment, // ✅ NEW: Return payment method
     delete: deleteFlag, // ✅ NEW: Return delete flag
   };
 }
@@ -369,6 +423,56 @@ export async function editEntryCommand(
           changes.push(`memo → "${args.memo}"`);
         }
 
+        // Handle payment method change (updates entry_text)
+        if (args.payment !== undefined) {
+          // Get the current business from the entry or use the new business if it's being changed
+          const currentBusiness =
+            args.business !== undefined
+              ? args.business
+              : entry.business || "Personal";
+
+          // Map payment method to account
+          const newPaymentAccount = mapPaymentMethodToAccount(
+            args.payment,
+            currentBusiness
+          );
+
+          // Update the entry text to replace the payment account
+          let updatedEntryText = entry.entry_text || "";
+
+          // Parse the ledger text and replace the payment account line
+          const lines = updatedEntryText.split("\n");
+          const updatedLines = lines.map((line) => {
+            // Look for posting lines (indented lines with amounts)
+            // Pattern: spaces + account + space + amount + currency (handles comma-separated numbers)
+            const postingMatch = line.match(
+              /^(\s+)([^\s]+)\s+([+-]?[\d,]+(?:\.\d{2})?)(\w+)/
+            );
+            if (postingMatch) {
+              const [, indent, account, amount, currency] = postingMatch;
+              console.log(
+                `DEBUG: Matched line: "${line}" -> account: "${account}", amount: "${amount}", currency: "${currency}"`
+              );
+
+              // Check if this is a payment account (Assets or Liabilities)
+              if (
+                account.startsWith("Assets:") ||
+                account.startsWith("Liabilities:")
+              ) {
+                // This is a payment account line, replace it
+                console.log(
+                  `DEBUG: Replacing payment account: "${account}" -> "${newPaymentAccount}"`
+                );
+                return `${indent}${newPaymentAccount} ${amount}${currency}`;
+              }
+            }
+            return line;
+          });
+
+          updates.entry_text = updatedLines.join("\n");
+          changes.push(`payment → ${newPaymentAccount}`);
+        }
+
         // Handle business change (most complex - updates entry_text)
         if (args.business !== undefined) {
           const updatedEntryText = updateAccountsForBusiness(
@@ -423,6 +527,25 @@ export async function editEntryCommand(
               );
               if (updatedAccount && updatedAccount !== posting.account) {
                 postingUpdates.account = updatedAccount;
+              }
+            }
+
+            // Update payment account if payment method changed
+            if (args.payment !== undefined) {
+              // Check if this posting is a payment account (Assets or Liabilities)
+              if (
+                posting.account?.startsWith("Assets:") ||
+                posting.account?.startsWith("Liabilities:")
+              ) {
+                const currentBusiness =
+                  args.business !== undefined
+                    ? args.business
+                    : entry.business || "Personal";
+                const newPaymentAccount = mapPaymentMethodToAccount(
+                  args.payment,
+                  currentBusiness
+                );
+                postingUpdates.account = newPaymentAccount;
               }
             }
 

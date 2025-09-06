@@ -16,6 +16,7 @@ export interface EntriesArgs {
   year?: string;
   business?: string;
   account?: string;
+  payment?: string; // NEW: Payment account filter
   currency?: string; // NEW: Currency filter
 
   // Created date filtering

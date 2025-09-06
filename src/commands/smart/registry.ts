@@ -119,7 +119,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
 
   entries: {
     description:
-      "List and filter ledger entries with powerful search options including multi-currency support. Supports business filtering, vendor search, account filtering, currency filtering, date ranges with smart aliases, created date filtering, amount filtering, counting, and navigation to specific entries.",
+      "List and filter ledger entries with powerful search options including multi-currency support. Supports business filtering, vendor search, account filtering, payment account filtering, currency filtering, date ranges with smart aliases, created date filtering, amount filtering, counting, and navigation to specific entries.",
     content: (
       arg?: string,
       pageCtx?: string,
@@ -210,6 +210,11 @@ export const commandRegistry: Record<string, CommandMeta> = {
         output: "entries --amount-range 50 200",
         description: "Filter by amount range",
       },
+      {
+        input: "Show me entries paid with credit card",
+        output: "entries --payment credit card",
+        description: "Filter by payment method",
+      },
     ],
     categories: ["query", "finance", "search"],
     aliases: ["ent", "e", "list", "show", "find"],
@@ -222,6 +227,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`--business <name>\` / \`-b <name>\`     — Filter by business account
   • \`--vendor <name>\` / \`-v <name>\`       — Filter by vendor/description
   • \`--account <pattern>\` / \`-A <pattern>\` — Filter by account name
+  • \`--payment <method>\` / \`-p <method>\`  — Filter by payment method (credit card, cash, bank)
   • \`--currency <code>\` / \`-c <code>\`     — Filter by currency (USD, THB, EUR)
   • \`--amount <number>\` / \`-amt <number>\` — Filter by exact amount
   • \`--min-amount <number>\` / \`-min <number>\` — Filter by minimum amount
@@ -257,7 +263,8 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`entries --amount 50\`                   — Entries for exactly $50
   • \`entries --min-amount 100\`              — Entries over $100
   • \`entries --amount-range 50 200\`         — Entries between $50-$200
-  • \`entries -A Food -l 10\`                 — Food account entries, limit 10`,
+  • \`entries -A Food -l 10\`                 — Food account entries, limit 10
+  • \`entries -p credit\`                     — Credit card payments`,
   },
 
   ent: {
@@ -413,7 +420,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
 
   "edit-entry": {
     description:
-      "Edit one or more ledger entries - change business, vendor, date, or memo. Requires login and entry ownership.",
+      "Edit one or more ledger entries - change business, vendor, date, memo, or payment method. Requires login and entry ownership.",
     content: (
       arg?: string,
       pageCtx?: string,
@@ -457,6 +464,11 @@ export const commandRegistry: Record<string, CommandMeta> = {
         output: 'edit-entry 340 --memo "client meeting"',
         description: "Add memo to entry",
       },
+      {
+        input: "Change entry 350 payment method to credit card",
+        output: "edit-entry 350 --payment credit card",
+        description: "Change payment account",
+      },
     ],
     categories: ["edit", "modify", "finance"],
     aliases: ["editent", "modify", "fix", "update"],
@@ -468,6 +480,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`edit-entry 323 --vendor "Starbucks Coffee"\` / \`edit-entry 323 -v "Starbucks"\` — Update vendor name
   • \`edit-entry 323 --date 2025-08-15\` / \`edit-entry 323 -D 2025-08-15\` — Change transaction date
   • \`edit-entry 323 --memo "client meeting"\` / \`edit-entry 323 -m "client meeting"\` — Add or update memo
+  • \`edit-entry 323 --payment "credit card"\` / \`edit-entry 323 -p "credit card"\` — Change payment method
   • \`edit-entry 323 --delete\` / \`edit-entry 323 -del\` — Delete the entry
   
   **Multiple Entries Examples:**
@@ -477,13 +490,14 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`edit-entry 200,201,202 --delete\` — Delete entries 200, 201, 202
   
   **Combined Operations:**
-  • \`edit-entry 323 --vendor "Coffee Shop" --memo "team meeting"\` — Update vendor and memo`,
+  • \`edit-entry 323 --vendor "Coffee Shop" --memo "team meeting"\` — Update vendor and memo
+  • \`edit-entry 350 --business MyBrick --payment "credit card"\` — Change business and payment method`,
     // ... rest of your existing usage stays the same
   },
 
   editent: {
     description:
-      "Alias for edit-entry - edit a single ledger entry (business, vendor, date, memo)",
+      "Alias for edit-entry - edit a single ledger entry (business, vendor, date, memo, payment method)",
     content: (
       arg?: string,
       pageCtx?: string,
@@ -509,7 +523,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
 
   ee: {
     description:
-      "Short alias for edit-entry - edit one or more ledger entries (business, vendor, date, memo)",
+      "Short alias for edit-entry - edit one or more ledger entries (business, vendor, date, memo, payment method)",
     content: (
       arg?: string,
       pageCtx?: string,

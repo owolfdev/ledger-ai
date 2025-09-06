@@ -10,6 +10,32 @@ import type { EntriesArgs } from "./types";
 export class QueryBuilder {
   constructor(private supabase: SupabaseClient) {}
 
+  private mapPaymentToSearchPattern(paymentMethod: string): string {
+    const payment = paymentMethod.toLowerCase();
+
+    // Credit card patterns
+    if (payment.includes("credit") || payment.includes("card")) {
+      return "Liabilities:";
+    }
+
+    // Bank account patterns
+    if (
+      payment.includes("bank") ||
+      payment.includes("kasikorn") ||
+      payment.includes("kbank")
+    ) {
+      return "Assets:Bank:";
+    }
+
+    // Cash patterns
+    if (payment.includes("cash") || payment.includes("money")) {
+      return "Assets:Cash";
+    }
+
+    // Default to Assets: for general asset searches
+    return "Assets:";
+  }
+
   private applyDateFilters(query: any, args: EntriesArgs) {
     // Range has highest priority
     if (args.range) {
@@ -127,6 +153,13 @@ export class QueryBuilder {
     // Account filter - FIXED: Now case-insensitive
     if (args.account) {
       query = query.ilike("entry_text", `%${args.account}%`);
+    }
+
+    // Payment account filter - searches for payment accounts (Assets: or Liabilities:)
+    if (args.payment) {
+      // Map payment method to account pattern for searching
+      const paymentPattern = this.mapPaymentToSearchPattern(args.payment);
+      query = query.ilike("entry_text", `%${paymentPattern}%`);
     }
 
     // Currency filter

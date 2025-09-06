@@ -158,6 +158,7 @@ export function parseArgs(raw?: string): EntriesArgs {
   let go: string | undefined;
   let business: string | undefined;
   let account: string | undefined;
+  let payment: string | undefined;
   let currency: string | undefined;
   let tags: string[] | undefined;
   let range: { start: string; end: string } | undefined;
@@ -249,6 +250,11 @@ export function parseArgs(raw?: string): EntriesArgs {
     }
     if ((t === "--account" || t === "-a") && i + 1 < parts.length) {
       account = parts[i + 1];
+      i++;
+      continue;
+    }
+    if ((t === "--payment" || t === "-p") && i + 1 < parts.length) {
+      payment = parts[i + 1];
       i++;
       continue;
     }
@@ -500,6 +506,7 @@ export function parseArgs(raw?: string): EntriesArgs {
       business ||
       vendor ||
       account ||
+      payment ||
       currency ||
       range ||
       createdMonth ||
@@ -527,6 +534,7 @@ export function parseArgs(raw?: string): EntriesArgs {
     year,
     business,
     account,
+    payment,
     currency,
     go,
     range,

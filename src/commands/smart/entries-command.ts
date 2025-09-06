@@ -125,6 +125,7 @@ export async function entriesListCommand(
         (args.vendor ? ` matching "${args.vendor}"` : "") +
         (args.business ? ` for business "${args.business}"` : "") +
         (args.account ? ` with account "${args.account}"` : "") +
+        (args.payment ? ` with payment "${args.payment}"` : "") +
         (args.currency ? ` in ${args.currency}` : "");
 
       // Add account summary when using --account without --sum
@@ -193,6 +194,7 @@ export async function entriesListCommand(
       (args.business ? ` for ${args.business}` : "") +
       (args.vendor ? ` matching "${args.vendor}"` : "") +
       (args.account ? ` with account "${args.account}"` : "") +
+      (args.payment ? ` with payment "${args.payment}"` : "") +
       (args.currency ? ` in ${args.currency}` : "");
 
     // Create header with total count
@@ -257,7 +259,9 @@ export async function entriesListCommand(
       "<div class='h-4'></div>",
     ];
 
-    return parts.join("\n\n") + accountSummary + totalsBlock; // Double newlines for component separation
+    return `<div class="terminal-entries">${
+      parts.join("\n\n") + accountSummary + totalsBlock
+    }</div>`; // Wrap in terminal-specific class
   } catch (error) {
     return `<custom-alert message="Unexpected error: ${error}" />`;
   }

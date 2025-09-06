@@ -52,9 +52,9 @@ function normalizeEntryProps(entry: LedgerEntryData) {
 }
 
 /**
- * Formats a single ledger entry for terminal display using pure HTML
+ * Formats a single ledger entry for terminal display using markdown
  * @param entry - Ledger entry data from database
- * @returns HTML string for terminal rendering without markdown conflicts
+ * @returns Markdown string for terminal rendering
  */
 export function formatEntryLine(entry: LedgerEntryData): string {
   const amt = Number(entry.amount) || 0;
@@ -62,46 +62,17 @@ export function formatEntryLine(entry: LedgerEntryData): string {
   const status = entry.is_cleared ? " ✅" : " ⏳";
   const businessName = extractBusinessName(entry.entry_text);
 
-  // Mobile card component
-  const mobileCard = `<div class="block sm:hidden mb-2">
-    <div class="flex items-start justify-between mb-1">
-      <div class="font-medium text-base flex-1 pr-2"> <a href="/ledger/entry/${entryId}">${sanitizeForAttribute(
-    entry.description
-  )}</a></div>
-      <div class="font-semibold text-base text-accent">${formatCurrencyWithSymbol(
-        amt,
-        entry.currency || "USD"
-      )}</div>
-    </div>
-    <div class="text-sm text-muted-foreground flex items-center gap-2">
-      <span>${entry.entry_date}</span>
-      <span>•</span>
-      <span>#${entryId}</span>
-      ${businessName ? `<span>•</span><span>${businessName}</span>` : ""}
-    </div>
-  </div>`;
+  // Format business tag
+  const businessTag = businessName ? ` **${businessName}**` : "";
 
-  // Desktop list item with pure HTML styling
-  const businessTag = businessName
-    ? ` <span class="px-1 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 rounded font-mono">${businessName}</span>`
-    : "";
+  // Format amount with currency
+  const formattedAmount = formatCurrencyWithSymbol(
+    amt,
+    entry.currency || "USD"
+  );
 
-  const desktopItem = `<div class="hidden sm:block mb-1">
-    <span class="text-foreground">${entry.entry_date} • </span>
-    <strong class="font-bold text-accent">${sanitizeForAttribute(
-      entry.description
-    )}</strong>
-    ${businessTag}
-    <span class="text-foreground"> — </span>
-    <strong class="font-bold text-accent">${formatCurrencyWithSymbol(
-      amt,
-      entry.currency || "USD"
-    )}</strong>
-    <span class="text-foreground">${status} → </span>
-    <a href="/ledger/entry/${entryId}" class="text-blue-600 dark:text-blue-400 hover:underline">#${entryId}</a>
-  </div>`;
-
-  return mobileCard + "\n" + desktopItem;
+  // Create markdown format
+  return `${entry.entry_date} • **${entry.description}**${businessTag} — **${formattedAmount}**${status} → [#${entryId}](/ledger/entry/${entryId})`;
 }
 
 /**
@@ -135,5 +106,5 @@ export function createEntryListHeader(
   filterDescription: string = "",
   sortInfo: { sort: string; dir: string; limit: number }
 ): string {
-  return `Found **${count}** entries (sort: ${sortInfo.sort} ${sortInfo.dir}, limit: ${sortInfo.limit}${filterDescription})`;
+  return `<div class="terminal-header">Found **${count}** entries (sort: ${sortInfo.sort} ${sortInfo.dir}, limit: ${sortInfo.limit}${filterDescription})</div>`;
 }
