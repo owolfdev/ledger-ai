@@ -442,7 +442,7 @@ export async function editEntryCommand(
 
           // Parse the ledger text and replace the payment account line
           const lines = updatedEntryText.split("\n");
-          const updatedLines = lines.map((line) => {
+          const updatedLines = lines.map((line: string) => {
             // Look for posting lines (indented lines with amounts)
             // Pattern: spaces + account + space + amount + currency (handles comma-separated numbers)
             const postingMatch = line.match(
