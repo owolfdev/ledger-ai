@@ -262,3 +262,8 @@ html {
 .terminal-markdown p:first-child {
   margin-bottom: 1rem !important;
 }
+
+/* Terminal output - add bottom spacing */
+.terminal-markdown {
+  margin-bottom: 0.5rem !important;
+}
