@@ -227,7 +227,7 @@ export async function entriesListCommand(
           (sum, total) => sum + total.count,
           0
         );
-        accountSummary = `\n\ntotal postings (${totalPostings} postings with the account "${args.account}") in entries`;
+        accountSummary = `\n\n\n---\n\ntotal postings (${totalPostings} postings with the account "${args.account}") in entries`;
       }
     }
 
