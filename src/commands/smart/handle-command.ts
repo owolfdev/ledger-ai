@@ -1053,7 +1053,8 @@ export function createHandleCommand(
           { type: "input", content: cmd },
           {
             type: "output",
-            content: cmdMeta.description || "Command executed.",
+            content:
+              (cmdMeta as CommandMeta).description || "Command executed.",
             format: "markdown",
           },
         ]);
@@ -1105,27 +1106,44 @@ export function createHandleCommand(
       const cmdMeta = commands[base];
       if (
         cmdMeta &&
-        typeof cmdMeta.content === "string" &&
-        cmdMeta.content.startsWith("__") &&
-        cmdMeta.content.endsWith("__")
+        typeof cmdMeta === "object" &&
+        "content" in cmdMeta &&
+        typeof (cmdMeta as CommandMeta).content === "string"
       ) {
-        // Handler token—show description or generic
-        setHistory([
-          ...(history ?? []),
-          { type: "input", content: cmd },
-          {
-            type: "output",
-            content: cmdMeta.description || "Command executed.",
-            format: "markdown",
-          },
-        ]);
-        return true;
-      } else if (cmdMeta) {
+        const content = (cmdMeta as CommandMeta).content as string;
+        if (content.startsWith("__") && content.endsWith("__")) {
+          // Handler token—show description or generic
+          setHistory([
+            ...(history ?? []),
+            { type: "input", content: cmd },
+            {
+              type: "output",
+              content:
+                (cmdMeta as CommandMeta).description || "Command executed.",
+              format: "markdown",
+            },
+          ]);
+          return true;
+        } else {
+          // Normal string command
+          setHistory([
+            ...(history ?? []),
+            { type: "input", content: cmd },
+            { type: "output", content: content, format: "markdown" },
+          ]);
+          return true;
+        }
+      } else if (
+        cmdMeta &&
+        typeof cmdMeta === "object" &&
+        "content" in cmdMeta
+      ) {
         // Normal command (string or function output)
+        const content = (cmdMeta as CommandMeta).content;
         const output =
-          typeof cmdMeta.content === "function"
-            ? await cmdMeta.content(arg, pageContext, commands, user)
-            : cmdMeta.content;
+          typeof content === "function"
+            ? await content(arg, pageContext, commands, user)
+            : content;
         setHistory([
           ...(history ?? []),
           { type: "input", content: cmd },
