@@ -133,7 +133,7 @@ new coffee $4, pastry $5, Starbucks, credit card, memo "pumpkin latte not good",
 
 | File / Path                                  | Purpose                                                                                            |
 | -------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `/commands/smart/new-command-handler.ts`     | Main orchestration for `new` terminal commands — handles both structured JSON and manual commands. |
+| `/commands/smart/add-command-handler.ts`     | Main orchestration for `add` terminal commands — handles both structured JSON and manual commands. |
 | `/lib/ledger/parse-manual-command.ts`        | Tokenizes, parses, and validates free-form commands into structured `ReceiptShape` + metadata.     |
 | `/lib/ledger/build-postings-from-receipt.ts` | Converts parsed receipt into Ledger CLI postings with correct accounts.                            |
 | `/lib/ledger/render-ledger.ts`               | Renders date, payee, and postings into canonical `.ledger` text.                                   |
@@ -158,5 +158,4 @@ new coffee $4, pastry $5, Starbucks, credit card, memo "pumpkin latte not good",
 - **New Categories**: Add to `account-map.ts` patterns.
 - **New Payment Methods**: Extend `PARSER_GRAMMAR.paymentMethods.map` in `parse-manual-command.ts`.
 - **Alternate Currencies**: Adjust currency detection regex or accept explicit ISO codes in input.
-- **Custom AI Rules**: Modify AI prompt in `/commands/smart/new-command-handler.ts`.
-
+- **Custom AI Rules**: Modify AI prompt in `/commands/smart/add-command-handler.ts`.

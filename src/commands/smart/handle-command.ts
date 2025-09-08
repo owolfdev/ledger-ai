@@ -9,14 +9,14 @@ import type { User } from "@/types/user";
 // import { extractLedgerDateAndText } from "@/lib/ledger-date-parse";
 // import * as chrono from "chrono-node";
 // import { getLedgerDate } from "@/lib/ledger-date";
-import { LEDGER_TIMEZONE } from "@/lib/ledger-config";
+// Removed unused import: LEDGER_TIMEZONE
 // import { createLedgerEntry } from "@/app/actions/ledger/create-ledger-entry"; // <-- server action
 // import { syncLedgerFile } from "@/app/actions/ledger/sync-ledger-file";
 // import {
 //   autoBalanceLedgerEntry,
 //   LedgerLine,
 // } from "@/lib/ledger/auto-balance-ledger-entry";
-import { handleNew } from "@/commands/smart/new-command-handler";
+import { handleNew } from "@/commands/smart/add-command-handler";
 import { entriesListCommand } from "@/commands/smart/entries-command";
 import { handleAccountsCommand } from "@/commands/smart/accounts-command";
 import { IntentDetector } from "./intent-detector";
@@ -25,34 +25,7 @@ import { CommandGenerator } from "./command-generator";
 type CommandMap = Record<string, CommandMeta>;
 type PageEntry = { title: string; slug: string; route: string };
 
-function cleanLedgerEntry(entry: string): string {
-  return entry
-    .replace(/^[*\s"]+/, "") // Remove leading *, spaces, quotes
-    .replace(/```[a-z]*\n?/gi, "") // Remove code block starts
-    .replace(/```$/, "") // Remove code block ends
-    .trim();
-}
-
-function getLocalDate() {
-  const now = new Date();
-  // Extract year, month, day in the desired timezone
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: LEDGER_TIMEZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(now);
-
-  const yearPart = parts.find((p) => p.type === "year");
-  const monthPart = parts.find((p) => p.type === "month");
-  const dayPart = parts.find((p) => p.type === "day");
-
-  if (!yearPart || !monthPart || !dayPart) {
-    throw new Error("Could not parse date parts");
-  }
-
-  return `${yearPart.value}-${monthPart.value}-${dayPart.value}`; // e.g., "2025-08-07"
-}
+// Removed unused functions: cleanLedgerEntry and getLocalDate
 
 function parseAccountsArgs(arg: string) {
   const args = arg.split(/\s+/);
@@ -243,42 +216,49 @@ Output trusted components like <my-alert ... /> if useful.
 Never suggest generic shell/Unix commands.
 If a question relates to site content, recommend relevant blog posts with markdown links.
 
-IMPORTANT: Use the NEW flag-based syntax for all commands:
+IMPORTANT: Use the NEW command syntax for all commands:
 
-NEW COMMAND EXAMPLES (Flag-based syntax):
-- "I bought coffee for 150 baht" → "new -i coffee 150"
-- "I spent $20 at Starbucks" → "new -i coffee 20 --vendor Starbucks"  
-- "I had lunch yesterday for 200 baht" → "new -i lunch 200 --date yesterday"
-- "MyBrick: office supplies for $100" → "new -i supplies 100 --business MyBrick"
-- "Bought gas $50 with credit card" → "new -i gas 50 --payment credit card"
-- "Coffee and pastry at Starbucks" → "new -i coffee 6 pastry 4 --vendor Starbucks"
-- "I received $5000 for consulting work" → "new -i consulting 5000 --type income --client Acme Corp"
-- "Bought a laptop for $2000 with credit card" → "new -i laptop 2000 --type asset --payment credit-card"
-- "Bought a laptop from Apple Store on my KBank Credit card" → "new -i laptop 40000 --type asset --vendor Apple Store --payment KBank Credit card"
-- "Paid off $500 of credit card debt" → "new -i credit-card 500 --type liability --payment checking"
-- "Opening balance of 1000000 in my Kasikorn bank account" → "new -i opening_balance 1000000 --type asset --payment Kasikorn Bank"
+NEW COMMAND EXAMPLES (Modern syntax):
+- "I bought coffee for 150 baht" → "add coffee 150"
+- "I spent $20 at Starbucks" → "add coffee 20 --vendor Starbucks"  
+- "I had lunch yesterday for 200 baht" → "add lunch 200 --date yesterday"
+- "MyBrick: office supplies for $100" → "add supplies 100 --business MyBrick"
+- "Bought gas $50 with credit card" → "add gas 50 --payment credit card"
+- "Coffee and pastry at Starbucks" → "add coffee 6 pastry 4 --vendor Starbucks"
+- "I received $5000 for consulting work" → "add consulting 5000 --type income --client Acme Corp"
+- "Bought a laptop for $2000 with credit card" → "add laptop 2000 --type asset --payment credit-card"
+- "Bought a laptop from Apple Store on my KBank Credit card" → "add laptop 40000 --type asset --vendor Apple Store --payment KBank Credit card"
+- "Paid off $500 of credit card debt" → "add credit-card 500 --type liability --payment checking"
 
-ENTRIES COMMAND EXAMPLES:
-- "Show my expenses from today" → "entries today"
-- "How much did I spend on coffee this month" → "entries -v coffee -s -m august"
-- "List my Starbucks transactions" → "entries -v Starbucks"
-- "What did I spend on Personal business last month" → "entries -b Personal -s -m july"
+DRY-RUN EXAMPLES:
+- "Preview coffee expense" → "add coffee 100 --vendor Starbucks --dry-run"
+- "Show what would be created" → "add lunch 200 --dry-run"
+- "Actually save the entry" → "add coffee 100 --vendor Starbucks --commit"
+- "Opening balance of 1000000 in my Kasikorn bank account" → "add opening_balance 1000000 --type asset --payment Kasikorn Bank"
 
-EDIT-ENTRY COMMAND EXAMPLES:
-- "Change entry 323 business to MyBrick" → "edit-entry 323 --business MyBrick"
-- "Fix the vendor name for entry 330 to Starbucks" → "edit-entry 330 --vendor Starbucks"
-- "Update entry 340 memo to client meeting" → "edit-entry 340 --memo client meeting"
-- "Change entry 350 payment to credit card" → "edit-entry 350 --payment credit card"
+LIST COMMAND EXAMPLES:
+- "Show my expenses from today" → "list --date today"
+- "How much did I spend on coffee this month" → "list --vendor coffee --sum --month august"
+- "List my Starbucks transactions" → "list --vendor Starbucks"
+- "What did I spend on Personal business last month" → "list --business Personal --sum --month july"
+
+EDIT COMMAND EXAMPLES:
+- "Change entry 323 business to MyBrick" → "edit 323 --business MyBrick"
+- "Fix the vendor name for entry 330 to Starbucks" → "edit 330 --vendor Starbucks"
+- "Update entry 340 memo to client meeting" → "edit 340 --memo client meeting"
+- "Change entry 350 payment to credit card" → "edit 350 --payment credit card"
 
 FLAG SYNTAX RULES:
-- Use -i flag for items and prices: "new -i item1 price1 item2 price2"
+- Use positional arguments for items and prices: "add item1 price1 item2 price2"
 - Use --vendor for vendor names: "--vendor Starbucks"
 - Use --business for business context: "--business MyBrick"
 - Use --date for dates: "--date 2025-01-15"
 - Use --memo for notes: "--memo meeting with client"
-- Use --payment for payment methods: "--payment credit card" (new/edit-entry commands)
+- Use --payment for payment methods: "--payment credit card"
+- Use --dry-run to preview without saving: "--dry-run"
+- Use --commit to actually save: "--commit"
 - Quote multi-word values: "--vendor \"Starbucks Coffee\""
-- Quote multi-word items: "new -i \"coffee mug\" 200"
+- Quote multi-word items: "add \"coffee mug\" 200"
 
 FORMATTING: When providing code examples or commands, always add a blank line after the command for better readability.
 
@@ -411,12 +391,7 @@ ${Object.entries(commands)
 }
 
 // Helper function for command suggestions
-function createCommandSuggestion(
-  command: string,
-  confidence: number,
-  reasoning: string,
-  intentReasoning: string
-): string {
+function createCommandSuggestion(command: string, confidence: number): string {
   const confidenceIcon = confidence > 0.8 ? "✓" : confidence > 0.6 ? "~" : "!";
 
   return `${confidenceIcon} Generated: \`${command}\``;
@@ -424,13 +399,15 @@ function createCommandSuggestion(
 
 export function createHandleCommand(
   commands: CommandMap,
-  routes: Record<string, string> = {},
+  _routes: Record<string, string> = {},
   pageContext?: string,
   pagesList: PageEntry[] = [],
   currentSlug?: string,
   postType?: "blog" | "project",
   onPopulateInput?: (cmd: string) => void // ✅ Make sure this parameter exists
 ) {
+  // Suppress unused parameter warning for _routes
+  void _routes;
   return async function handleCommand(
     cmd: string,
     setHistory: React.Dispatch<
@@ -509,6 +486,15 @@ export function createHandleCommand(
     // Go to a page by slug/title/route — now with fuzzy matching!
     if (base === "go") {
       const dest = arg.toLowerCase().trim();
+
+      // Check for entry ID navigation first
+      const entryIdMatch = arg.match(/^(?:--entry\s+|-e\s+)?(\d+)$/);
+      if (entryIdMatch) {
+        const entryId = entryIdMatch[1];
+        // Navigate to ledger entry page with specific entry ID
+        router.push(`/ledger/entry/${entryId}`);
+        return true; // do NOT echo to history!
+      }
 
       // 1. Try exact match (route, slug, title)
       let page = pagesList.find(
@@ -620,7 +606,7 @@ export function createHandleCommand(
           { type: "input", content: cmd },
           { type: "output", content: output, format: "markdown" },
         ]);
-      } catch (e) {
+      } catch {
         setHistory([
           ...(history ?? []),
           { type: "input", content: cmd },
@@ -646,7 +632,7 @@ export function createHandleCommand(
           { type: "input", content: cmd },
           { type: "output", content: output, format: "markdown" },
         ]);
-      } catch (e) {
+      } catch {
         setHistory([
           ...(history ?? []),
           { type: "input", content: cmd },
@@ -682,7 +668,7 @@ export function createHandleCommand(
           { type: "input", content: cmd },
           { type: "output", content: output, format: "markdown" },
         ]);
-      } catch (e) {
+      } catch {
         setHistory([
           ...(history ?? []),
           { type: "input", content: cmd },
@@ -692,7 +678,11 @@ export function createHandleCommand(
       return true;
     }
 
-    if (base === "edit" || commands[trimmed]?.content === "__EDIT_POST__") {
+    // --- NEW: EDIT POST COMMAND (renamed from edit) ---
+    if (
+      base === "edit-post" ||
+      commands[trimmed]?.content === "__EDIT_POST__"
+    ) {
       try {
         const supabase = createClient();
         const {
@@ -711,7 +701,7 @@ export function createHandleCommand(
 
           if (!slug) {
             output =
-              '<my-alert message="Could not determine post slug. Please enter `edit my-post` or run this on a post page." />';
+              '<my-alert message="Could not determine post slug. Please enter `edit-post my-post` or run this on a post page." />';
           } else {
             const targetUrl = `/post/edit/${slug}`;
             window.location.href = targetUrl;
@@ -723,7 +713,7 @@ export function createHandleCommand(
           { type: "input", content: cmd },
           { type: "output", content: output, format: "markdown" },
         ]);
-      } catch (e) {
+      } catch {
         setHistory([
           ...(history ?? []),
           { type: "input", content: cmd },
@@ -734,32 +724,7 @@ export function createHandleCommand(
     }
 
     // ----------- Blog/Project DATA COMMANDS -----------
-    // LIST COMMAND with optional limit
-    if (base === "list" && commands[base]) {
-      let posts = await getPublishedPosts();
-      if (postType) posts = posts.filter((p) => p.type === postType); // 👈
-      let limit = 0;
-      // Try to parse the last argument as a number
-      const args = arg.split(" ").filter(Boolean);
-      if (args.length && /^\d+$/.test(args[args.length - 1])) {
-        limit = parseInt(args[args.length - 1], 10);
-        args.pop();
-      }
-      const items = posts
-        .slice(0, limit > 0 ? limit : posts.length)
-        .map((p) => `- [${p.title}](/blog/${p.slug})`)
-        .join("\n");
-      setHistory([
-        ...(history ?? []),
-        { type: "input", content: cmd },
-        {
-          type: "output",
-          content: items || "No posts found.",
-          format: "markdown",
-        },
-      ]);
-      return true;
-    }
+    // Note: LIST command is now handled above in the primary commands section
 
     // LATEST COMMAND with optional limit
     if (base === "latest" && commands[base]) {
@@ -1007,6 +972,137 @@ export function createHandleCommand(
       return true;
     }
 
+    // --- BACKWARD COMPATIBILITY ALIASES ---
+
+    // OLD: entries/ent/e commands redirect to new list command
+    if (
+      (base === "entries" || base === "ent" || base === "e") &&
+      commands[base]
+    ) {
+      const output = await entriesListCommand(
+        arg,
+        pageContext,
+        commands,
+        user,
+        router
+      );
+      setHistory([
+        ...(history ?? []),
+        { type: "input", content: cmd },
+        { type: "output", content: output, format: "markdown" },
+      ]);
+      return true;
+    }
+
+    // OLD: edit-entry/ee commands redirect to new edit command
+    if ((base === "edit-entry" || base === "ee") && commands[base]) {
+      const { editEntryCommand } = await import("./edit-entry-command");
+      const output = await editEntryCommand(arg, pageContext, commands, user);
+      setHistory([
+        ...(history ?? []),
+        { type: "input", content: cmd },
+        { type: "output", content: output, format: "markdown" },
+      ]);
+      return true;
+    }
+
+    // --- NEW: PRIMARY COMMANDS (add, list, edit, show, delete) ---
+
+    // ADD command (replaces 'new' as primary entry creation)
+    if (base === "add" && commands[base]) {
+      await handleNew(setHistory, cmd, arg);
+      return true;
+    }
+
+    // LIST command (primary entry viewing)
+    if (base === "list" && commands[base]) {
+      const output = await entriesListCommand(
+        arg,
+        pageContext,
+        commands,
+        user,
+        router
+      );
+      setHistory([
+        ...(history ?? []),
+        { type: "input", content: cmd },
+        { type: "output", content: output, format: "markdown" },
+      ]);
+      return true;
+    }
+
+    // LIST-POSTS command (blog/project post listing)
+    if (base === "list-posts" && commands[base]) {
+      let posts = await getPublishedPosts();
+      if (postType) posts = posts.filter((p) => p.type === postType);
+      let limit = 0;
+      const args = arg.split(" ").filter(Boolean);
+      if (args.length && /^\d+$/.test(args[args.length - 1])) {
+        limit = parseInt(args[args.length - 1], 10);
+        args.pop();
+      }
+      const items = posts
+        .slice(0, limit > 0 ? limit : posts.length)
+        .map((p) => `- [${p.title}](/blog/${p.slug})`)
+        .join("\n");
+      setHistory([
+        ...(history ?? []),
+        { type: "input", content: cmd },
+        {
+          type: "output",
+          content: items || "No posts found.",
+          format: "markdown",
+        },
+      ]);
+      return true;
+    }
+
+    // EDIT command (replaces 'edit-entry' as primary entry editing)
+    if (base === "edit" && commands[base]) {
+      const { editEntryCommand } = await import("./edit-entry-command");
+      const output = await editEntryCommand(arg, pageContext, commands, user);
+      setHistory([
+        ...(history ?? []),
+        { type: "input", content: cmd },
+        { type: "output", content: output, format: "markdown" },
+      ]);
+      return true;
+    }
+
+    // SHOW command (single entry details)
+    if (base === "show" && commands[base]) {
+      const output = await entriesListCommand(
+        `--entry ${arg}`,
+        pageContext,
+        commands,
+        user,
+        router
+      );
+      setHistory([
+        ...(history ?? []),
+        { type: "input", content: cmd },
+        { type: "output", content: output, format: "markdown" },
+      ]);
+      return true;
+    }
+
+    // DELETE command (entry deletion)
+    if (base === "delete" && commands[base]) {
+      const { editEntryCommand } = await import("./edit-entry-command");
+      const output = await editEntryCommand(
+        `${arg} --delete`,
+        pageContext,
+        commands,
+        user
+      );
+      setHistory([
+        ...(history ?? []),
+        { type: "input", content: cmd },
+        { type: "output", content: output, format: "markdown" },
+      ]);
+      return true;
+    }
+
     // --- ACCOUNTS MANAGEMENT ---
     if (base === "accounts" && commands[base]) {
       const args = parseAccountsArgs(arg);
@@ -1186,9 +1282,7 @@ export function createHandleCommand(
           // Create command suggestion output
           const suggestionOutput = createCommandSuggestion(
             generationResult.command,
-            generationResult.confidence,
-            generationResult.reasoning,
-            intentResult.reasoning
+            generationResult.confidence
           );
 
           setHistory([

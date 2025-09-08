@@ -101,21 +101,21 @@ IMPORTANT RULES:
 2. Use the exact syntax shown in the command usage
 3. Always validate amounts are numeric
 4. Use proper flag syntax (--flag or -f)
-5. For expenses, prefer the "new" command
+5. For expenses, prefer the "add" command
 6. For queries, prefer the "entries" command
 7. For edits, prefer the "edit-entry" command
 
 COMMON PATTERNS:
-- "I bought coffee for 150 baht" → "new -i coffee 150"
-- "I spent $20 at Starbucks" → "new -i coffee 20 --vendor Starbucks"
-- "I received $5000 for consulting" → "new -i consulting 5000 --type income --client Acme Corp"
-- "Bought a laptop for $2000 with credit card" → "new -i laptop 2000 --type asset --payment credit-card"
-- "Bought a laptop from Apple Store on my KBank Credit card" → "new -i laptop 40000 --type asset --vendor Apple Store --payment KBank Credit card"
-- "Paid off $500 of credit card debt" → "new -i credit-card 500 --type liability --payment checking"
-- "Opening balance of 1000000 in my Kasikorn bank account" → "new -i opening_balance 1000000 --type asset --payment Kasikorn Bank"
+- "I bought coffee for 150 baht" → "add coffee 150"
+- "I spent $20 at Starbucks" → "add coffee 20 --vendor Starbucks"
+- "I received $5000 for consulting" → "add consulting 5000 --type income --client Acme Corp"
+- "Bought a laptop for $2000 with credit card" → "add laptop 2000 --type asset --payment credit-card"
+- "Bought a laptop from Apple Store on my KBank Credit card" → "add laptop 40000 --type asset --vendor Apple Store --payment KBank Credit card"
+- "Paid off $500 of credit card debt" → "add credit-card 500 --type liability --payment checking"
+- "Opening balance of 1000000 in my Kasikorn bank account" → "add opening_balance 1000000 --type asset --payment Kasikorn Bank"
 - "Show me today's expenses" → "entries today"
 - "How much did I spend on coffee?" → "entries -v coffee -s"
-- "MyBrick: office supplies $100" → "new -i supplies 100 --business MyBrick"
+- "MyBrick: office supplies $100" → "add supplies 100 --business MyBrick"
 
 Return ONLY the command, nothing else. If you cannot generate a valid command, return "ERROR: [reason]".
     `.trim();

@@ -1,4 +1,4 @@
-// /commands/smart/new-command-handler.ts (Client-side AI processing)
+// /commands/smart/add-command-handler.ts (Client-side AI processing)
 "use client";
 
 import { TerminalOutputRendererProps } from "@/types/terminal";
@@ -496,7 +496,8 @@ function updateHistoryWithAIStatus(
 
 async function processAndSaveEntry(
   result: ProcessingResult,
-  setHistory: SetHistory
+  setHistory: SetHistory,
+  isDryRun: boolean = false
 ): Promise<void> {
   if (!result.memo || result.memo.trim() === "") {
     const autoMemo = generateDefaultMemo(result.receipt);
@@ -559,6 +560,19 @@ async function processAndSaveEntry(
 
     updateHistoryWithLedger(setHistory, ledgerPreview);
 
+    if (isDryRun) {
+      // Dry-run mode: show preview without saving
+      setHistory((h) => [
+        ...h.slice(0, -1), // Remove the last "Creating..." message
+        {
+          type: "output",
+          content: `**Preview (--dry-run):**\n\n\`\`\`\n${ledgerPreview}\n\`\`\`\n\nRun with \`--commit\` to actually save this entry.`,
+          format: "markdown",
+        },
+      ]);
+      return;
+    }
+
     const serverResult = await serverHandleNewCommand(payload);
 
     if (serverResult.ok) {
@@ -591,6 +605,19 @@ async function processAndSaveEntry(
         );
 
         updateHistoryWithLedger(setHistory, ledgerPreview);
+
+        if (isDryRun) {
+          // Dry-run mode: show preview without saving
+          setHistory((h) => [
+            ...h.slice(0, -1), // Remove the last "Creating..." message
+            {
+              type: "output",
+              content: `**Preview (--dry-run, rule-based):**\n\n\`\`\`\n${ledgerPreview}\n\`\`\`\n\nRun with \`--commit\` to actually save this entry.`,
+              format: "markdown",
+            },
+          ]);
+          return;
+        }
 
         // Create new payload with rule-based postings
         const retryPayload = toPayload(result, postings);
@@ -646,32 +673,107 @@ function parseManualCommandWithAI(arg: string): {
   return { parsed, useAI };
 }
 
+// Convert new 'add' syntax to old 'new -i' syntax for compatibility
+function convertAddToNewSyntax(arg: string): string {
+  // Parse the arguments to extract items and flags
+  const parts = arg.trim().split(/\s+/);
+  const items: string[] = [];
+  const flags: string[] = [];
+
+  let i = 0;
+  while (i < parts.length) {
+    const part = parts[i];
+
+    // If it's a flag, add it to flags
+    if (part.startsWith("-")) {
+      flags.push(part);
+      // If it has a value, add that too
+      if (i + 1 < parts.length && !parts[i + 1].startsWith("-")) {
+        flags.push(parts[i + 1]);
+        i += 2;
+      } else {
+        i++;
+      }
+    } else {
+      // It's an item or amount
+      items.push(part);
+      i++;
+    }
+  }
+
+  // Convert to new -i syntax
+  if (items.length >= 2) {
+    // First item is description, second is amount
+    const description = items[0];
+    const amount = items[1];
+    const remainingItems = items.slice(2);
+
+    // Build the new command
+    let newCmd = `-i ${description} ${amount}`;
+
+    // Add remaining items as additional items
+    for (let j = 0; j < remainingItems.length; j += 2) {
+      if (j + 1 < remainingItems.length) {
+        newCmd += ` ${remainingItems[j]} ${remainingItems[j + 1]}`;
+      }
+    }
+
+    // Add flags
+    if (flags.length > 0) {
+      newCmd += ` ${flags.join(" ")}`;
+    }
+
+    return newCmd;
+  }
+
+  // If we can't parse it properly, return the original arg
+  return arg;
+}
+
 export async function handleNew(
   setHistory: SetHistory,
   cmd: string,
   arg: string
 ): Promise<boolean> {
+  // Check for --dry-run flag
+  const isDryRun = /--dry-run\b/.test(arg);
+  const isCommit = /--commit\b/.test(arg);
+
+  // Remove dry-run and commit flags from arg for processing
+  let cleanedArg = arg
+    .replace(/--dry-run\b/g, "")
+    .replace(/--commit\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Convert 'add' syntax to 'new -i' syntax for compatibility
+  if (cmd.startsWith("add ")) {
+    cleanedArg = convertAddToNewSyntax(cleanedArg);
+  }
+
   setHistory((h) => [
     ...(h ?? []),
     { type: "input", content: cmd },
     {
       type: "output",
-      content: "_Creating Ledger entry..._",
+      content: isDryRun
+        ? "_Previewing Ledger entry..._"
+        : "_Creating Ledger entry..._",
       format: "markdown",
     },
   ]);
 
   try {
     // 1) Structured JSON path
-    const structuredInput = tryParseJSONInput(arg);
+    const structuredInput = tryParseJSONInput(cleanedArg);
     if (structuredInput) {
       const result = processStructuredInput(structuredInput);
-      await processAndSaveEntry(result, setHistory);
+      await processAndSaveEntry(result, setHistory, isDryRun);
       return true;
     }
 
     // 2) Manual grammar path with AI detection
-    const { parsed, useAI } = parseManualCommandWithAI(arg);
+    const { parsed, useAI } = parseManualCommandWithAI(cleanedArg);
     const result: ProcessingResult = {
       date: parsed.date,
       payee: parsed.payee,
@@ -685,7 +787,7 @@ export async function handleNew(
       useAI,
     };
 
-    await processAndSaveEntry(result, setHistory);
+    await processAndSaveEntry(result, setHistory, isDryRun);
     return true;
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);

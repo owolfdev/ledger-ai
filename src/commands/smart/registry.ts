@@ -38,8 +38,17 @@ export const commandRegistry: Record<string, CommandMeta> = {
   },
   go: {
     content: "`go <page>` - go to a page",
-    description: "Navigate to a page by name or slug.",
-    usage: "go <page-slug-or-name>",
+    description:
+      "Navigate to a page by name or slug, or jump to a specific entry by ID.",
+    usage: `go <page-slug-or-name> | go <entry-id> | go --entry <id> | go -e <id>
+
+**Examples:**
+• \`go blog\` — Navigate to blog page
+• \`go about\` — Navigate to about page  
+• \`go home\` — Navigate to home page
+• \`go 880\` — Jump to entry #880
+• \`go --entry 880\` — Jump to entry #880 (explicit)
+• \`go -e 880\` — Jump to entry #880 (short flag)`,
   },
   nav: {
     content: `[**go blog** - go to blog](/blog)  
@@ -172,8 +181,8 @@ export const commandRegistry: Record<string, CommandMeta> = {
       },
       {
         input: "Show me entries I created this month",
-        output: "entries --created-month 2024-01",
-        description: "Filter by creation date",
+        output: "entries --from 2024-01 --until 2024-01",
+        description: "Filter by creation date range",
       },
       {
         input: "What entries did I create yesterday?",
@@ -207,7 +216,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
       },
       {
         input: "Show me entries between $50 and $200",
-        output: "entries --amount-range 50 200",
+        output: "entries --min-amount 50 --max-amount 200",
         description: "Filter by amount range",
       },
       {
@@ -234,7 +243,6 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`--amount <number>\` / \`-amt <number>\` — Filter by exact amount
   • \`--min-amount <number>\` / \`-min <number>\` — Filter by minimum amount
   • \`--max-amount <number>\` / \`-max <number>\` — Filter by maximum amount
-  • \`--amount-range <min> <max>\` / \`-ar <min> <max>\` — Filter by amount range
 
   **Date & Display:**
   • \`--date <date>\` / \`-d <date>\`         — Filter by specific date or alias (today, yesterday, august)
@@ -258,13 +266,13 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`entries --created asc\`                  — Sort by creation date (oldest first)
   • \`entries -ct\`                            — Sort by creation date (newest first)
   • \`entries -ct asc\`                        — Sort by creation date (oldest first)
-  • \`entries --created-month 2024-01\`       — Entries created in January 2024
-  • \`entries -cm august\`                    — Entries created in August (current year)
+  • \`entries --from 2024-01 --until 2024-01\` — Entries created in January 2024
+  • \`entries --from 2024-08 --until 2024-08\` — Entries created in August 2024
   • \`entries --created-day 2024-01-15\`      — Entries created on specific date
-  • \`entries -cr 2024-01-01 2024-01-31\`     — Entries created in date range
+  • \`entries --from 2024-01-01 --until 2024-01-31\` — Entries created in date range
   • \`entries --amount 50\`                   — Entries for exactly $50
   • \`entries --min-amount 100\`              — Entries over $100
-  • \`entries --amount-range 50 200\`         — Entries between $50-$200
+  • \`entries --min-amount 50 --max-amount 200\` — Entries between $50-$200
   • \`entries -A Food -l 10\`                 — Food account entries, limit 10
   • \`entries -p credit\`                     — Credit card payments`,
   },
@@ -292,7 +300,6 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`--amount <number>\` / \`-amt <number>\` — Filter by exact amount
   • \`--min-amount <number>\` / \`-min <number>\` — Filter by minimum amount
   • \`--max-amount <number>\` / \`-max <number>\` — Filter by maximum amount
-  • \`--amount-range <min> <max>\` / \`-ar <min> <max>\` — Filter by amount range
   
   **Date & Display:**
   • \`--date <date>\` / \`-d <date>\`         — Filter by specific date or alias (today, yesterday, august)
@@ -318,7 +325,7 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`ent -ct asc\`                            — Sort by creation date (oldest first)
   • \`ent --amount 50\`                        — Entries for exactly $50
   • \`ent --min-amount 100\`                   — Entries over $100
-  • \`ent --amount-range 50 200\`              — Entries between $50-$200
+  • \`ent --min-amount 50 --max-amount 200\`   — Entries between $50-$200
   • \`ent -A Food -l 10\`                      — Food account entries, limit 10
   
   **Date Filtering:**
@@ -381,6 +388,194 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • Numeric limits without \`--limit\` still work: \`ent 50\`
   • Date aliases still work: \`ent today\`, \`ent 2025\`
   • Currency codes still work: \`ent USD\``,
+  },
+
+  // --- NEW: PRIMARY COMMANDS ---
+
+  // ADD command (primary entry creation)
+  add: {
+    description:
+      "Create new ledger entries with natural language or structured input. Supports items, amounts, vendors, business context, dates, and payment methods.",
+    content: "__HANDLE_NEW__", // This will be handled by the new command handler
+    usage: `add <description> <amount> [options]
+
+**Examples:**
+• \`add coffee 100 --vendor Starbucks\` — Coffee purchase
+• \`add "office supplies" 500 --business MyBrick\` — Business expense
+• \`add lunch 200 --date yesterday\` — Yesterday's lunch
+• \`add gas 50 --payment credit card\` — Gas with credit card
+
+**Flags:**
+• \`--vendor <name>\` / \`-v <name>\` — Vendor/merchant name
+• \`--business <name>\` / \`-b <name>\` — Business context
+• \`--date <date>\` / \`-d <date>\` — Transaction date
+• \`--memo <text>\` / \`-m <text>\` — Additional notes
+• \`--payment <method>\` / \`-p <method>\` — Payment method
+• \`--currency <code>\` / \`-c <code>\` — Currency (default: THB)
+• \`--dry-run\` — Preview without saving
+• \`--commit\` — Actually save the entry`,
+    aliases: ["create", "new"],
+    categories: ["create", "finance", "entry"],
+    intent: "action",
+    priority: 15, // Higher priority than 'new'
+    naturalLanguage: [
+      // Expense patterns
+      "i just bought",
+      "i purchased",
+      "i spent money on",
+      "i had",
+      "i paid for",
+      "bought",
+      "purchased",
+      "spent",
+      "coffee",
+      "lunch",
+      "dinner",
+      "gas",
+      "groceries",
+      "shopping",
+      "office supplies",
+      "at starbucks",
+      "at mcdonalds",
+      "at restaurant",
+      "for work",
+      "for business",
+      "expense",
+      "cost",
+      "price",
+      "amount",
+      "baht",
+      "dollars",
+      "dollar",
+      "thb",
+      "usd",
+      "euro",
+      "euros",
+      "yen",
+      "pound",
+      "pounds",
+    ],
+  },
+
+  // LIST command (primary entry viewing)
+  list: {
+    description:
+      "List and filter ledger entries with powerful search options. Replaces 'entries' as the primary viewing command.",
+    content: (
+      arg?: string,
+      pageCtx?: string,
+      cmds?: Record<string, CommandMeta>,
+      user?: User | null
+    ) => entriesListCommand(arg || "", pageCtx || "", cmds || {}, user || null),
+    usage: `list [options]
+
+**Quick Examples:**
+• \`list\` — Recent entries
+• \`list --vendor Starbucks\` — Starbucks transactions
+• \`list --date today\` — Today's entries
+• \`list --sum\` — With totals
+• \`list --business MyBrick --from 2025-01\` — MyBrick entries from January
+
+**Common Flags:**
+• \`--vendor <name>\` / \`-v <name>\` — Filter by vendor
+• \`--business <name>\` / \`-b <name>\` — Filter by business
+• \`--date <date>\` / \`-d <date>\` — Filter by date
+• \`--from <date>\` / \`-f <date>\` — Date range start
+• \`--until <date>\` / \`-u <date>\` — Date range end
+• \`--sum\` / \`-s\` — Show totals
+• \`--limit <number>\` / \`-l <number>\` — Limit results`,
+    aliases: ["entries", "ent", "e"],
+    categories: ["query", "finance", "search"],
+  },
+
+  // EDIT command (primary entry editing)
+  edit: {
+    description:
+      "Edit one or more ledger entries. Replaces 'edit-entry' as the primary editing command.",
+    content: (
+      arg?: string,
+      pageCtx?: string,
+      cmds?: Record<string, CommandMeta>,
+      user?: User | null
+    ) => editEntryCommand(arg || "", pageCtx || "", cmds || {}, user || null),
+    usage: `edit <id>[,id2,id3...] [options]
+
+**Examples:**
+• \`edit 123 --vendor "Coffee Shop"\` — Change vendor
+• \`edit 123 --business MyBrick\` — Change business
+• \`edit 123,124,125 --memo "team meeting"\` — Bulk edit
+• \`edit 123 --amount 150\` — Change amount
+
+**Flags:**
+• \`--vendor <name>\` / \`-v <name>\` — Update vendor
+• \`--business <name>\` / \`-b <name>\` — Update business
+• \`--date <date>\` / \`-d <date>\` — Update date
+• \`--memo <text>\` / \`-m <text>\` — Update memo
+• \`--payment <method>\` / \`-p <method>\` — Update payment method
+• \`--amount <number>\` / \`-a <number>\` — Update amount`,
+    aliases: ["edit-entry", "ee", "modify"],
+    categories: ["edit", "modify", "finance"],
+  },
+
+  // SHOW command (single entry details)
+  show: {
+    description:
+      "Show detailed information about a specific ledger entry including all postings and tags.",
+    content: (
+      arg?: string,
+      pageCtx?: string,
+      cmds?: Record<string, CommandMeta>,
+      user?: User | null
+    ) =>
+      entriesListCommand(
+        `--entry ${arg}`,
+        pageCtx || "",
+        cmds || {},
+        user || null
+      ),
+    usage: `show <id>
+
+**Examples:**
+• \`show 123\` — Show entry #123 details
+• \`show 456\` — Show entry #456 with postings`,
+    aliases: ["view", "details"],
+    categories: ["query", "finance", "details"],
+  },
+
+  // DELETE command (entry deletion)
+  delete: {
+    description:
+      "Delete one or more ledger entries permanently. Includes cleanup of associated images.",
+    content: (
+      arg?: string,
+      pageCtx?: string,
+      cmds?: Record<string, CommandMeta>,
+      user?: User | null
+    ) =>
+      editEntryCommand(
+        `${arg} --delete`,
+        pageCtx || "",
+        cmds || {},
+        user || null
+      ),
+    usage: `delete <id>[,id2,id3...]
+
+**Examples:**
+• \`delete 123\` — Delete entry #123
+• \`delete 123,124,125\` — Delete multiple entries
+• \`delete 456 --confirm\` — Delete with confirmation`,
+    aliases: ["del", "remove"],
+    categories: ["delete", "finance"],
+  },
+
+  // EDIT-POST command (renamed from edit for blog posts)
+  "edit-post": {
+    content: "__EDIT_POST__",
+    description:
+      "Edit a blog post in the Monaco editor. Navigate to the post edit page.",
+    usage: "edit-post [slug]",
+    aliases: ["edit"],
+    categories: ["blog", "edit"],
   },
 
   // --- Edit Entry ---
@@ -717,10 +912,11 @@ export const commandRegistry: Record<string, CommandMeta> = {
     usage:
       "search <keyword> [--tag <tag>] [--category <cat>] [--sort <type>] [--limit <n>]",
   },
-  list: {
+  "list-posts": {
     content: "List all blog/project post titles.",
     description: "List all blog/project post titles.",
-    usage: "list [limit]",
+    usage: "list-posts [limit]",
+    aliases: ["list"],
   },
   like: {
     content: "Like a blog post by slug (e.g. `like my-post`).",
@@ -885,15 +1081,13 @@ export const commandRegistry: Record<string, CommandMeta> = {
     usage: "help [global|admin|page|<command>]",
   },
 
-  // Ledger CLI
+  // Ledger CLI (Legacy - use 'add' instead)
   new: {
     content: "__LEDGER_NEW_ENTRY__",
     description:
-      "Create a new double-entry ledger transaction from natural language or receipt images. Uses unified flag-based syntax with -i for items and --flags for options. Supports expenses (default), income, assets, and liabilities with --type flag. Both manual entry and automated OCR parsing use the same syntax for consistency. Automatically categorizes transactions and supports multiple businesses with AI-powered categorization.",
-
-    // NEW: Natural language support
+      "Legacy command for creating ledger entries. Use 'add' instead for the modern syntax. This command uses the old -i flag syntax.",
     intent: "action",
-    priority: 10,
+    priority: 5, // Lower priority than 'add'
     naturalLanguage: [
       // Expense patterns
       "i just bought",
@@ -934,107 +1128,106 @@ export const commandRegistry: Record<string, CommandMeta> = {
     examples: [
       {
         input: "I just bought coffee for 150 baht",
-        output: "new -i coffee 150",
+        output: "add coffee 150",
         description: "Simple expense entry",
       },
       {
         input: "I spent $20 at Starbucks for coffee",
-        output: "new -i coffee 20 --vendor Starbucks",
+        output: "add coffee 20 --vendor Starbucks",
         description: "Expense with vendor",
       },
       {
         input: "Upload receipt from Starbucks",
-        output:
-          "new -i coffee 20 --vendor Starbucks --memo 'Receipt total $20'",
+        output: "add coffee 20 --vendor Starbucks --memo 'Receipt total $20'",
         description: "Automated receipt parsing (same syntax)",
       },
       {
         input: "MyBrick: office supplies for $100",
-        output: "new -i supplies 100 --business MyBrick",
+        output: "add supplies 100 --business MyBrick",
         description: "Business expense with flag syntax",
       },
       {
         input: "I had lunch yesterday for 200 baht",
-        output: "new -i lunch 200 --date yesterday",
+        output: "add lunch 200 --date yesterday",
         description: "Expense with date",
       },
       {
         input: "Bought gas $50 with credit card",
-        output: 'new -i gas 50 --payment "credit card"',
+        output: 'add gas 50 --payment "credit card"',
         description: "Expense with payment method",
       },
       {
         input: "I bought a coffee mug for 200 baht",
-        output: 'new -i "coffee mug" 200',
+        output: 'add "coffee mug" 200',
         description: "Multi-word item with quotes",
       },
       {
         input: "Office supplies and coffee for the team",
         output:
-          'new -i supplies 500 coffee 150 --business MyBrick --memo "team meeting"',
+          'add supplies 500 coffee 150 --business MyBrick --memo "team meeting"',
         description: "Multiple items with business context and memo",
       },
       // NEW: Income examples
       {
         input: "I received $5000 for consulting work",
-        output: "new -i consulting 5000 --type income --client Acme Corp",
+        output: "add consulting 5000 --type income --client Acme Corp",
         description: "Income entry with client",
       },
       {
         input: "Freelance payment of $2000",
-        output: "new -i freelance 2000 --type income --client Client ABC",
+        output: "add freelance 2000 --type income --client Client ABC",
         description: "Freelance income",
       },
       {
         input: "Salary payment of $8000",
-        output: "new -i salary 8000 --type income --client My Company",
+        output: "add salary 8000 --type income --client My Company",
         description: "Salary income",
       },
       // NEW: Asset examples
       {
         input: "Bought a laptop for $2000 with credit card",
-        output: "new -i laptop 2000 --type asset --payment credit-card",
+        output: "add laptop 2000 --type asset --payment credit-card",
         description: "Asset purchase with payment method",
       },
       {
         input: "Bought a laptop from Apple Store on my KBank Credit card",
         output:
-          "new -i laptop 40000 --type asset --vendor Apple Store --payment KBank Credit card",
+          "add laptop 40000 --type asset --vendor Apple Store --payment KBank Credit card",
         description: "Asset purchase with vendor and credit card",
       },
       {
         input: "Purchased office furniture for $1500",
-        output: "new -i furniture 1500 --type asset --business MyBrick",
+        output: "add furniture 1500 --type asset --business MyBrick",
         description: "Business asset purchase",
       },
       // NEW: Liability examples
       {
         input: "Paid off $500 of credit card debt",
-        output: "new -i credit-card 500 --type liability --payment checking",
+        output: "add credit-card 500 --type liability --payment checking",
         description: "Liability payment",
       },
       {
         input: "Student loan payment of $1000",
-        output: "new -i student-loan 1000 --type liability --payment savings",
+        output: "add student-loan 1000 --type liability --payment savings",
         description: "Student loan payment",
       },
       // NEW: Opening balance examples
       {
         input: "Opening balance of 1000000 in my Kasikorn bank account",
         output:
-          "new -i opening_balance 1000000 --type asset --payment Kasikorn Bank",
+          "add opening_balance 1000000 --type asset --payment Kasikorn Bank",
         description: "Opening balance entry",
       },
       {
         input: "Initial balance of $50000 in checking account",
-        output: "new -i initial_balance 50000 --type asset --payment checking",
+        output: "add initial_balance 50000 --type asset --payment checking",
         description: "Initial balance entry",
       },
     ],
     categories: ["expense", "finance", "accounting"],
     aliases: ["expense", "spend", "buy", "purchase"],
 
-    usage: `new -i <item1> <price1> <item2> <price2>... [--options]
+    usage: `add <item1> <price1> <item2> <price2>... [--options]
     
     **📋 Quick Reference - All Available Flags:**
     
@@ -1056,13 +1249,13 @@ export const commandRegistry: Record<string, CommandMeta> = {
     • \`--no-ai\` / \`-n\`                       — Disable AI, use rule-based mapping
     
     **🚀 Smart Syntax Examples:**
-    • \`new -i coffee 150\`                      — Simple expense (Personal business)
-    • \`new -i supplies 500 --business MyBrick\` — Business context with flag
-    • \`new -i coffee 150 --vendor Starbucks\`   — With vendor using flag
-    • \`new -i coffee 150 -r Starbucks\`         — With recipient using short alias
-    • \`new -i coffee 150 -pay Starbucks\`       — With payee using short alias
-    • \`new -i coffee $6 pastry $4 --vendor Starbucks\`  — Multiple items with vendor
-    • \`new -i "coffee mug" 200 croissant 150\` — Multi-word items with quotes`,
+    • \`add coffee 150\`                      — Simple expense (Personal business)
+    • \`add supplies 500 --business MyBrick\` — Business context with flag
+    • \`add coffee 150 --vendor Starbucks\`   — With vendor using flag
+    • \`add coffee 150 -r Starbucks\`         — With recipient using short alias
+    • \`add coffee 150 -pay Starbucks\`       — With payee using short alias
+    • \`add coffee $6 pastry $4 --vendor Starbucks\`  — Multiple items with vendor
+    • \`add "coffee mug" 200 croissant 150\` — Multi-word items with quotes`,
   },
 
   // --- Account Management ---

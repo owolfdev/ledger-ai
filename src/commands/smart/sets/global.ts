@@ -17,6 +17,12 @@ export const globalCommandKeys = [
   "popular",
   "search",
   "list",
+  "add", // NEW: Primary entry creation
+  "edit", // NEW: Primary entry editing
+  "show", // NEW: Single entry details
+  "delete", // NEW: Entry deletion
+  "list-posts", // NEW: Blog post listing
+  "edit-post", // NEW: Blog post editing
   "info",
   "team",
   "aiusage",
@@ -27,9 +33,10 @@ export const globalCommandKeys = [
   "entries",
   "ent",
   "e",
-  "edit-entry", // NEW
-  "editent", // NEW
-  "ee", // NEW
+  "new", // Legacy command (replaced by add)
+  "edit-entry", // Legacy alias
+  "editent", // Legacy alias
+  "ee", // Legacy alias
   "ledger",
   "bal",
   "reg",

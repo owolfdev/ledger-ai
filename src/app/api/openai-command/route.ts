@@ -57,12 +57,12 @@ Return ONLY the command string, nothing else. If you cannot generate a valid com
 IMPORTANT: Use the NEW flag-based syntax for all commands:
 
 NEW COMMAND EXAMPLES (Flag-based syntax):
-- "I bought coffee for 150 baht" → "new -i coffee 150"
-- "I spent $20 at Starbucks" → "new -i coffee 20 --vendor Starbucks"  
-- "I had lunch yesterday for 200 baht" → "new -i lunch 200 --date yesterday"
-- "MyBrick: office supplies for $100" → "new -i supplies 100 --business MyBrick"
-- "Bought gas $50 with credit card" → "new -i gas 50 --payment credit card"
-- "Coffee and pastry at Starbucks" → "new -i coffee 6 pastry 4 --vendor Starbucks"
+- "I bought coffee for 150 baht" → "add coffee 150"
+- "I spent $20 at Starbucks" → "add coffee 20 --vendor Starbucks"  
+- "I had lunch yesterday for 200 baht" → "add lunch 200 --date yesterday"
+- "MyBrick: office supplies for $100" → "add supplies 100 --business MyBrick"
+- "Bought gas $50 with credit card" → "add gas 50 --payment credit card"
+- "Coffee and pastry at Starbucks" → "add coffee 6 pastry 4 --vendor Starbucks"
 
 ENTRIES COMMAND EXAMPLES:
 - "Show my expenses from today" → "entries today"
