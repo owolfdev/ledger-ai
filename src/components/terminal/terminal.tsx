@@ -175,18 +175,25 @@ export default function Terminal({
   const [loadingCommand, setLoadingCommand] = useState("");
 
   // All useCallback hooks at top level
-  const populateInput = useCallback((cmd: string) => {
-    console.log("populateInput called with:", cmd); // DEBUG
+  const populateInput = useCallback(
+    (cmd: string) => {
+      console.log("=== TERMINAL populateInput called with:", cmd); // DEBUG
+      console.log("Current input state before setting:", input);
 
-    setInput(cmd);
-    setTimeout(() => {
-      inputRef.current?.focus();
-      inputRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    }, 100);
-  }, []);
+      setInput(cmd);
+      console.log("Input state set to:", cmd);
+
+      setTimeout(() => {
+        console.log("Focusing input, current value:", inputRef.current?.value);
+        inputRef.current?.focus();
+        inputRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 100);
+    },
+    [input]
+  );
 
   // Always set up window.terminalPopulateInput for AI command generation
   useEffect(() => {
@@ -322,7 +329,10 @@ export default function Terminal({
     window.scrollTo(0, 0);
   }, []);
 
-  useEffect(() => resizeTextarea(inputRef.current), [input]);
+  useEffect(() => {
+    console.log("Input state changed to:", input);
+    resizeTextarea(inputRef.current);
+  }, [input]);
 
   if (!initialized) return null;
 

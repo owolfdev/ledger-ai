@@ -151,7 +151,7 @@ export default function SmartTerminal({
           pagesList,
           currentSlug,
           postType,
-          onPopulateInput
+          undefined // Use terminal's internal populateInput function instead of external one
         )
       : null;
 

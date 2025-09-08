@@ -21,6 +21,12 @@ import { entriesListCommand } from "@/commands/smart/entries-command";
 import { handleAccountsCommand } from "@/commands/smart/accounts-command";
 import { IntentDetector } from "./intent-detector";
 import { CommandGenerator } from "./command-generator";
+import {
+  generateLedgerEntry,
+  shouldGenerateLedgerEntry,
+  isLedgerEntry,
+  handleLedgerEntry,
+} from "./ledger-entry-generator";
 
 type CommandMap = Record<string, CommandMeta>;
 type PageEntry = { title: string; slug: string; route: string };
@@ -417,11 +423,71 @@ export function createHandleCommand(
     user?: User | null,
     history?: TerminalOutputRendererProps[]
   ): Promise<boolean> {
+    console.log("=== HANDLE COMMAND START ===", { cmd, trimmed: cmd.trim() });
     const trimmed = cmd.trim();
     const [rawBase, ...rest] = trimmed.split(/[\s\n]+/);
     const base = (rawBase || "").toLowerCase();
 
     const arg = rest.join(" ");
+    let handled = false; // Flag to track if we've already handled the input
+
+    // ----------- Ledger Entry Generation ----------- //
+    // Check if this should generate a ledger entry instead of executing a command
+    const shouldGenerate = shouldGenerateLedgerEntry(trimmed);
+    console.log("Ledger entry generation check:", {
+      input: trimmed,
+      shouldGenerate,
+      hasOnPopulateInput: !!onPopulateInput,
+      hasUser: !!user,
+    });
+
+    if (shouldGenerate && user) {
+      console.log("Generating ledger entry for:", trimmed);
+
+      // Use terminal's internal populateInput function if external one not provided
+      const populateFunction =
+        onPopulateInput ||
+        (typeof window !== "undefined" &&
+          ((window as unknown as Record<string, unknown>)
+            .terminalPopulateInput as ((cmd: string) => void) | undefined));
+
+      if (!populateFunction) {
+        console.log("No populateInput function available");
+        return false;
+      }
+
+      const ledgerEntry = await generateLedgerEntry(
+        trimmed,
+        user,
+        populateFunction
+      );
+      if (ledgerEntry) {
+        console.log("Ledger entry generated successfully:", ledgerEntry);
+        // Don't add to history - the populated input will be handled when user presses Enter
+        // Return false so the user can edit and submit the ledger entry
+        console.log(
+          "=== RETURNING FALSE FROM LEDGER GENERATION (user can edit and submit) ==="
+        );
+        return false;
+      } else {
+        console.log("Ledger entry generation failed - ledgerEntry is null");
+      }
+    }
+
+    // ----------- Ledger Entry Parsing ----------- //
+    // Check if the input is a ledger entry (starts with date pattern)
+    // This should run regardless of handled status
+    if (isLedgerEntry(trimmed)) {
+      console.log("Detected ledger entry, saving to database:", trimmed);
+      handled = true;
+      return await handleLedgerEntry(
+        trimmed,
+        setHistory,
+        user || null,
+        history || []
+      );
+    }
+
     // ----------- Side-effect/Imperative Commands ----------- //
 
     if (base === "dark" && commands[base]) {
@@ -1322,14 +1388,21 @@ export function createHandleCommand(
     }
 
     // ----------- AI Fallback: unknown or not allowed (EXISTING CODE) ----------- //
-    await processAiPrompt(
-      cmd,
-      setHistory,
-      history || [],
-      commands,
-      pageContext,
-      onPopulateInput
-    );
+    console.log("AI Fallback check:", { handled, input: trimmed });
+    if (!handled) {
+      console.log("Running AI fallback for:", trimmed);
+      await processAiPrompt(
+        cmd,
+        setHistory,
+        history || [],
+        commands,
+        pageContext,
+        onPopulateInput
+      );
+    } else {
+      console.log("Skipping AI fallback - already handled");
+    }
+    console.log("=== HANDLE COMMAND END ===", { handled, input: trimmed });
     return true;
   };
 }
