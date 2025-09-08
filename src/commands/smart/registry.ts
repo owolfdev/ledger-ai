@@ -943,12 +943,6 @@ export const commandRegistry: Record<string, CommandMeta> = {
       "`create <type> <post name>` Example: create blog My Blog. Create a new post at /post/create/<slug>?type=<category>, e.g., blog or project. Requires login.",
     usage: "create <blog|project> <post-name>",
   },
-  edit: {
-    content: "__EDIT_POST__",
-    description:
-      "Edit an existing blog post at /post/edit/<slug>. Requires login.",
-    usage: "edit <slug>",
-  },
 
   // --- Info/About ---
   info: {
