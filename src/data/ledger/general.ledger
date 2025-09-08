@@ -803,3 +803,11 @@
     Liabilities:Personal:Transportation:Vehicle 17,739.62฿
     Assets:Bank:Bank:Personal     -17,739.62฿
 
+2025/09/07 Lek
+    Expenses:Personal:Misc         1,000.00฿
+    Assets:Bank:Kasikorn:Personal -1,000.00฿
+
+2025/09/08 Starbucks
+    Expenses:Personal:Food:Coffee  150.00฿
+    Assets:Bank:Kasikorn:Personal -150.00฿
+

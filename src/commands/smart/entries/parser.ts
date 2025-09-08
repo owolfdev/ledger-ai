@@ -238,7 +238,19 @@ export function parseArgs(raw?: string): EntriesArgs {
       count = true;
       continue;
     }
-    if ((t === "--vendor" || t === "-v") && i + 1 < parts.length) {
+    if (
+      (t === "--vendor" ||
+        t === "-v" ||
+        t === "-ven" ||
+        t === "-vend" ||
+        t === "--recipient" ||
+        t === "-r" ||
+        t === "-rec" ||
+        t === "-recip" ||
+        t === "--payee" ||
+        t === "-pay") &&
+      i + 1 < parts.length
+    ) {
       vendor = parts[i + 1];
       i++;
       continue;

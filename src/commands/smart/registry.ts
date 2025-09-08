@@ -225,7 +225,9 @@ export const commandRegistry: Record<string, CommandMeta> = {
 
   **Filtering:**
   • \`--business <name>\` / \`-b <name>\`     — Filter by business account
-  • \`--vendor <name>\` / \`-v <name>\`       — Filter by vendor/description
+  • \`--vendor <name>\` / \`-v <name>\` / \`-ven <name>\` / \`-vend <name>\` — Filter by vendor/description
+  • \`--recipient <name>\` / \`-r <name>\` / \`-rec <name>\` / \`-recip <name>\` — Filter by recipient (alias for vendor)
+  • \`--payee <name>\` / \`-pay <name>\` — Filter by payee (alias for vendor)
   • \`--account <pattern>\` / \`-A <pattern>\` — Filter by account name
   • \`--payment <method>\` / \`-p <method>\`  — Filter by payment method (credit card, cash, bank)
   • \`--currency <code>\` / \`-c <code>\`     — Filter by currency (USD, THB, EUR)
@@ -282,7 +284,9 @@ export const commandRegistry: Record<string, CommandMeta> = {
   
   **Filtering:**
   • \`--business <name>\` / \`-b <name>\`     — Filter by business account
-  • \`--vendor <name>\` / \`-v <name>\`       — Filter by vendor/description
+  • \`--vendor <name>\` / \`-v <name>\` / \`-ven <name>\` / \`-vend <name>\` — Filter by vendor/description
+  • \`--recipient <name>\` / \`-r <name>\` / \`-rec <name>\` / \`-recip <name>\` — Filter by recipient (alias for vendor)
+  • \`--payee <name>\` / \`-pay <name>\` — Filter by payee (alias for vendor)
   • \`--account <pattern>\` / \`-A <pattern>\` — Filter by account name
   • \`--currency <code>\` / \`-c <code>\`     — Filter by currency (USD, THB, EUR)
   • \`--amount <number>\` / \`-amt <number>\` — Filter by exact amount
@@ -346,7 +350,9 @@ export const commandRegistry: Record<string, CommandMeta> = {
   • \`ent -s\`                        — With totals
   • \`ent -n\`                        — Count only
   • \`ent -b Personal\`                — Personal business entries
-  • \`ent -v Starbucks\`               — Starbucks purchases
+    • \`ent -v Starbucks\`               — Starbucks purchases
+    • \`ent -r Starbucks\`               — Starbucks purchases (using recipient alias)
+    • \`ent -pay Starbucks\`             — Starbucks purchases (using payee alias)
   • \`ent -A Coffee\`                  — Coffee-related accounts
   • \`ent -c USD\`                     — USD entries only
   • \`ent -g 330\`                     — Navigate to entry #330
@@ -363,7 +369,9 @@ export const commandRegistry: Record<string, CommandMeta> = {
   **📱 Mobile-Friendly Short Flags:**
   Use short flags for quick typing on mobile:
   • \`-b\` instead of \`--business\`
-  • \`-v\` instead of \`--vendor\`
+  • \`-v\` instead of \`--vendor\` (also \`-ven\`, \`-vend\`)
+  • \`-r\` instead of \`--recipient\` (also \`-rec\`, \`-recip\`)
+  • \`-pay\` instead of \`--payee\`
   • \`-s\` instead of \`--sum\`
   • \`-n\` instead of \`--count\`
   • \`-g\` instead of \`--go\`
@@ -1034,7 +1042,9 @@ export const commandRegistry: Record<string, CommandMeta> = {
     • \`--items <item1> <price1> <item2> <price2>...\` / \`-i <item1> <price1> <item2> <price2>...\` — Items and prices (required)
     • \`--type <type>\` / \`-t <type>\`            — Transaction type: expense (default), income, asset, liability, transfer
     • \`--business <name>\` / \`-b <name>\`     — Set business context
-    • \`--vendor <name>\` / \`-v <name>\`        — Set vendor/merchant name (expenses)
+    • \`--vendor <name>\` / \`-v <name>\` / \`-ven <name>\` / \`-vend <name>\` — Set vendor/merchant name (expenses)
+    • \`--recipient <name>\` / \`-r <name>\` / \`-rec <name>\` / \`-recip <name>\` — Set recipient name (alias for vendor)
+    • \`--payee <name>\` / \`-pay <name>\` — Set payee name (alias for vendor)
     • \`--client <name>\` / \`-c <name>\`        — Set client name (income)
     • \`--payment <method>\` / \`-p <method>\`   — Payment method (cash, credit card, etc.)
     • \`--memo <text>\` / \`-m <text>\`          — Add memo/note
@@ -1049,6 +1059,8 @@ export const commandRegistry: Record<string, CommandMeta> = {
     • \`new -i coffee 150\`                      — Simple expense (Personal business)
     • \`new -i supplies 500 --business MyBrick\` — Business context with flag
     • \`new -i coffee 150 --vendor Starbucks\`   — With vendor using flag
+    • \`new -i coffee 150 -r Starbucks\`         — With recipient using short alias
+    • \`new -i coffee 150 -pay Starbucks\`       — With payee using short alias
     • \`new -i coffee $6 pastry $4 --vendor Starbucks\`  — Multiple items with vendor
     • \`new -i "coffee mug" 200 croissant 150\` — Multi-word items with quotes`,
   },

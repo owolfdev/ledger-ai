@@ -269,6 +269,14 @@ function extractFlags(tokens: string[]): {
       } else if (
         flagName === "vendor" ||
         flagName === "v" ||
+        flagName === "ven" ||
+        flagName === "vend" ||
+        flagName === "recipient" ||
+        flagName === "r" ||
+        flagName === "rec" ||
+        flagName === "recip" ||
+        flagName === "payee" ||
+        flagName === "pay" ||
         flagName === "client" ||
         flagName === "c"
       ) {
