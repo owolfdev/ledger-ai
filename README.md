@@ -2,8 +2,6 @@
 
 **Current Implementation — Updated September 2025**
 
-## test...
-
 ## **1. Overview**
 
 Ledger AI is a **web-based terminal interface** for creating and managing financial ledger entries. It combines a modern React terminal with Supabase backend storage and optional Ledger CLI integration for development workflows.
